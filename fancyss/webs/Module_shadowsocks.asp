@@ -1067,7 +1067,7 @@ function normalize_smartdns_dns_item(item) {
 		return null;
 	}
 	var proto = String(item.proto || "").toLowerCase();
-	if ($.inArray(proto, ["udp", "tcp", "dot"]) === -1) {
+	if ($.inArray(proto, ["udp", "tcp", "dot", "https"]) === -1) {
 		return null;
 	}
 	var normalized = {
@@ -1088,15 +1088,15 @@ function normalize_smartdns_dns_item(item) {
 		normalized.net = String(item.net || "ipv4");
 		return normalized;
 	}
-	if (proto == "dot") {
+	if (proto == "dot" || proto == "https") {
 		normalized.host = String(item.host || "");
 		normalized.host_ip = String(item.host_ip || "");
-		normalized.port = parseInt(item.port || 853, 10) || 853;
+		normalized.port = parseInt(item.port || (proto == "https" ? 443 : 853), 10) || (proto == "https" ? 443 : 853);
 		normalized.net = String(item.net || (normalized.host_ip.indexOf(":") !== -1 ? "ipv6" : "ipv4"));
-		if (!normalized.host || !normalized.host_ip) {
+		if (!normalized.host || !normalized.host_ip || (proto == "https" && !/^https:\/\/[^\s]+$/.test(normalized.host))) {
 			return null;
 		}
-		normalized.id = normalized.id || ("dot_" + normalized.host + "_" + normalized.host_ip + "_" + normalized.port);
+		normalized.id = normalized.id || (proto + "_" + normalized.host + "_" + normalized.host_ip + "_" + normalized.port);
 		return normalized;
 	}
 	normalized.addr = String(item.addr || "");
@@ -1279,7 +1279,7 @@ function smartdns_option_label(item) {
 		var ispLabel = ispAddr || item.provider;
 		return prefix + ispLabel + " - " + item.provider + (item.description ? " - " + item.description : "");
 	}
-	if (item.proto == "dot") {
+	if (item.proto == "dot" || item.proto == "https") {
 		var dotText = item.host + "@" + item.host_ip;
 		return prefix + dotText + " - " + item.provider + (item.description ? " - " + item.description : "");
 	}
@@ -1290,8 +1290,8 @@ function smartdns_chip_label(item) {
 		var ispAddr = item.slot == "2" ? (typeof isp_dns_2 != "undefined" ? isp_dns_2 : "") : (typeof isp_dns_1 != "undefined" ? isp_dns_1 : "");
 		return "udp: " + (ispAddr || item.provider);
 	}
-	if (item.proto == "dot") {
-		return "dot: " + item.host + "@" + item.host_ip;
+	if (item.proto == "dot" || item.proto == "https") {
+		return (item.proto == "https" ? "DoH: " : "dot: ") + item.host + "@" + item.host_ip;
 	}
 	return item.proto + ": " + item.addr;
 }
@@ -1437,6 +1437,9 @@ function init_smartdns_dns_ui() {
 	smartdns_register_isp_catalog();
 	smartdns_build_catalog_from_data("chn", china_dnsData);
 	smartdns_build_catalog_from_data("gfw", trust_dnsData);
+	["162.159.36.1", "162.159.46.1"].forEach(function(ip) {
+		smartdns_register_catalog_item("gfw", {id:"doh_cloudflare_"+ip, proto:"https", provider:"Cloudflare DoH", host:"https://cloudflare-dns.com/dns-query", host_ip:ip, port:443, net:"ipv4"});
+	});
 	render_smartdns_dns_selector("chn");
 	render_smartdns_dns_selector("gfw");
 	smartdnsDnsGroups.chn = decode_smartdns_dns_group("chn");
@@ -2039,6 +2042,7 @@ function is_shunt_supported_node(nodeId) {
 	case "4":
 	case "5":
 	case "8":
+	case "9": //fancyss-full
 		return true;
 	default:
 		return false;
@@ -15221,7 +15225,14 @@ function get_acl_current_node_type() {
 	return get_node_type(get_acl_current_node_id());
 }
 
+function shunt_uses_anytls() {
+	if (!current_mode_is_shunt()) return false;
+	var ids = [get_acl_current_node_id(), get_shunt_default_node_id()];
+	(shuntRulesState || []).forEach(function(rule) { if (String(rule.enabled) != "0") ids.push(rule.target_node_id); });
+	return ids.some(function(id) { return confs[id] && String(confs[id].type) == "9"; });
+}
 function acl_current_node_supports_udp() {
+	if (current_mode_is_shunt()) return true;
 	var nodeType = get_acl_current_node_type();
 	return nodeType != "6" && nodeType != "9";
 }
@@ -15712,6 +15723,13 @@ function sync_acl_checkbox_state_by_mode(udpId, quicId, mode) {
 		quicBox.checked = false;
 		sync_acl_checkbox_ui(udpId, "不通过代理时，udp将走本地网络直连", true);
 		sync_acl_checkbox_ui(quicId, "不通过代理时，quic流量将走本地网络直连", true);
+		return;
+	}
+	if (shunt_uses_anytls()) {
+		udpBox.checked = true;
+		quicBox.checked = false;
+		sync_acl_checkbox_ui(udpId, "由 Xray 按出站处理：AnyTLS 目标拒绝 UDP，DIRECT 保留 UDP", true);
+		sync_acl_checkbox_ui(quicId, "AnyTLS 的 QUIC 拒绝按目标生效，DIRECT 不受全局拦截", true);
 		return;
 	}
 	if (!acl_current_node_supports_udp()) {

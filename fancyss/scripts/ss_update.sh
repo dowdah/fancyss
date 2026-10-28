@@ -48,6 +48,10 @@ restart_websocketd_after_update(){
 }
 
 update_ss(){
+	if [ -f /koolshare/ss/fork-build.json ]; then
+		echo_date "当前为 AnyTLS 原生集成 fork，请安装该 fork 的匹配更新包；上游更新会覆盖补丁。节点订阅不受影响。"
+		return 1
+	fi
 	echo_date "更新过程中请不要刷新本页面或者关闭路由等，不然可能导致问题！"
 	echo_date "检查科学上网插件更新，使用主服务器：github"
 	echo_date "检测主服务器在线版本号..."

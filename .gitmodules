@@ -6,7 +6,7 @@
 	url = git@github1.com:hq450/xapi-tool.git
 [submodule "tool/node-tool"]
 	path = tool/node-tool
-	url = git@github1.com:hq450/node-tool.git
+	url = https://github.com/dowdah/node-tool.git
 [submodule "tool/sub-tool"]
 	path = tool/sub-tool
 	url = git@github1.com:hq450/sub-tool.git

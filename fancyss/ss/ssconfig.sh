@@ -945,11 +945,18 @@ get_tproxy_port6() {
 }
 
 proxy_core_supports_udp() {
+	# In shunt mode Xray routes UDP; individual AnyTLS targets reject it.
+	[ "${ss_basic_mode}" != 7 ] || return 0
 	case "${ss_basic_type}" in
 	6|9)
 		return 1
 		;;
 	esac
+	return 0
+}
+
+dns_proxy_supports_udp() {
+	case "${ss_basic_type}" in 6|9) return 1;; esac
 	return 0
 }
 
@@ -1239,6 +1246,8 @@ restore_conf() {
 }
 
 kill_process() {
+	fss_require_shunt_lib >/dev/null 2>&1 || true
+	fss_shunt_stop_runtime_artifact_helpers || return 1
 	local v2ray_process=$(pidof v2ray)
 	if [ -n "$v2ray_process" ]; then
 		echo_date "关闭V2Ray进程..."
@@ -1325,7 +1334,7 @@ kill_process() {
 	fi
 
 	local ANYTLS_PID=$(ps | grep "anytls-zig" | grep -v grep | awk '{print $1}')
-	if [ -n "${ANYTLS_PID}" ];then
+	if [ -n "${ANYTLS_PID}" ] && [ "${ss_basic_mode}" != 7 ];then
 		echo_date "关闭anytls-zig进程..."
 		killall anytls-zig
 	fi
@@ -1344,6 +1353,8 @@ kill_process() {
 }
 
 shunt_hot_restart_eligible() {
+	fss_require_shunt_lib >/dev/null 2>&1 || return 1
+	fss_shunt_has_anytls && return 1
 	[ "${ss_basic_status}" = "1" ] || return 1
 	[ "${ss_basic_mode}" = "7" ] || return 1
 	[ "${ss_basic_shunt_hot_reload}" = "1" ] || return 1
@@ -1558,7 +1569,7 @@ start_dns_x(){
 		fi
 	fi
 	[ -n "${special_dns_hint}" ] && echo_date "${special_dns_hint}"
-	if ! proxy_core_supports_udp;then
+	if ! dns_proxy_supports_udp;then
 		local trust_udp_fallback=""
 		local n=""
 		if [ "${dns_plan_runtime}" = "1" ];then
@@ -1691,14 +1702,17 @@ smartdns_append_server_line() {
 	dot)
 		line="server-tls ${host}"
 		;;
+	https)
+		line="server-https ${host}"
+		;;
 	*)
 		return 0
 		;;
 	esac
 	[ -n "${extras}" ] && line="${line} ${extras}"
-	if [ "${proto}" = "dot" ];then
+	if [ "${proto}" = "dot" ] || [ "${proto}" = "https" ];then
 		line="${line} -host-ip ${host_ip}"
-		if [ -n "${port}" ] && [ "${port}" != "853" ];then
+		if [ -n "${port}" ] && [ "${port}" != "853" ] && [ "${port}" != "443" ];then
 			line="${line} -port ${port}"
 		fi
 	fi
@@ -1719,7 +1733,7 @@ smartdns_append_group_servers() {
 	[ "${group}" = "gfw" ] && use_proxy="1"
 	while IFS="${sep}" read -r id proto provider description kind slot addr port host host_ip isp net
 	do
-		if [ "${group}" = "gfw" ] && ! proxy_core_supports_udp && [ "${proto}" = "udp" ];then
+		if [ "${group}" = "gfw" ] && ! dns_proxy_supports_udp && [ "${proto}" = "udp" ];then
 			skip_udp_count=$((skip_udp_count + 1))
 			continue
 		fi
@@ -1737,7 +1751,7 @@ smartdns_append_group_servers() {
 	done <<-EOF
 $(smartdns_group_items_tsv "${group}")
 EOF
-	if [ "${group}" = "gfw" ] && ! proxy_core_supports_udp;then
+	if [ "${group}" = "gfw" ] && ! dns_proxy_supports_udp;then
 		if [ "${skip_udp_count}" -gt 0 ];then
 			echo_date "⚠️smartdns ${scope}：已跳过 ${skip_udp_count} 个 gfw 组 UDP DNS。"
 		fi
@@ -1882,6 +1896,12 @@ EOF
 		smartdns_append_airport_dns_ipv6_lines
 		;;
 	esac
+	# Explicit proxy policy must win over broader China/DIRECT AAAA exceptions.
+	# Otherwise Graph can resolve IPv6 through chnlist and bypass IPv4 TPROXY.
+	cat >> "${outfile}" <<-'EOF'
+address /domain-set:black_list/#6
+address /domain-set:shunt_proxy/#6
+EOF
 }
 
 smartdns_generate_runtime_conf() {
@@ -2451,10 +2471,10 @@ start_chinadns_ng(){
 		fi
 	fi
 
-	if ! proxy_core_supports_udp && [ "${FDNS_SKIPPED_UDP_COUNT}" -gt 0 ];then
+	if ! dns_proxy_supports_udp && [ "${FDNS_SKIPPED_UDP_COUNT}" -gt 0 ];then
 		echo_date "⚠️chinadns-ng：已跳过 ${FDNS_SKIPPED_UDP_COUNT} 个可信 UDP DNS。"
 	fi
-	if ! proxy_core_supports_udp && [ -z "${FDNS_1}${FDNS_2}${FDNS_3}" ];then
+	if ! dns_proxy_supports_udp && [ -z "${FDNS_1}${FDNS_2}${FDNS_3}" ];then
 		FDNS_1="tcp://8.8.8.8"
 		echo_date "⚠️chinadns-ng：可信组没有可用 TCP/DoT DNS，已使用 tcp://8.8.8.8 兜底。"
 	fi
@@ -2907,11 +2927,11 @@ iter_dns_udp_relay_targets(){
 		do
 			local chk="$(eval echo \$ss_basic_chng_trust_dns_${numb}_chk)"
 			local net="$(get_dns_selected_net trust "${numb}")"
-			if [ "${chk}" = "1" ] && [ "${net}" = "udp" ] && proxy_core_supports_udp;then
+			if [ "${chk}" = "1" ] && [ "${net}" = "udp" ] && dns_proxy_supports_udp;then
 				printf '%s\037%s\037%s\037%s\037%s\n' "$((SMARTDNS_RELAY_PORT_BASE + numb - 1))" "$(get_dns_para trust "${numb}" addr)" "$(get_dns_para trust "${numb}" port)" "chinadns-ng trust DNS ${numb}" ""
 			fi
 		done
-	elif [ "${ss_basic_dns_plan}" = "2" ] && proxy_core_supports_udp;then
+	elif [ "${ss_basic_dns_plan}" = "2" ] && dns_proxy_supports_udp;then
 		smartdns_iter_gfw_udp_relays
 	fi
 }
@@ -3054,7 +3074,7 @@ get_dns(){
 	local dns_opt=$(eval echo \$ss_basic_chng_${type}_${net}_${numb}_opt)
 	local dns_usr=$(eval echo \$ss_basic_chng_${type}_${net}_${numb}_usr)
 
-	if [ "${type}" = "trust" ] && ! proxy_core_supports_udp && [ "${net}" = "udp" ];then
+	if [ "${type}" = "trust" ] && ! dns_proxy_supports_udp && [ "${net}" = "udp" ];then
 		return 0
 	fi
 
@@ -5595,6 +5615,10 @@ get_acl_udp_flag() {
 	local acl="$1"
 	local proxy_mode="$2"
 	local udp_flag=""
+	if [ "${ss_basic_mode}" = 7 ] && fss_shunt_has_anytls; then
+		[ "${proxy_mode}" = 0 ] && echo 0 || echo 1
+		return
+	fi
 	if ! acl_proxy_supports_udp; then
 		if [ "${proxy_mode}" != "0" ]; then
 			note_acl_udp_unsupported_once
@@ -5630,6 +5654,8 @@ get_acl_quic_flag() {
 	local proxy_mode="$2"
 	local udp_flag="$3"
 	local quic_flag=""
+	# Preserve DIRECT UDP/443: AnyTLS rejection is attached to Xray targets.
+	if [ "${ss_basic_mode}" = 7 ] && fss_shunt_has_anytls; then echo 0; return; fi
 	if [ -n "${acl}" ];then
 		eval quic_flag=\$ss_acl_quic_${acl}
 	else
@@ -7182,6 +7208,24 @@ apply_ss() {
 	local shunt_hot_restart="0"
 	local shunt_prev_xray_json=""
 
+	fss_require_base_dns || return 1
+	fss_require_shunt_lib || return 1
+	local airport_ids="/tmp/fss_airport_start_ids.$$"
+	{
+		fss_get_current_node_id
+		if [ "${ss_basic_mode}" = 7 ]; then
+			fss_shunt_get_default_node_id
+			fss_shunt_get_effective_default_target
+			fss_shunt_rules_json_resolved | jq -r '.[]?|select((.enabled//1|tostring)!="0")|.target_node_id//empty'
+		fi
+	} | awk '/^[0-9]+$/' | sort -u > "${airport_ids}"
+	if ! fss_airport_bootstrap_sync --ids-file "${airport_ids}"; then
+		rm -f "${airport_ids}"
+		echo_date 'AIRPORT_DNS_PREFLIGHT_FAILED：保留现有运行实例，未执行切换。'
+		return 1
+	fi
+	rm -f "${airport_ids}"
+
 	echo_date ======================= 梅林固件 - 【科学上网】 ========================
 	echo_date
 	if [ "${ss_basic_status}" == "1" ];then
@@ -7237,6 +7281,13 @@ apply_ss() {
 		start_dns_x
 		if ! refresh_current_node_server_ip_runtime; then
 			echo_date "节点服务器域名运行时解析失败，将继续启动代理主程序，并等待客户端后续自行解析。"
+		fi
+	fi
+
+	if [ "${ss_basic_mode}" = 7 ]; then
+		if ! fss_shunt_start_runtime_artifact_helpers "${FSS_SHUNT_RUNTIME_DIR}/cache_ids.txt"; then
+			echo_date 'ANYTLS_HELPER_NOT_READY：拒绝启动不完整的分流配置。'
+			close_in_five flag
 		fi
 	fi
 

@@ -66,6 +66,7 @@ GET_FW_VER(){
 }
 
 GET_PROXY_TOOL(){
+	[ "${ss_basic_mode}" != 7 ] || { echo "xray-core (native shunt helpers)"; return; }
 	case "$(GET_CURRENT_NODE_TYPE_ID)" in
 	0)
 		echo "xray-core"
@@ -613,12 +614,25 @@ GET_PROG_STAT(){
 	local WEBSOCKETD_RSS=""
 	local WEBSOCKETD_UPTIME=""
 	echo
+	[ ! -f /koolshare/ss/fork-build.json ] || jq -r '"Fork build: " + .build' /koolshare/ss/fork-build.json
 	echo "1️⃣ 检测当前相关进程工作状态："
 	echo "--------------------------------------------------------------------------------------------------------"
 	echo "程序		状态		作用		PID		内存		运行时长"
 
 	# proxy core program
-if [ "${current_type}" == "1" ]; then
+	if [ "${ss_basic_mode}" = 7 ]; then
+		local node_id="" pid="" meta="" port=""
+		pid="$(pidof xray)"
+		[ -z "${pid}" ] && printf 'Xray\t未运行🔴\n' || printf 'Xray\t运行中🟢\t分流\t%s\t%s\n' "${pid}" "$(GET_VM_RSS_MULTI ${pid})"
+		for meta in /tmp/fancyss_shunt/runtime_artifacts/meta/*.meta; do
+			[ -f "${meta}" ] || continue
+			grep -q "^node_type=9$" "${meta}" || continue
+			node_id="${meta##*/}"; node_id="${node_id%.meta}"
+			port="$(sed -n "s/^start_port=//p" "${meta}")"
+			pid="$(/bin/sh /koolshare/scripts/ss_anytls_helper.sh status /tmp/fancyss_shunt/runtime_artifacts/nodes/${node_id}_anytls.pid /tmp/fancyss_shunt/runtime_artifacts/nodes/${node_id}_anytls.pass 127.0.0.1:${port})"
+			[ -z "${pid}" ] && printf 'AnyTLS %s\t未就绪🔴\n' "${node_id}" || printf 'AnyTLS %s\t运行中🟢\tSOCKS\t%s\t%s\n' "${node_id}" "${pid}" "$(GET_VM_RSS_MULTI ${pid})"
+		done
+	elif [ "${current_type}" == "1" ]; then
 		# ssr
 		local SSR_REDIR_PID=$(pidof rss-redir)
 		local SSR_REDIR_RSS=$(GET_VM_RSS_MULTI ${SSR_REDIR_PID})

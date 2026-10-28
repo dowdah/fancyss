@@ -2036,6 +2036,14 @@ install_now(){
 	dbus set softcenter_module_${module}_title="${TITLE_NEW}"
 	dbus set softcenter_module_${module}_description="${DESCR}"
 	
+	# Existing independent airport DoH must be ready before proxy restart.
+	if [ -x /koolshare/scripts/ss_airport_dns_install.sh ]; then
+		/bin/sh /koolshare/scripts/ss_airport_dns_install.sh || {
+			echo_date "AIRPORT_DNS_INSTALL_FAILED：未启动代理，请检查机场 DNS 或恢复备份。"
+			exit 1
+		}
+	fi
+
 	# finish
 	echo_date "${TITLE_NEW}插件安装安装成功！"
 

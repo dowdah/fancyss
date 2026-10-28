@@ -1333,11 +1333,8 @@ kill_process() {
 		killall tuic-client
 	fi
 
-	local ANYTLS_PID=$(ps | grep "anytls-zig" | grep -v grep | awk '{print $1}')
-	if [ -n "${ANYTLS_PID}" ] && [ "${ss_basic_mode}" != 7 ];then
-		echo_date "关闭anytls-zig进程..."
-		killall anytls-zig
-	fi
+	# Only stop the single-node instance owned by this plugin.
+	/bin/sh /koolshare/scripts/ss_anytls_helper.sh stop /tmp/fss_anytls_single.pid /tmp/anytls_pass 127.0.0.1:23456
 
 	local OBFSLOCAL_PID=$(ps | grep "obfs-local" | grep -v grep | awk '{print $1}')
 	if [ -n "${OBFSLOCAL_PID}" ];then
@@ -5169,27 +5166,8 @@ start_anytls(){
 	local pass_file="/tmp/anytls_pass"
 	local verify_arg=""
 
-	if [ -f "/koolshare/bin/anytls-zig" ];then
-		chmod +x /koolshare/bin/anytls-zig
-		ret=$(run /koolshare/bin/anytls-zig --version 2>&1)
-		if [ -z "${ret}" ];then
-			echo_date "检测到/koolshare/bin/目录下存在anytls-zig文件，但是无法运行！"
-			echo_date "请确保你下载了正确的二进制文件！"
-			close_in_five flag
-		fi
-	else
-		local pkg_arch=$(cat /koolshare/webs/Module_shadowsocks.asp | tr -d '\r' | grep -Eo "PKG_ARCH=.+"|awk -F "=" '{print $2}'|sed 's/"//g')
-		echo_date ""
-		echo_date "+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
-		echo_date ""
-		echo_date "重要提醒！！"
-		echo_date ""
-		echo_date "检测到你需要使用AnyTLS！但是当前/koolshare/bin目录下缺少anytls-zig二进制文件！"
-		echo_date "请安装fancyss full版本，或确认对应平台的anytls-zig已经正确安装。"
-		echo_date "当前平台：${pkg_arch}"
-		echo_date ""
-		echo_date "+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
-		echo_date ""
+	if ! /koolshare/bin/fss-anytls-client --version >/dev/null 2>&1; then
+		echo_date "AnyTLS 并发客户端缺失或无法运行，请安装对应平台的 fork 包。"
 		close_in_five flag
 	fi
 
@@ -5204,7 +5182,8 @@ start_anytls(){
 	}
 
 	server_addr="$(anytls_hostport "${ss_basic_anytls_server}" "${ss_basic_anytls_port}")"
-	printf '%s' "${ss_basic_anytls_pass}" > "${pass_file}"
+	(umask 077; printf '%s' "${ss_basic_anytls_pass}" > "${pass_file}")
+	chmod 600 "${pass_file}"
 	if [ "${ss_basic_anytls_ai}" = "1" ]; then
 		verify_arg="--insecure"
 	else
@@ -5216,12 +5195,11 @@ start_anytls(){
 	detect_running_status2 ipt2socks 23456
 
 	echo_date "开启AnyTLS客户端进程..."
-	if [ -n "${ss_basic_anytls_sni}" ]; then
-		run_bg /koolshare/bin/anytls-zig -server "${server_addr}" --password-file "${pass_file}" -l 127.0.0.1:23456 -sni "${ss_basic_anytls_sni}" "${verify_arg}"
-	else
-		run_bg /koolshare/bin/anytls-zig -server "${server_addr}" --password-file "${pass_file}" -l 127.0.0.1:23456 "${verify_arg}"
-	fi
-	detect_running_status3 anytls-zig 23456 1 force
+	/bin/sh /koolshare/scripts/ss_anytls_helper.sh start /tmp/fss_anytls_single.pid "${pass_file}" 127.0.0.1:23456 "${server_addr}" "${ss_basic_anytls_sni}" "${verify_arg}" || {
+		echo_date "AnyTLS 客户端启动失败。"
+		close_in_five flag
+	}
+
 }
 
 write_cron_job() {
@@ -7048,7 +7026,7 @@ detect_ip(){
 		local IP=$(run curl-fancyss ${CURL_IP_FLAG} -s -m ${TIMEOUT} ${SUBJECT} 2>&1 | grep -Eo "([0-9]{1,3}[\.]){3}[0-9]{1,3}" | grep -v "Terminated")
 	elif [ "${METHOD}" == "1" ];then
 		# 检测代理ip
-		local SOCKS5_OPEN=$(netstat -nlpt 2>/dev/null|grep -w "23456"|grep -Eo "v2ray|xray|naive|tuic|anytls-zig")
+		local SOCKS5_OPEN=$(netstat -nlpt 2>/dev/null|grep -w "23456"|grep -Eo "v2ray|xray|naive|tuic|fss-anytls-clie|anytls-zig")
 		if [ -n "${SOCKS5_OPEN}" ];then
 			local IP=$(run curl-fancyss ${CURL_IP_FLAG} -s -x socks5h://127.0.0.1:23456 -m ${TIMEOUT} ${SUBJECT} 2>&1 | grep -v "Terminated")
 		else
@@ -7063,7 +7041,7 @@ detect_ip(){
 check_frn_public_ip(){
 	echo_date "开始代理出口ip检测..."
 
-	local SOCKS5_OPEN=$(netstat -nlp 2>/dev/null | grep -w "23456" | grep -Eo "v2ray|xray|naive|tuic|anytls-zig" | head -n1)
+	local SOCKS5_OPEN=$(netstat -nlp 2>/dev/null | grep -w "23456" | grep -Eo "v2ray|xray|naive|tuic|fss-anytls-clie|anytls-zig" | head -n1)
 	if [ -n "${SOCKS5_OPEN}" ];then
 		echo_date "检测方式1：socks5"
 	else
@@ -7512,7 +7490,7 @@ flush_nat)
 		;;
 start_nat)
 	# start on nat-start
-	SOCKS5_OPEN=$(netstat -nlpt 2>/dev/null|grep -w "23456"|grep -Eo "v2ray|xray|naive|tuic|anytls-zig")
+	SOCKS5_OPEN=$(netstat -nlpt 2>/dev/null|grep -w "23456"|grep -Eo "v2ray|xray|naive|tuic|fss-anytls-clie|anytls-zig")
 	if [ -z "${SOCKS5_OPEN}" ];then
 		# 代理程序没有运行，可能是刚开机，不继续
 		return 0

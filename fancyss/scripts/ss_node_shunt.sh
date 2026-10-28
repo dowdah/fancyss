@@ -229,7 +229,8 @@ fss_shunt_geodata_ready() {
 }
 
 fss_shunt_xray_asset_dir() {
-	fss_shunt_geodata_ready || return 1
+	# Text custom rules still use native CN geodata for transparent domestic routing.
+	fss_shunt_dat_store_ready || return 1
 	printf '%s\n' "${FSS_SHUNT_DAT_DIR}"
 }
 
@@ -945,7 +946,7 @@ fss_shunt_runtime_key() {
 	node_config_ts="$(fss_get_node_config_ts)"
 	printf '%s' "${node_config_ts}" | grep -Eq '^[0-9]+$' || node_config_ts="0"
 	ingress_mode="$(fss_shunt_runtime_mode)"
-	printf '%s|%s|%s\n' "${ingress_mode}" "${rule_ts}" "${node_config_ts}"
+	printf 'native2|%s|%s|%s\n' "${ingress_mode}" "${rule_ts}" "${node_config_ts}"
 }
 
 fss_shunt_runtime_meta_get() {
@@ -1166,6 +1167,8 @@ fss_shunt_rebuild_proxy_domains() {
 	fi
 	awk -F'|' '
 	{
+		# Domestic DIRECT uses domestic DNS; other DIRECT rules (recording bodies) retain trusted DNS.
+		if ($2 == "DIRECT" && $4 == "builtin" && $5 == "chnlist") next
 		file = $3
 		if (file == "") next
 		while ((getline line < file) > 0) {
@@ -1275,7 +1278,7 @@ fss_shunt_prepare_runtime() {
 		ip_file="${FSS_SHUNT_RUNTIME_RULE_DIR}/${rule_id}.ips"
 		geoip_file="${FSS_SHUNT_RUNTIME_RULE_DIR}/${rule_id}.geoips"
 		rm -f "${domain_file}" "${ip_file}" "${geoip_file}" >/dev/null 2>&1
-		count="$(fss_shunt_materialize_rule_domains "${source_type}" "${preset}" "${custom_b64}" "${domain_file}" "${proxy_tmp}" 2>/dev/null)"
+		count="$(fss_shunt_materialize_rule_domains "${source_type}" "${preset}" "${custom_b64}" "${domain_file}" "${tmp_dir}/rule-proxy.txt" 2>/dev/null)"
 		[ -n "${count}" ] || count=0
 		if [ "${count}" -le 0 ] 2>/dev/null; then
 			rm -f "${domain_file}" "${ip_file}" "${geoip_file}" >/dev/null 2>&1
@@ -1311,9 +1314,8 @@ fss_shunt_prepare_runtime() {
 		mv -f "${active_tmp}.keep" "${active_tmp}"
 		rebuild_runtime_lists=1
 	fi
-	if [ "${rebuild_runtime_lists}" = "1" ]; then
-		fss_shunt_rebuild_proxy_domains "${active_tmp}" "${proxy_tmp}"
-	fi
+	# Rebuild once from all retained rules, after per-rule materialization and limits.
+	fss_shunt_rebuild_proxy_domains "${active_tmp}" "${proxy_tmp}"
 	if [ -s "${proxy_tmp}" ]; then
 		sort -u "${proxy_tmp}" > "${FSS_SHUNT_RUNTIME_PROXY_FILE}" 2>/dev/null
 	else
@@ -1539,6 +1541,64 @@ fss_shunt_make_rule_tag() {
 	[ -n "${rule_id}" ] || return 1
 	[ -n "${suffix}" ] || return 1
 	printf 'fss_%s_%s\n' "${rule_id}" "${suffix}"
+}
+
+fss_shunt_emit_native_policy() {
+	# Use persistent explicit lists, never the merged DNS black list: the latter
+	# also contains DIRECT recording hosts and custom per-node routing rules.
+	local work="$1" current_tag="$2" kind="" encoded="" target=""
+	local field="" key="" values=""
+	: > "${work}/native-policy.jsonl"
+	for kind in black white; do
+		if [ "${kind}" = black ]; then target="${current_tag}"; else target=direct; fi
+		for field in domain ip; do
+			key="ss_wan_${kind}_${field}"
+			encoded="$(dbus get "${key}")"
+			: > "${work}/native-values"
+			if [ "${field}" = domain ]; then
+				fss_b64_decode "${encoded}" | awk '{sub(/#.*/, ""); for(i=1;i<=NF;i++) print $i}' |
+					fss_shunt_custom_domain_to_tokens "${work}/native-values" "${work}/native-dns"
+			else
+				fss_b64_decode "${encoded}" | fss_shunt_custom_ip_to_tokens "${work}/native-values"
+			fi
+			values="$(fss_shunt_json_array_from_file "${work}/native-values" '')"
+			[ -n "${values}" ] && [ "${values}" != '[]' ] || continue
+			jq -cn --arg field "${field}" --arg tag "${target}" --arg kind "${kind}" --argjson values "${values}" \
+				'{type:"field",ruleTag:("fss_native_"+$kind+"_"+$field),($field):$values,outboundTag:$tag}' >> "${work}/native-policy.jsonl" || return 1
+		done
+	done
+	jq -s . "${work}/native-policy.jsonl"
+}
+
+fss_shunt_apply_native_policy() {
+	local file="$1" current_tag="$2" work="${file}.policy" domestic=false
+	mkdir -p "${work}" || return 1
+	fss_shunt_emit_native_policy "${work}" "${current_tag}" > "${work}/explicit.json" || { rm -rf "${work}"; return 1; }
+	# Mainland white-list ingress is 2; ingress 5 intentionally proxies all.
+	if [ "$(fss_shunt_runtime_mode)" = 2 ]; then
+		[ -s "${FSS_SHUNT_GEOSITE_FILE}" ] && [ -s "${FSS_SHUNT_GEOIP_FILE}" ] || { rm -rf "${work}"; return 1; }
+		domestic=true
+	fi
+	# Keep service ingress rules ahead of transparent routing. Extract only the
+	# configured recording host tokens, rather than moving an entire user rule.
+	jq --slurpfile explicit "${work}/explicit.json" --argjson domestic "${domestic}" \
+		--arg site "geosite:CN" --arg ip "geoip:CN" \
+		--arg private "geoip:PRIVATE" '
+		["full:my.microsoftpersonalcontent.com","domain:up.1drv.com","domain:files.1drv.com","domain:livefilestore.com","domain:mediap.svc.ms"] as $bodies |
+		.routing.rules as $r |
+		([$r[] | select(.outboundTag=="direct" and .domain!=null) | .domain[] | select(. as $d | $bodies|index($d))] | unique) as $bodyDomains |
+		.routing.rules =
+		([$r[] | select(.inboundTag!=null)] +
+		 (if ($bodyDomains|length)>0 then [{type:"field",ruleTag:"fss_recording_body",domain:$bodyDomains,outboundTag:"direct"}] else [] end) +
+		 $explicit[0] +
+		 [$r[] | select(.inboundTag==null and .ruleTag!="fss_default")] +
+		 (if $domestic then [{type:"field",ruleTag:"fss_native_cn_domain",domain:[$site],outboundTag:"direct"},
+		 {type:"field",ruleTag:"fss_native_cn_ip",ip:[$ip,$private],outboundTag:"direct"}] else [] end) +
+		 [$r[] | select(.ruleTag=="fss_default")])
+	' "${file}" > "${work}/result.json" && mv "${work}/result.json" "${file}"
+	local result=$?
+	rm -rf "${work}"
+	return "${result}"
 }
 
 fss_shunt_emit_routing_rules_json() {
@@ -1809,7 +1869,7 @@ fss_shunt_stop_runtime_artifact_helpers() {
 	for stop_script in "${FSS_SHUNT_RUNTIME_ARTIFACT_DIR}"/nodes/*_stop.sh
 	do
 		[ -x "${stop_script}" ] || continue
-		sh "${stop_script}" >/dev/null 2>&1 || failed=1
+		/bin/sh "${stop_script}" >/dev/null 2>&1 || failed=1
 	done
 	return "${failed}"
 }
@@ -1836,7 +1896,7 @@ fss_shunt_start_runtime_helpers() {
 		has_start="$(sed -n 's/^has_start=//p' "${meta_file}" | sed -n '1p')"
 		[ "${has_start}" = "1" ] || continue
 		[ -x "${start_script}" ] || return 1
-		if ! sh "${start_script}" >/dev/null 2>&1; then
+		if ! /bin/sh "${start_script}" >/dev/null 2>&1; then
 			fss_shunt_state_failed "helper_start" "${ids_file}" "节点 ${node_id} 辅助进程未就绪。"
 			fss_shunt_stop_runtime_artifact_helpers
 			return 1
@@ -2195,6 +2255,7 @@ EOF2
 	}
 EOF2
 	rm -f "${route_rules_file}" >/dev/null 2>&1
+	fss_shunt_apply_native_policy "${tmp_file}" "${current_tag}" || { rm -f "${tmp_file}"; return 1; }
 	if ! jq --argjson ids "$(while IFS= read -r node; do [ "$(fss_get_node_field_plain "${node}" type)" != 9 ] || printf '"proxy%s"\n' "${node}"; done < "${FSS_SHUNT_RUNTIME_DIR}/cache_ids.txt" | jq -s .)" '
 		.routing.rules |= map(. as $r | if ($ids|index($r.outboundTag)) != null then
 			[($r + {network:"udp",outboundTag:"reject"} | del(.ruleTag)), $r] else [$r] end) | .routing.rules |= add

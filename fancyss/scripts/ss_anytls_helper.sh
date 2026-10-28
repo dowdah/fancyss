@@ -10,7 +10,7 @@ listen=$4
 server=$5
 sni=$6
 verify=$7
-binary=${FSS_ANYTLS_BINARY:-/koolshare/bin/anytls-zig}
+binary=${FSS_ANYTLS_BINARY:-/koolshare/bin/fss-anytls-client}
 proc=${FSS_PROC_ROOT:-/proc}
 
 ticks() { sed 's/^.*) //' "$proc/$1/stat" 2>/dev/null | awk '{print $20}'; }
@@ -18,7 +18,11 @@ owned() {
     read -r instance_pid instance_ticks 2>/dev/null < "$pidfile" || return 1
     case "$instance_pid:$instance_ticks" in *[!0-9:]*|:*|*:) return 1;; esac
     [ -n "$instance_ticks" ] && [ "$(ticks "$instance_pid")" = "$instance_ticks" ] || return 1
-    [ "$(readlink "$proc/$instance_pid/exe" 2>/dev/null)" = "$(readlink -f "$binary")" ] || return 1
+    instance_binary=$(readlink "$proc/$instance_pid/exe" 2>/dev/null)
+    case "$instance_binary" in
+        /koolshare/bin/anytls-zig|/koolshare/bin/fss-anytls-client) ;;
+        *) [ "$instance_binary" = "$(readlink -f "$binary")" ] || return 1;;
+    esac
     tr '\000' '\n' < "$proc/$instance_pid/cmdline" | grep -Fqx -- "$passfile" || return 1
     tr '\000' '\n' < "$proc/$instance_pid/cmdline" | grep -Fqx -- "$listen" || return 1
 }
@@ -37,7 +41,8 @@ stop_owned() {
 quote() { printf "'%s'" "$(printf '%s' "$1" | sed "s/'/'\\\\''/g")"; }
 service_name=
 case "$pidfile" in
-*/runtime_artifacts/nodes/*_anytls.pid)
+ /tmp/fss_anytls_single.pid) service_name=fss-anytls-single;;
+/tmp/fancyss_shunt/runtime_artifacts/nodes/*_anytls.pid)
     node=${pidfile##*/}; node=${node%_anytls.pid}
     case "$node" in ''|*[!0-9]*) exit 1;; esac
     service_name="fss-anytls-$node"
@@ -71,8 +76,8 @@ start)
     [ -x "$binary" ] && [ -s "$passfile" ] || exit 1
     case "$listen" in 127.0.0.1:[0-9]*) ;; *) exit 1;; esac
     case "$verify" in --verify|--insecure) ;; *) exit 1;; esac
-    if owned && listening; then exit 0; fi
-    [ ! -s "$pidfile" ] || stop_owned || exit 1
+    if owned && listening && [ "$instance_binary" = "$(readlink -f "$binary")" ]; then exit 0; fi
+    [ ! -s "$pidfile" ] || stop_instance || exit 1
     # Fail on occupied port; bind success must later belong to our exact PID.
     port=${listen##*:}
     netstat -nl 2>/dev/null | awk -v p=":$port" '$4 ~ p"$" {used=1} END {exit !used}' && exit 1
@@ -109,6 +114,10 @@ stop)
 status)
     owned && listening || exit 1
     printf '%s\n' "$instance_pid"
+    ;;
+engine)
+    owned && listening || exit 1
+    "$instance_binary" --version
     ;;
 *) exit 2;;
 esac

@@ -12,8 +12,11 @@ class ShuntTests(unittest.TestCase):
             p=pathlib.Path(d);(p/'outbounds').mkdir();(p/'cache_ids.txt').write_text('1\n2\n')
             for id,protocol in [('1','socks'),('2','vless')]:
                 (p/'outbounds'/f'{id}_outbounds.json').write_text(json.dumps({'tag':'proxy'+id,'protocol':protocol,'settings':{}}))
-            program='\n'.join(function(x) for x in ['fss_shunt_emit_outbounds_json','fss_shunt_build_xray_config'])
+            program='\n'.join(function(x) for x in ['fss_shunt_emit_outbounds_json','fss_shunt_custom_domain_to_tokens','fss_shunt_custom_ip_to_tokens','fss_shunt_json_array_from_file','fss_shunt_emit_native_policy','fss_shunt_apply_native_policy','fss_shunt_build_xray_config'])
             program+='''
+dbus() { :; }
+fss_b64_decode() { :; }
+fss_shunt_runtime_mode() { echo 2; }
 fss_shunt_mode_selected() { return 0; }
 fss_shunt_validate_current_node() { return 0; }
 fss_shunt_prepare_runtime() { return 0; }
@@ -29,7 +32,8 @@ fss_get_node_field_plain() { if [ "$1" = 1 ]; then echo 9; else echo 4; fi; }
 fss_shunt_log() { :; }
 fss_shunt_emit_routing_rules_json() { echo '{"type":"field","domain":["full:body.invalid"],"outboundTag":"direct"}, {"type":"field","domain":["full:vless.invalid"],"outboundTag":"proxy2"}'; }
 '''
-            program+=f'FSS_SHUNT_RUNTIME_DIR={d}\nFSS_SHUNT_RUNTIME_OUTBOUND_DIR={d}/outbounds\nFSS_SHUNT_RUNTIME_TARGET_FILE={d}/targets\nfss_shunt_build_xray_config {d}/xray.json 1\n'
+            (p/'site').write_text('fixture');(p/'ip').write_text('fixture')
+            program+=f'FSS_SHUNT_GEOSITE_FILE={p}/site\nFSS_SHUNT_GEOIP_FILE={p}/ip\nFSS_SHUNT_RUNTIME_DIR={d}\nFSS_SHUNT_RUNTIME_OUTBOUND_DIR={d}/outbounds\nFSS_SHUNT_RUNTIME_TARGET_FILE={d}/targets\nfss_shunt_build_xray_config {d}/xray.json 1\n'
             r=subprocess.run(['/bin/bash'],input=program,text=True,capture_output=True)
             self.assertEqual(r.returncode,0,r.stderr)
             rules=json.loads((p/'xray.json').read_text())['routing']['rules']
@@ -39,6 +43,10 @@ fss_shunt_emit_routing_rules_json() { echo '{"type":"field","domain":["full:body
             self.assertFalse(any(x.get('outboundTag')=='reject' and 'full:vless.invalid' in x.get('domain',[]) for x in rules))
             self.assertEqual(rules[-2]['network'],'udp');self.assertEqual(rules[-2]['outboundTag'],'reject')
             self.assertEqual(rules[-1]['outboundTag'],'proxy1')
+            cn=[(i,r) for i,r in enumerate(rules) if r.get('ruleTag','').startswith('fss_native_cn_')]
+            self.assertEqual(len(cn),2)
+            self.assertTrue(all(r['outboundTag']=='direct' and i<len(rules)-2 for i,r in cn))
+            self.assertFalse(any(r.get('outboundTag')=='reject' and ('geosite:CN' in r.get('domain',[]) or 'geoip:CN' in r.get('ip',[])) for r in rules))
     def test_helper_failure_is_propagated(self):
         with tempfile.TemporaryDirectory() as d:
             p=pathlib.Path(d);(p/'ids').write_text('1\n');(p/'1.meta').write_text('has_start=1\n')

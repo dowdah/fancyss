@@ -97,7 +97,7 @@ GET_PROXY_TOOL(){
 		echo "xray-core"
 		;;
 	9)
-		echo "anytls-zig"
+		echo "fss-anytls-client"
 		;;
 	esac
 }
@@ -631,6 +631,7 @@ GET_PROG_STAT(){
 			port="$(sed -n "s/^start_port=//p" "${meta}")"
 			pid="$(/bin/sh /koolshare/scripts/ss_anytls_helper.sh status /tmp/fancyss_shunt/runtime_artifacts/nodes/${node_id}_anytls.pid /tmp/fancyss_shunt/runtime_artifacts/nodes/${node_id}_anytls.pass 127.0.0.1:${port})"
 			[ -z "${pid}" ] && printf 'AnyTLS %s\t未就绪🔴\n' "${node_id}" || printf 'AnyTLS %s\t运行中🟢\tSOCKS\t%s\t%s\n' "${node_id}" "${pid}" "$(GET_VM_RSS_MULTI ${pid})"
+			[ -z "${pid}" ] || /bin/sh /koolshare/scripts/ss_anytls_helper.sh engine /tmp/fancyss_shunt/runtime_artifacts/nodes/${node_id}_anytls.pid /tmp/fancyss_shunt/runtime_artifacts/nodes/${node_id}_anytls.pass 127.0.0.1:${port}
 		done
 	elif [ "${current_type}" == "1" ]; then
 		# ssr
@@ -664,13 +665,13 @@ GET_PROG_STAT(){
 			fi
 		fi
 	elif [ "${current_type}" == "9" ]; then
-		local ANYTLS_PID=$(pidof anytls-zig)
+		local ANYTLS_PID=$(/bin/sh /koolshare/scripts/ss_anytls_helper.sh status /tmp/fss_anytls_single.pid /tmp/anytls_pass 127.0.0.1:23456)
 		local ANYTLS_RSS=$(GET_VM_RSS_MULTI ${ANYTLS_PID})
 		local ANYTLS_UPTIME=$(GET_PROC_UPTIME_MULTI ${ANYTLS_PID})
 		if [ -n "${ANYTLS_PID}" ]; then
-			echo "anytls-zig	运行中🟢		socks5		${ANYTLS_PID}		${ANYTLS_RSS}		${ANYTLS_UPTIME}"
+			echo "fss-anytls-client	运行中🟢		socks5		${ANYTLS_PID}		${ANYTLS_RSS}		${ANYTLS_UPTIME}"
 		else
-			echo "anytls-zig	未运行🔴		socks5"
+			echo "fss-anytls-client	未运行🔴		socks5"
 		fi
 		local IPT2SOCKS_PID=$(pidof ipt2socks)
 		local IPT2SOCKS_RSS=$(GET_VM_RSS_MULTI ${IPT2SOCKS_PID})
@@ -816,6 +817,9 @@ ECHO_VERSION(){
 	fi
 		if [ -x "/koolshare/bin/tuic-client" ];then
 			printf '%-16s %-16s %s\n' "tuic-client" "$(run tuic-client -V|awk '{print $NF}')" "https://github.com/Itsusinn/tuic"
+		fi
+		if [ -x "/koolshare/bin/fss-anytls-client" ]; then
+			print_bin_version_line "fss-anytls-client" "$(/koolshare/bin/fss-anytls-client --version)" "并发 / 会话池"
 		fi
 		if [ -x "/koolshare/bin/anytls-zig" ];then
 			print_bin_version_line "anytls-zig" "$(get_zig_tool_version /koolshare/bin/anytls-zig)" "fancyss Zig / AnyTLS 客户端"

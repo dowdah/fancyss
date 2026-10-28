@@ -1,0 +1,5 @@
+fss-anytls-client: native fancyss AnyTLS transport adapter (GPL-3.0-or-later).
+Protocol, session pool and padding: github.com/anytls/sing-anytls v0.0.11 (GPL-3.0-or-later).
+SOCKS ingress and connection utilities: github.com/sagernet/sing v0.6.1 (GPL-3.0-or-later).
+Platform support: golang.org/x/sys v0.30.0 (BSD-3-Clause).
+Dependencies are pinned in go.mod/go.sum; no upstream sources are modified.

@@ -27,3 +27,9 @@ separate `fancyss-direct-v1-control-v4` backup of the previously accepted versio
 Do not reuse old staging files or confirm from an old health receipt. The original
 `fancyss-direct-v1` attempt and any rolled-back network-setting experiments remain
 separate audit history; the delivered fix does not depend on those DNS changes.
+
+Completion confirmation reads recent verified recording metadata through a child
+running as `camera-monitor`, since health metrics may be cached. Root does not
+open SQLite. Confirmation is idempotent; an expired old validation loop cannot
+roll back an already confirmed component. An explicitly requested later rollback
+uses `force-rollback` on the component guard and retains its audit files.

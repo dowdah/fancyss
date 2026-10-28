@@ -12,7 +12,8 @@ watch)
     ;;
 renew) echo $(( $(awk '{print int($1)}' /proc/uptime)+300 )) > "$ROOT/deadline";;
 commit) rm -f "$ROOT/pending"; date -Iseconds > "$ROOT/confirmed";;
-rollback)
+rollback|force-rollback)
+    if [ "$1" = rollback ] && [ -f "$ROOT/confirmed" ]; then echo component_already_confirmed; exit 0; fi
     rm -f "$ROOT/pending"
     systemctl stop camera-uploader camera-viewing-uploader camera-web
     cp -p "$ROOT/graph.py" /opt/camera-monitor/camera_monitor/graph.py

@@ -11,6 +11,7 @@ server=$5
 sni=$6
 verify=$7
 binary=${FSS_ANYTLS_BINARY:-/koolshare/bin/fss-anytls-client}
+legacy_binary=/koolshare/bin/anytls-zig
 proc=${FSS_PROC_ROOT:-/proc}
 
 ticks() { sed 's/^.*) //' "$proc/$1/stat" 2>/dev/null | awk '{print $20}'; }
@@ -19,10 +20,9 @@ owned() {
     case "$instance_pid:$instance_ticks" in *[!0-9:]*|:*|*:) return 1;; esac
     [ -n "$instance_ticks" ] && [ "$(ticks "$instance_pid")" = "$instance_ticks" ] || return 1
     instance_binary=$(readlink "$proc/$instance_pid/exe" 2>/dev/null)
-    case "$instance_binary" in
-        /koolshare/bin/anytls-zig|/koolshare/bin/fss-anytls-client) ;;
-        *) [ "$instance_binary" = "$(readlink -f "$binary")" ] || return 1;;
-    esac
+    # hnd may relocate legacy cores to /data and install a symlink in bin.
+    [ "$instance_binary" = "$(readlink -f "$binary")" ] ||
+        [ "$instance_binary" = "$(readlink -f "$legacy_binary")" ] || return 1
     tr '\000' '\n' < "$proc/$instance_pid/cmdline" | grep -Fqx -- "$passfile" || return 1
     tr '\000' '\n' < "$proc/$instance_pid/cmdline" | grep -Fqx -- "$listen" || return 1
 }

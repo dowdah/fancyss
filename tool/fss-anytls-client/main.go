@@ -21,7 +21,7 @@ import (
 	"github.com/sagernet/sing/common/logger"
 )
 
-const version = "fss-anytls-client 0.1.0 (sing-anytls v0.0.11)"
+const version = "fss-anytls-client 0.1.1 (sing-anytls v0.0.11 + cancellation.1)"
 
 type config struct {
 	Listen, Server, PasswordFile, SNI, CAFile string

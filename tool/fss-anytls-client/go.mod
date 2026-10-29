@@ -8,3 +8,6 @@ require (
 )
 
 require golang.org/x/sys v0.30.0 // indirect
+
+// Base v0.0.11 with bounded establishment cancellation; see third_party/sing-anytls/PATCHES.md.
+replace github.com/anytls/sing-anytls => ./third_party/sing-anytls

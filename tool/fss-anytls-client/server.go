@@ -5,6 +5,7 @@ import (
 	"bufio"
 	"context"
 	"errors"
+	"io"
 	"net"
 	"sync"
 	"syscall"
@@ -35,6 +36,8 @@ func newServer(client proxyClient) *server {
 }
 
 func (s *server) serve(ctx context.Context, ln net.Listener) error {
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
 	done := make(chan struct{})
 	go func() {
 		select {
@@ -45,7 +48,13 @@ func (s *server) serve(ctx context.Context, ln net.Listener) error {
 	}()
 	defer close(done)
 	defer func() {
+		cancel()
 		ln.Close()
+		// Close upstream sessions before joining handlers: a handler may be waiting
+		// for remote I/O, rather than reading its already closed local socket.
+		if closer, ok := s.client.(io.Closer); ok {
+			_ = closer.Close()
+		}
 		s.mu.Lock()
 		for c := range s.active {
 			c.Close()

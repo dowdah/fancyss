@@ -2257,6 +2257,9 @@ EOF2
 	rm -f "${route_rules_file}" >/dev/null 2>&1
 	fss_shunt_apply_native_policy "${tmp_file}" "${current_tag}" || { rm -f "${tmp_file}"; return 1; }
 	if ! jq --argjson ids "$(while IFS= read -r node; do [ "$(fss_get_node_field_plain "${node}" type)" != 9 ] || printf '"proxy%s"\n' "${node}"; done < "${FSS_SHUNT_RUNTIME_DIR}/cache_ids.txt" | jq -s .)" '
+		# Keep core-owned sockets out of router-IP OUTPUT interception. A DIRECT
+		# domain can share an IP with rotlist entries and otherwise recurse.
+		.outbounds |= map(if .protocol=="blackhole" then . else .streamSettings.sockopt.mark=255 end) |
 		.routing.rules |= map(. as $r | if ($ids|index($r.outboundTag)) != null then
 			[($r + {network:"udp",outboundTag:"reject"} | del(.ruleTag)), $r] else [$r] end) | .routing.rules |= add
 	' "${tmp_file}" > "${tmp_file}.udp"; then rm -f "${tmp_file}" "${tmp_file}.udp"; return 1; fi

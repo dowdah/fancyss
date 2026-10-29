@@ -36,7 +36,15 @@ fss_shunt_emit_routing_rules_json() { echo '{"type":"field","domain":["full:body
             program+=f'FSS_SHUNT_GEOSITE_FILE={p}/site\nFSS_SHUNT_GEOIP_FILE={p}/ip\nFSS_SHUNT_RUNTIME_DIR={d}\nFSS_SHUNT_RUNTIME_OUTBOUND_DIR={d}/outbounds\nFSS_SHUNT_RUNTIME_TARGET_FILE={d}/targets\nfss_shunt_build_xray_config {d}/xray.json 1\n'
             r=subprocess.run(['/bin/bash'],input=program,text=True,capture_output=True)
             self.assertEqual(r.returncode,0,r.stderr)
-            rules=json.loads((p/'xray.json').read_text())['routing']['rules']
+            config=json.loads((p/'xray.json').read_text())
+            rules=config['routing']['rules']
+            # Domain DIRECT must remain DIRECT even when its shared IP is in
+            # the router's forced-proxy set: marked egress bypasses OUTPUT.
+            for outbound in config['outbounds']:
+                if outbound['protocol']=='blackhole':
+                    self.assertNotIn('streamSettings',outbound)
+                else:
+                    self.assertEqual(outbound['streamSettings']['sockopt']['mark'],255)
             body=next(i for i,x in enumerate(rules) if 'full:body.invalid' in x.get('domain',[]))
             self.assertEqual(rules[body]['outboundTag'],'direct')
             self.assertFalse(any(x.get('outboundTag')=='reject' and 'full:body.invalid' in x.get('domain',[]) for x in rules))

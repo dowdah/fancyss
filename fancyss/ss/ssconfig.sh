@@ -6522,6 +6522,11 @@ _start_iptables() {
 	dns_hijack_control 4
 	#-----------------------FOR ROUTER---------------------
 	# router itself
+	if [ "${ss_basic_mode}" = "7" ]; then
+		# Reserved shunt egress mark: DIRECT sockets must not re-enter 3333.
+		append_if_not_exists nat -A OUTPUT -m mark --mark 0xff/0xffffffff -m comment --comment SHADOWSOCKS_SHUNT_EGRESS -j RETURN
+		append_if_not_exists mangle -A OUTPUT -m mark --mark 0xff/0xffffffff -m comment --comment SHADOWSOCKS_SHUNT_EGRESS -j RETURN
+	fi
 	if [ "${ss_basic_mode}" != "6" ];then
 		append_if_not_exists nat -A OUTPUT -p tcp -m set --match-set router dst -j REDIRECT --to-ports 3333
 
@@ -6771,6 +6776,10 @@ _start_ipv6_iptables() {
 	fi
 
 	if [ "${ss_basic_mode}" != "6" ];then
+		if [ "${ss_basic_mode}" = "7" ]; then
+			append_if_not_exists6 nat -A OUTPUT -m mark --mark 0xff/0xffffffff -m comment --comment SHADOWSOCKS6_SHUNT_EGRESS -j RETURN || return 1
+			append_if_not_exists6 mangle -A OUTPUT -m mark --mark 0xff/0xffffffff -m comment --comment SHADOWSOCKS6_SHUNT_EGRESS -j RETURN || return 1
+		fi
 		append_if_not_exists6 nat -A OUTPUT -p tcp -m set --match-set router6 dst -j REDIRECT --to-ports $(get_tproxy_port6) || return 1
 		append_if_not_exists6 mangle -A OUTPUT -p udp -m set --match-set router6 dst -m udp --dport 53 -j MARK --set-mark 0x7/0xffffffff || return 1
 	fi

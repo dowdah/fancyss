@@ -25,6 +25,10 @@ hot_ensure_state_dir() {
 }
 
 hot_require_ready() {
+	if fss_shunt_has_anytls; then
+		hot_log 'AnyTLS 运行目标需要完整重启；未清理现有运行产物。'
+		return 1
+	fi
 	fss_shunt_mode_selected || {
 		hot_log "当前不是 xray 分流模式，跳过。"
 		return 1

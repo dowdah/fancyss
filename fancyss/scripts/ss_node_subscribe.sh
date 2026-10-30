@@ -3,6 +3,7 @@
 # fancyss subscribe script for asuswrt/merlin based router with software center
 source /koolshare/scripts/base.sh
 source /koolshare/scripts/ss_node_common.sh
+[ -f /koolshare/scripts/ss_base_dns.sh ] && source /koolshare/scripts/ss_base_dns.sh
 [ -f /koolshare/scripts/ss_subscribe_profile_lib.sh ] && source /koolshare/scripts/ss_subscribe_profile_lib.sh
 NEW_PATH=$(echo $PATH|tr ':' '\n'|sed '/opt/d;/mmc/d'|awk '!a[$0]++'|tr '\n' ':'|sed '$ s/:$//')
 export PATH=${NEW_PATH}
@@ -3651,6 +3652,15 @@ sub_run_reference_postwrite_steps(){
 }
 
 sub_run_cache_postwrite_steps(){
+	type fss_airport_bootstrap_sync >/dev/null 2>&1 || return 1
+	if ! fss_airport_bootstrap_sync; then
+		echo_date 'AIRPORT_DNS_SYNC_FAILED：节点已保存，新节点解析未就绪；不启动测速缓存刷新。'
+		return 1
+	fi
+	if [ "$(dbus get ss_basic_mode)" = 7 ]; then
+		. /koolshare/scripts/ss_node_shunt.sh
+		fss_shunt_reconcile_anytls_subscription || return 1
+	fi
 	if sub_should_refresh_runtime_caches;then
 		sub_refresh_runtime_caches_async
 	else
@@ -3665,6 +3675,8 @@ sub_after_nodes_written(){
 }
 
 sub_refresh_runtime_dns_after_airport_special_change(){
+	type fss_airport_bootstrap_sync >/dev/null 2>&1 || return 1
+	fss_airport_bootstrap_sync || return 1
 	[ "${SUB_AIRPORT_SPECIAL_CHANGED}" = "1" ] || return 0
 	echo_date "⚙️机场专属节点DNS配置已更新，刷新节点域名解析运行态..."
 	if [ "$(dbus get ss_basic_enable)" = "1" ];then
@@ -5390,6 +5402,7 @@ remove_sub_node(){
 			done
 			fss_refresh_node_direct_cache >/dev/null 2>&1
 			fss_clear_airport_special_confs >/dev/null 2>&1 || true
+			fss_airport_bootstrap_sync || return 1
 			fss_schedule_webtest_cache_warm "" "${SUB_WEBTEST_WARM_LOG}" >/dev/null 2>&1
 			echo_date "所有订阅节点信息已经成功删除！"
 			sub_refresh_node_state

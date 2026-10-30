@@ -1133,9 +1133,11 @@ wt_gen_anytls_outbound() {
 	[ -n "${socks5_port}" ] || socks5_port=$(wt_get_reserved_port)
 	[ -n "${socks5_port}" ] || return 1
 	WT_LAST_START_PORT="${socks5_port}"
-	if [ -n "${WT_GEN_OUT_FILE}" ] && [ -n "${FSS_WEBTEST_CACHE_NODE_DIR}" ]; then
-		pass_file="${FSS_WEBTEST_CACHE_NODE_DIR}/${nu}_anytls.pass"
-		pid_file="${FSS_WEBTEST_CACHE_NODE_DIR}/${nu}_anytls.pid"
+	# Credentials/PID belong to the requested artifact output, never another
+	# profile's cache (including when building a temporary .tmp outbound).
+	if [ -n "${WT_GEN_OUT_FILE}" ]; then
+		pass_file="${WT_ANYTLS_NODE_DIR:-${out_file%/*}}/${nu}_anytls.pass"
+		pid_file="${WT_ANYTLS_NODE_DIR:-${out_file%/*}}/${nu}_anytls.pid"
 	else
 		pass_file="${out_file%_outbounds.json}_anytls.pass"
 		pid_file="${out_file%_outbounds.json}_anytls.pid"
@@ -1164,23 +1166,14 @@ wt_gen_anytls_outbound() {
 		}
 	EOF
 	printf '%s' "${anytls_pass}" > "${pass_file}"
+	chmod 600 "${pass_file}" || return 1
 	cat >"${start_file}" <<-EOF
 		#!/bin/sh
-		if [ -s "${pid_file}" ]; then
-			_pid=\$(cat "${pid_file}" 2>/dev/null)
-			[ -n "\${_pid}" ] && kill "\${_pid}" >/dev/null 2>&1 || true
-			rm -f "${pid_file}"
-		fi
-		"/koolshare/bin/anytls-zig" -server $(wt_shell_quote "${server_addr}") --password-file $(wt_shell_quote "${pass_file}") -l $(wt_shell_quote "127.0.0.1:${socks5_port}")${sni_arg}${verify_arg} >/dev/null 2>&1 &
-		echo \$! > "${pid_file}"
+		exec /bin/sh /koolshare/scripts/ss_anytls_helper.sh start $(wt_shell_quote "${pid_file}") $(wt_shell_quote "${pass_file}") $(wt_shell_quote "127.0.0.1:${socks5_port}") $(wt_shell_quote "${server_addr}") $(wt_shell_quote "${anytls_sni}")${verify_arg}
 	EOF
 	cat >"${stop_file}" <<-EOF
 		#!/bin/sh
-		if [ -s "${pid_file}" ]; then
-			_pid=\$(cat "${pid_file}" 2>/dev/null)
-			[ -n "\${_pid}" ] && kill "\${_pid}" >/dev/null 2>&1 || true
-			rm -f "${pid_file}"
-		fi
+		exec /bin/sh /koolshare/scripts/ss_anytls_helper.sh stop $(wt_shell_quote "${pid_file}") $(wt_shell_quote "${pass_file}") $(wt_shell_quote "127.0.0.1:${socks5_port}")
 	EOF
 	chmod +x "${start_file}" "${stop_file}"
 }

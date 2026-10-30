@@ -1,6 +1,7 @@
 #!/bin/sh
 
 source /koolshare/scripts/base.sh
+[ -f /koolshare/scripts/ss_base_dns.sh ] && source /koolshare/scripts/ss_base_dns.sh
 [ -f /koolshare/scripts/ss_subscribe_profile_lib.sh ] && source /koolshare/scripts/ss_subscribe_profile_lib.sh
 [ -f /koolshare/scripts/ss_node_common.sh ] && source /koolshare/scripts/ss_node_common.sh
 
@@ -164,6 +165,7 @@ profile_save() {
 		return 1
 	fi
 	subprof_rebuild_cron_jobs >/dev/null 2>&1 || true
+	fss_airport_bootstrap_sync || { profile_log "AIRPORT_DNS_SYNC_FAILED：配置已保存，机场解析同步失败。"; return 1; }
 	profile_log "订阅配置已保存：${profile_id}"
 	return 0
 }
@@ -181,6 +183,7 @@ profile_delete() {
 		return 1
 	fi
 	subprof_rebuild_cron_jobs >/dev/null 2>&1 || true
+	fss_airport_bootstrap_sync || { profile_log "AIRPORT_DNS_SYNC_FAILED：配置已保存，机场解析同步失败。"; return 1; }
 	profile_log "已删除订阅配置：${profile_id}"
 	return 0
 }

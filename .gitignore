@@ -14,3 +14,12 @@ AGENTS.md
 CLAUDE.md
 tmp_test_file/
 doc/migration/
+
+# Local deployment evidence can contain private network topology.
+/artifacts/
+/local-reports/
+/doc/implementation/anytls-xray-fork-plan-v1-2026-10-28.md
+
+# Python verification artifacts
+__pycache__/
+*.pyc

@@ -66,6 +66,7 @@ GET_FW_VER(){
 }
 
 GET_PROXY_TOOL(){
+	[ "${ss_basic_mode}" != 7 ] || { echo "xray-core (native shunt helpers)"; return; }
 	case "$(GET_CURRENT_NODE_TYPE_ID)" in
 	0)
 		echo "xray-core"
@@ -96,7 +97,7 @@ GET_PROXY_TOOL(){
 		echo "xray-core"
 		;;
 	9)
-		echo "anytls-zig"
+		echo "fss-anytls-client"
 		;;
 	esac
 }
@@ -613,12 +614,26 @@ GET_PROG_STAT(){
 	local WEBSOCKETD_RSS=""
 	local WEBSOCKETD_UPTIME=""
 	echo
+	[ ! -f /koolshare/ss/fork-build.json ] || jq -r '"Fork build: " + .build' /koolshare/ss/fork-build.json
 	echo "1️⃣ 检测当前相关进程工作状态："
 	echo "--------------------------------------------------------------------------------------------------------"
 	echo "程序		状态		作用		PID		内存		运行时长"
 
 	# proxy core program
-if [ "${current_type}" == "1" ]; then
+	if [ "${ss_basic_mode}" = 7 ]; then
+		local node_id="" pid="" meta="" port=""
+		pid="$(pidof xray)"
+		[ -z "${pid}" ] && printf 'Xray\t未运行🔴\n' || printf 'Xray\t运行中🟢\t分流\t%s\t%s\n' "${pid}" "$(GET_VM_RSS_MULTI ${pid})"
+		for meta in /tmp/fancyss_shunt/runtime_artifacts/meta/*.meta; do
+			[ -f "${meta}" ] || continue
+			grep -q "^node_type=9$" "${meta}" || continue
+			node_id="${meta##*/}"; node_id="${node_id%.meta}"
+			port="$(sed -n "s/^start_port=//p" "${meta}")"
+			pid="$(/bin/sh /koolshare/scripts/ss_anytls_helper.sh status /tmp/fancyss_shunt/runtime_artifacts/nodes/${node_id}_anytls.pid /tmp/fancyss_shunt/runtime_artifacts/nodes/${node_id}_anytls.pass 127.0.0.1:${port})"
+			[ -z "${pid}" ] && printf 'AnyTLS %s\t未就绪🔴\n' "${node_id}" || printf 'AnyTLS %s\t运行中🟢\tSOCKS\t%s\t%s\n' "${node_id}" "${pid}" "$(GET_VM_RSS_MULTI ${pid})"
+			[ -z "${pid}" ] || /bin/sh /koolshare/scripts/ss_anytls_helper.sh engine /tmp/fancyss_shunt/runtime_artifacts/nodes/${node_id}_anytls.pid /tmp/fancyss_shunt/runtime_artifacts/nodes/${node_id}_anytls.pass 127.0.0.1:${port}
+		done
+	elif [ "${current_type}" == "1" ]; then
 		# ssr
 		local SSR_REDIR_PID=$(pidof rss-redir)
 		local SSR_REDIR_RSS=$(GET_VM_RSS_MULTI ${SSR_REDIR_PID})
@@ -650,13 +665,13 @@ if [ "${current_type}" == "1" ]; then
 			fi
 		fi
 	elif [ "${current_type}" == "9" ]; then
-		local ANYTLS_PID=$(pidof anytls-zig)
+		local ANYTLS_PID=$(/bin/sh /koolshare/scripts/ss_anytls_helper.sh status /tmp/fss_anytls_single.pid /tmp/anytls_pass 127.0.0.1:23456)
 		local ANYTLS_RSS=$(GET_VM_RSS_MULTI ${ANYTLS_PID})
 		local ANYTLS_UPTIME=$(GET_PROC_UPTIME_MULTI ${ANYTLS_PID})
 		if [ -n "${ANYTLS_PID}" ]; then
-			echo "anytls-zig	运行中🟢		socks5		${ANYTLS_PID}		${ANYTLS_RSS}		${ANYTLS_UPTIME}"
+			echo "fss-anytls-client	运行中🟢		socks5		${ANYTLS_PID}		${ANYTLS_RSS}		${ANYTLS_UPTIME}"
 		else
-			echo "anytls-zig	未运行🔴		socks5"
+			echo "fss-anytls-client	未运行🔴		socks5"
 		fi
 		local IPT2SOCKS_PID=$(pidof ipt2socks)
 		local IPT2SOCKS_RSS=$(GET_VM_RSS_MULTI ${IPT2SOCKS_PID})
@@ -802,6 +817,9 @@ ECHO_VERSION(){
 	fi
 		if [ -x "/koolshare/bin/tuic-client" ];then
 			printf '%-16s %-16s %s\n' "tuic-client" "$(run tuic-client -V|awk '{print $NF}')" "https://github.com/Itsusinn/tuic"
+		fi
+		if [ -x "/koolshare/bin/fss-anytls-client" ]; then
+			print_bin_version_line "fss-anytls-client" "$(/koolshare/bin/fss-anytls-client --version)" "并发 / 会话池"
 		fi
 		if [ -x "/koolshare/bin/anytls-zig" ];then
 			print_bin_version_line "anytls-zig" "$(get_zig_tool_version /koolshare/bin/anytls-zig)" "fancyss Zig / AnyTLS 客户端"

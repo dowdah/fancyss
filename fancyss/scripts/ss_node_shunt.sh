@@ -163,7 +163,7 @@ fss_shunt_is_active() {
 }
 
 fss_shunt_cleanup_runtime() {
-	fss_shunt_stop_runtime_artifact_helpers >/dev/null 2>&1 || true
+	fss_shunt_stop_runtime_artifact_helpers >/dev/null 2>&1 || return 1
 	rm -rf "${FSS_SHUNT_RUNTIME_DIR}" >/dev/null 2>&1
 	rm -f "${FSS_SHUNT_RUNTIME_PROXY_FILE}" >/dev/null 2>&1
 	unset FSS_SHUNT_RUNTIME_READY FSS_SHUNT_RUNTIME_READY_KEY
@@ -229,7 +229,8 @@ fss_shunt_geodata_ready() {
 }
 
 fss_shunt_xray_asset_dir() {
-	fss_shunt_geodata_ready || return 1
+	# Text custom rules still use native CN geodata for transparent domestic routing.
+	fss_shunt_dat_store_ready || return 1
 	printf '%s\n' "${FSS_SHUNT_DAT_DIR}"
 }
 
@@ -721,7 +722,7 @@ fss_shunt_node_supported() {
 		fi
 		[ -z "${ss_obfs}" ] || [ "${ss_obfs}" = "0" ] || [ "${ss_obfs}" = "http" ]
 		;;
-	3|4|5|8)
+	3|4|5|8|9)
 		return 0
 		;;
 	*)
@@ -945,7 +946,7 @@ fss_shunt_runtime_key() {
 	node_config_ts="$(fss_get_node_config_ts)"
 	printf '%s' "${node_config_ts}" | grep -Eq '^[0-9]+$' || node_config_ts="0"
 	ingress_mode="$(fss_shunt_runtime_mode)"
-	printf '%s|%s|%s\n' "${ingress_mode}" "${rule_ts}" "${node_config_ts}"
+	printf 'native2|%s|%s|%s\n' "${ingress_mode}" "${rule_ts}" "${node_config_ts}"
 }
 
 fss_shunt_runtime_meta_get() {
@@ -1166,6 +1167,8 @@ fss_shunt_rebuild_proxy_domains() {
 	fi
 	awk -F'|' '
 	{
+		# Domestic DIRECT uses domestic DNS; other DIRECT rules (recording bodies) retain trusted DNS.
+		if ($2 == "DIRECT" && $4 == "builtin" && $5 == "chnlist") next
 		file = $3
 		if (file == "") next
 		while ((getline line < file) > 0) {
@@ -1249,7 +1252,7 @@ fss_shunt_prepare_runtime() {
 		FSS_SHUNT_RUNTIME_READY_KEY="${runtime_key}"
 		return 0
 	fi
-	fss_shunt_cleanup_runtime
+	fss_shunt_cleanup_runtime || return 1
 	json="$(fss_shunt_rules_json)"
 	fss_shunt_write_rules_mirror "${json}" >/dev/null 2>&1 || true
 	jq_bin="$(fss_pick_jq_bin)"
@@ -1275,7 +1278,7 @@ fss_shunt_prepare_runtime() {
 		ip_file="${FSS_SHUNT_RUNTIME_RULE_DIR}/${rule_id}.ips"
 		geoip_file="${FSS_SHUNT_RUNTIME_RULE_DIR}/${rule_id}.geoips"
 		rm -f "${domain_file}" "${ip_file}" "${geoip_file}" >/dev/null 2>&1
-		count="$(fss_shunt_materialize_rule_domains "${source_type}" "${preset}" "${custom_b64}" "${domain_file}" "${proxy_tmp}" 2>/dev/null)"
+		count="$(fss_shunt_materialize_rule_domains "${source_type}" "${preset}" "${custom_b64}" "${domain_file}" "${tmp_dir}/rule-proxy.txt" 2>/dev/null)"
 		[ -n "${count}" ] || count=0
 		if [ "${count}" -le 0 ] 2>/dev/null; then
 			rm -f "${domain_file}" "${ip_file}" "${geoip_file}" >/dev/null 2>&1
@@ -1311,9 +1314,8 @@ fss_shunt_prepare_runtime() {
 		mv -f "${active_tmp}.keep" "${active_tmp}"
 		rebuild_runtime_lists=1
 	fi
-	if [ "${rebuild_runtime_lists}" = "1" ]; then
-		fss_shunt_rebuild_proxy_domains "${active_tmp}" "${proxy_tmp}"
-	fi
+	# Rebuild once from all retained rules, after per-rule materialization and limits.
+	fss_shunt_rebuild_proxy_domains "${active_tmp}" "${proxy_tmp}"
 	if [ -s "${proxy_tmp}" ]; then
 		sort -u "${proxy_tmp}" > "${FSS_SHUNT_RUNTIME_PROXY_FILE}" 2>/dev/null
 	else
@@ -1539,6 +1541,64 @@ fss_shunt_make_rule_tag() {
 	[ -n "${rule_id}" ] || return 1
 	[ -n "${suffix}" ] || return 1
 	printf 'fss_%s_%s\n' "${rule_id}" "${suffix}"
+}
+
+fss_shunt_emit_native_policy() {
+	# Use persistent explicit lists, never the merged DNS black list: the latter
+	# also contains DIRECT recording hosts and custom per-node routing rules.
+	local work="$1" current_tag="$2" kind="" encoded="" target=""
+	local field="" key="" values=""
+	: > "${work}/native-policy.jsonl"
+	for kind in black white; do
+		if [ "${kind}" = black ]; then target="${current_tag}"; else target=direct; fi
+		for field in domain ip; do
+			key="ss_wan_${kind}_${field}"
+			encoded="$(dbus get "${key}")"
+			: > "${work}/native-values"
+			if [ "${field}" = domain ]; then
+				fss_b64_decode "${encoded}" | awk '{sub(/#.*/, ""); for(i=1;i<=NF;i++) print $i}' |
+					fss_shunt_custom_domain_to_tokens "${work}/native-values" "${work}/native-dns"
+			else
+				fss_b64_decode "${encoded}" | fss_shunt_custom_ip_to_tokens "${work}/native-values"
+			fi
+			values="$(fss_shunt_json_array_from_file "${work}/native-values" '')"
+			[ -n "${values}" ] && [ "${values}" != '[]' ] || continue
+			jq -cn --arg field "${field}" --arg tag "${target}" --arg kind "${kind}" --argjson values "${values}" \
+				'{type:"field",ruleTag:("fss_native_"+$kind+"_"+$field),($field):$values,outboundTag:$tag}' >> "${work}/native-policy.jsonl" || return 1
+		done
+	done
+	jq -s . "${work}/native-policy.jsonl"
+}
+
+fss_shunt_apply_native_policy() {
+	local file="$1" current_tag="$2" work="${file}.policy" domestic=false
+	mkdir -p "${work}" || return 1
+	fss_shunt_emit_native_policy "${work}" "${current_tag}" > "${work}/explicit.json" || { rm -rf "${work}"; return 1; }
+	# Mainland white-list ingress is 2; ingress 5 intentionally proxies all.
+	if [ "$(fss_shunt_runtime_mode)" = 2 ]; then
+		[ -s "${FSS_SHUNT_GEOSITE_FILE}" ] && [ -s "${FSS_SHUNT_GEOIP_FILE}" ] || { rm -rf "${work}"; return 1; }
+		domestic=true
+	fi
+	# Keep service ingress rules ahead of transparent routing. Extract only the
+	# configured recording host tokens, rather than moving an entire user rule.
+	jq --slurpfile explicit "${work}/explicit.json" --argjson domestic "${domestic}" \
+		--arg site "geosite:CN" --arg ip "geoip:CN" \
+		--arg private "geoip:PRIVATE" '
+		["full:my.microsoftpersonalcontent.com","domain:up.1drv.com","domain:files.1drv.com","domain:livefilestore.com","domain:mediap.svc.ms"] as $bodies |
+		.routing.rules as $r |
+		([$r[] | select(.outboundTag=="direct" and .domain!=null) | .domain[] | select(. as $d | $bodies|index($d))] | unique) as $bodyDomains |
+		.routing.rules =
+		([$r[] | select(.inboundTag!=null)] +
+		 (if ($bodyDomains|length)>0 then [{type:"field",ruleTag:"fss_recording_body",domain:$bodyDomains,outboundTag:"direct"}] else [] end) +
+		 $explicit[0] +
+		 [$r[] | select(.inboundTag==null and .ruleTag!="fss_default")] +
+		 (if $domestic then [{type:"field",ruleTag:"fss_native_cn_domain",domain:[$site],outboundTag:"direct"},
+		 {type:"field",ruleTag:"fss_native_cn_ip",ip:[$ip,$private],outboundTag:"direct"}] else [] end) +
+		 [$r[] | select(.ruleTag=="fss_default")])
+	' "${file}" > "${work}/result.json" && mv "${work}/result.json" "${file}"
+	local result=$?
+	rm -rf "${work}"
+	return "${result}"
 }
 
 fss_shunt_emit_routing_rules_json() {
@@ -1770,7 +1830,7 @@ fss_shunt_link_webtest_cache_outbounds() {
 		[ -s "${cache_out}" ] || return 1
 		ln -sf "${cache_out}" "${FSS_SHUNT_RUNTIME_OUTBOUND_DIR}/${node_id}_outbounds.json" || return 1
 	done < "${ids_file}"
-	fss_shunt_start_runtime_helpers "${ids_file}" "${FSS_WEBTEST_CACHE_META_DIR}" "${FSS_WEBTEST_CACHE_NODE_DIR}" >/dev/null 2>&1 || true
+	return 0
 }
 
 fss_shunt_runtime_artifact_meta_get() {
@@ -1804,13 +1864,14 @@ fss_shunt_log_node_tool_runtime_summary() {
 }
 
 fss_shunt_stop_runtime_artifact_helpers() {
-	local stop_script=""
+	local stop_script="" failed=0
 
 	for stop_script in "${FSS_SHUNT_RUNTIME_ARTIFACT_DIR}"/nodes/*_stop.sh
 	do
 		[ -x "${stop_script}" ] || continue
-		sh "${stop_script}" >/dev/null 2>&1 || true
+		/bin/sh "${stop_script}" >/dev/null 2>&1 || failed=1
 	done
+	return "${failed}"
 }
 
 fss_shunt_start_runtime_helpers() {
@@ -1823,19 +1884,23 @@ fss_shunt_start_runtime_helpers() {
 	local has_start=""
 	local started=0
 
-	[ -f "${ids_file}" ] || return 0
-	[ -n "${meta_dir}" ] || return 0
-	[ -n "${node_dir}" ] || return 0
+	[ -f "${ids_file}" ] || return 1
+	[ -n "${meta_dir}" ] || return 1
+	[ -n "${node_dir}" ] || return 1
 	while IFS= read -r node_id
 	do
 		[ -n "${node_id}" ] || continue
 		meta_file="${meta_dir}/${node_id}.meta"
 		start_script="${node_dir}/${node_id}_start.sh"
-		[ -f "${meta_file}" ] || continue
+		[ -f "${meta_file}" ] || return 1
 		has_start="$(sed -n 's/^has_start=//p' "${meta_file}" | sed -n '1p')"
 		[ "${has_start}" = "1" ] || continue
-		[ -x "${start_script}" ] || continue
-		sh "${start_script}" >/dev/null 2>&1 || continue
+		[ -x "${start_script}" ] || return 1
+		if ! /bin/sh "${start_script}" >/dev/null 2>&1; then
+			fss_shunt_state_failed "helper_start" "${ids_file}" "节点 ${node_id} 辅助进程未就绪。"
+			fss_shunt_stop_runtime_artifact_helpers
+			return 1
+		fi
 		started=$((started + 1))
 	done < "${ids_file}"
 	[ "${started}" -gt 0 ] && fss_shunt_log "ℹ️已启动 ${started} 个分流节点辅助进程。"
@@ -1854,6 +1919,8 @@ fss_shunt_runtime_artifacts_ready_for_ids() {
 
 	[ -f "${ids_file}" ] || return 1
 	[ -f "${meta_file}" ] || return 1
+	[ "$(sed -n 's/^gen_rev=//p' "${meta_file}")" = '20261028_anytls1' ] || return 1
+	[ "$(sed -n 's/^node_config_ts=//p' "${meta_file}")" = "$(dbus get fss_node_config_ts)" ] || return 1
 	while IFS= read -r node_id
 	do
 		[ -n "${node_id}" ] || continue
@@ -1871,6 +1938,9 @@ fss_shunt_try_prepare_node_tool_runtime_artifacts() {
 	local ret=0
 
 	[ -f "${ids_file}" ] || return 1
+	umask 077
+	mkdir -p "${FSS_SHUNT_RUNTIME_ARTIFACT_DIR}" || return 1
+	chmod 700 "${FSS_SHUNT_RUNTIME_ARTIFACT_DIR}"
 	node_tool="$(fss_pick_node_tool 2>/dev/null)" || return 1
 	fss_node_tool_supports_command "${node_tool}" "runtime-artifact" || return 1
 	fss_refresh_node_json_cache >/dev/null 2>&1 || return 1
@@ -1910,7 +1980,6 @@ fss_shunt_try_prepare_node_tool_runtime_artifacts() {
 			return 1
 		}
 	done < "${ids_file}"
-	fss_shunt_start_runtime_artifact_helpers "${ids_file}" >/dev/null 2>&1 || true
 	fss_shunt_state_ready "runtime_artifact" "${ids_file}" "分流运行产物已就绪。"
 	fss_shunt_runtime_artifact_lock_release
 	fss_shunt_log "ℹ️通过node-tool生成shunt统一运行产物。"
@@ -1918,19 +1987,89 @@ fss_shunt_try_prepare_node_tool_runtime_artifacts() {
 	return 0
 }
 
+# An old node-tool can still generate other protocols, but AnyTLS fallback is
+# materialized in its OWN production directory, never linked from webtest.
 fss_shunt_try_prepare_webtest_outbounds() {
-	local ids_file="$1"
-
-	[ -f "${ids_file}" ] || return 1
-	if fss_shunt_try_prepare_node_tool_runtime_artifacts "${ids_file}"; then
-		return 0
-	fi
+	local ids_file="$1" node_id="" out="" node_type=""
+	if fss_shunt_try_prepare_node_tool_runtime_artifacts "${ids_file}"; then return 0; fi
 	fss_refresh_node_json_cache >/dev/null 2>&1 || return 1
-	if fss_shunt_need_webtest_cache_rebuild "${ids_file}"; then
-		fss_shunt_log "复用webtest节点配置缓存：检测到缺失或过期，开始增量更新。"
-		sh "${FSS_SHUNT_WEBTEST_HELPER}" ensure_cache_ids_file "${ids_file}" >/dev/null 2>&1 || return 1
-	fi
-	fss_shunt_link_webtest_cache_outbounds "${ids_file}" || return 1
+	mkdir -p "${FSS_SHUNT_RUNTIME_ARTIFACT_DIR}/nodes" "${FSS_SHUNT_RUNTIME_ARTIFACT_DIR}/meta" "${FSS_SHUNT_RUNTIME_OUTBOUND_DIR}" || return 1
+	WT_NODE_CACHE_DIR="${FSS_NODE_JSON_CACHE_DIR}"
+	WT_ANYTLS_NODE_DIR="${FSS_SHUNT_RUNTIME_ARTIFACT_DIR}/nodes"
+	while IFS= read -r node_id; do
+		[ -n "${node_id}" ] || continue
+		node_type="$(fss_get_node_field_plain "${node_id}" type)"
+		if [ "${node_type}" = 9 ]; then
+			WT_GEN_OUT_FILE="${WT_ANYTLS_NODE_DIR}/${node_id}_outbounds.json"
+			WT_GEN_START_FILE="${WT_ANYTLS_NODE_DIR}/${node_id}_start.sh"
+			WT_GEN_STOP_FILE="${WT_ANYTLS_NODE_DIR}/${node_id}_stop.sh"
+			WT_PRESET_START_PORT="$(get_rand_port "${FSS_SHUNT_RUNTIME_DIR}/allocated_ports.txt")"
+			[ -n "${WT_PRESET_START_PORT}" ] || return 1
+			printf '%s\n' "${WT_PRESET_START_PORT}" >> "${FSS_SHUNT_RUNTIME_DIR}/allocated_ports.txt"
+			wt_gen_anytls_outbound "${node_id}" "shunt" || return 1
+			printf 'node_type=9\nnode_rev=%s\nhas_start=1\nhas_stop=1\nstart_port=%s\n' "$(fss_v2_get_node_json_by_id "${node_id}" | jq -r '._rev // 0')" "${WT_LAST_START_PORT}" > "${FSS_SHUNT_RUNTIME_ARTIFACT_DIR}/meta/${node_id}.meta"
+			out="${WT_GEN_OUT_FILE}"
+		else
+			sh "${FSS_SHUNT_WEBTEST_HELPER}" ensure_cache_ids_file "${ids_file}" >/dev/null 2>&1 || return 1
+			out="${FSS_WEBTEST_CACHE_NODE_DIR}/${node_id}_outbounds.json"
+			[ -s "${out}" ] || return 1
+			cp "${FSS_WEBTEST_CACHE_META_DIR}/${node_id}.meta" "${FSS_SHUNT_RUNTIME_ARTIFACT_DIR}/meta/${node_id}.meta" || return 1
+		fi
+		ln -sf "${out}" "${FSS_SHUNT_RUNTIME_OUTBOUND_DIR}/${node_id}_outbounds.json" || return 1
+	done < "${ids_file}"
+	unset WT_GEN_OUT_FILE WT_GEN_START_FILE WT_GEN_STOP_FILE WT_ANYTLS_NODE_DIR WT_PRESET_START_PORT
+	return 0
+}
+
+fss_shunt_has_anytls() {
+	local ids="" id=""
+	# Inspect both loaded helpers and the proposed targets BEFORE any cleanup.
+	if ls "${FSS_SHUNT_RUNTIME_ARTIFACT_DIR}"/nodes/*_anytls.pass >/dev/null 2>&1; then return 0; fi
+	ids="$(fss_shunt_get_default_node_id; fss_shunt_get_effective_default_target; fss_shunt_rules_json_resolved | jq -r '.[]?|select((.enabled//1|tostring)!="0")|.target_node_id//empty')"
+	for id in ${ids}; do
+		case "${id}" in ''|*[!0-9]*) continue;; esac
+		[ "$(fss_get_node_field_plain "${id}" type)" != 9 ] || return 0
+	done
+	return 1
+}
+
+fss_shunt_restart_after_subscription() {
+	# Close the subscription lock in the restart child; supervised transports
+	# must not keep the updater locked after it returns.
+	(/bin/sh /koolshare/scripts/ss_config.sh start 233>&-)
+}
+
+# Subscription changes must update transport parameters even when Xray's
+# SOCKS outbound still points at the same local port. No independent watcher.
+fss_shunt_reconcile_anytls_subscription() {
+	local meta="" id="" revision="" current="" desired="" node_tool="" available="" needs_restart=0
+	[ "$(dbus get ss_basic_enable)" = 1 ] && [ "$(dbus get ss_basic_mode)" = 7 ] || return 0
+	fss_shunt_has_anytls || return 0
+	node_tool="$(fss_pick_node_tool)" || return 1
+	for meta in "${FSS_SHUNT_RUNTIME_ARTIFACT_DIR}"/meta/*.meta; do
+		[ -f "${meta}" ] || continue
+		grep -q '^node_type=9$' "${meta}" || continue
+		id="${meta##*/}"; id="${id%.meta}"
+		revision="$(sed -n 's/^node_rev=//p' "${meta}")"
+		available="$("${node_tool}" list --format json --effective --ids "${id}" 2>/dev/null | jq -r 'length')"
+		current="$(fss_v2_get_node_json_by_id "${id}" 2>/dev/null | jq -r '._rev // 0')"
+		if [ -z "${current}" ] || [ "${available}" != 1 ]; then
+			fss_shunt_state_failed missing_target "${FSS_SHUNT_RUNTIME_DIR}/cache_ids.txt" "运行 AnyTLS 节点 ${id} 已消失，请重新选择节点；未自动切换出站。"
+			return 2
+		fi
+		[ "${revision}" = "${current}" ] || needs_restart=1
+	done
+	desired="$(fss_shunt_get_default_node_id; fss_shunt_get_effective_default_target; fss_shunt_rules_json_resolved | jq -r '.[]?|select((.enabled//1|tostring)!="0")|.target_node_id//empty')"
+	for id in ${desired}; do
+		case "${id}" in ''|*[!0-9]*) continue;; esac
+		if [ "$(fss_get_node_field_plain "${id}" type)" = 9 ] && [ ! -f "${FSS_SHUNT_RUNTIME_ARTIFACT_DIR}/meta/${id}.meta" ]; then needs_restart=1; fi
+	done
+	[ "${needs_restart}" = 1 ] || return 0
+	fss_shunt_log '订阅更新了实际引用的 AnyTLS 节点，调用原生完整重启以应用新凭据/端口/SNI。'
+	fss_shunt_restart_after_subscription || {
+		fss_shunt_state_failed subscription_restart "${FSS_SHUNT_RUNTIME_DIR}/cache_ids.txt" '订阅数据已保存，运行更新未完成，请通过原生界面重启插件。'
+		return 1
+	}
 }
 
 fss_shunt_prune_runtime_targets_by_cache() {
@@ -2006,6 +2145,7 @@ fss_shunt_build_xray_config() {
 	[ -n "${config_file}" ] || return 1
 	[ -n "${current_id}" ] || return 1
 	fss_shunt_mode_selected || return 1
+	umask 077
 	build_started="$(date +%s)"
 	fss_shunt_validate_current_node "${current_id}" || return 1
 	fss_shunt_prepare_runtime || return 1
@@ -2115,7 +2255,21 @@ EOF2
 	}
 EOF2
 	rm -f "${route_rules_file}" >/dev/null 2>&1
-	mv -f "${tmp_file}" "${config_file}"
+	fss_shunt_apply_native_policy "${tmp_file}" "${current_tag}" || { rm -f "${tmp_file}"; return 1; }
+	if ! jq --argjson ids "$(while IFS= read -r node; do [ "$(fss_get_node_field_plain "${node}" type)" != 9 ] || printf '"proxy%s"\n' "${node}"; done < "${FSS_SHUNT_RUNTIME_DIR}/cache_ids.txt" | jq -s .)" '
+		# Keep core-owned sockets out of router-IP OUTPUT interception. A DIRECT
+		# domain can share an IP with rotlist entries and otherwise recurse.
+		.outbounds |= map(if .protocol=="blackhole" then . else .streamSettings.sockopt.mark=255 end) |
+		.routing.rules |= map(. as $r | if ($ids|index($r.outboundTag)) != null then
+			[($r + {network:"udp",outboundTag:"reject"} | del(.ruleTag)), $r] else [$r] end) | .routing.rules |= add
+	' "${tmp_file}" > "${tmp_file}.udp"; then rm -f "${tmp_file}" "${tmp_file}.udp"; return 1; fi
+	if [ "${ss_basic_shunt_audit:-0}" = 1 ]; then
+		mkdir -p /tmp/fancyss_shunt_audit && chmod 700 /tmp/fancyss_shunt_audit || return 1
+		jq '.log.access="/tmp/fancyss_shunt_audit/access.log"' "${tmp_file}.udp" > "${tmp_file}.audit" || return 1
+		mv "${tmp_file}.audit" "${tmp_file}.udp"
+	fi
+	mv -f "${tmp_file}.udp" "${config_file}"
+	rm -f "${tmp_file}"
 	build_elapsed=$(( $(date +%s) - build_started ))
 	fss_shunt_log "xray分流配置已生成，用时${build_elapsed}s。"
 }

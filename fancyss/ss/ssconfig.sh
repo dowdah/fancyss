@@ -945,11 +945,18 @@ get_tproxy_port6() {
 }
 
 proxy_core_supports_udp() {
+	# In shunt mode Xray routes UDP; individual AnyTLS targets reject it.
+	[ "${ss_basic_mode}" != 7 ] || return 0
 	case "${ss_basic_type}" in
 	6|9)
 		return 1
 		;;
 	esac
+	return 0
+}
+
+dns_proxy_supports_udp() {
+	case "${ss_basic_type}" in 6|9) return 1;; esac
 	return 0
 }
 
@@ -1239,6 +1246,8 @@ restore_conf() {
 }
 
 kill_process() {
+	fss_require_shunt_lib >/dev/null 2>&1 || true
+	fss_shunt_stop_runtime_artifact_helpers || return 1
 	local v2ray_process=$(pidof v2ray)
 	if [ -n "$v2ray_process" ]; then
 		echo_date "关闭V2Ray进程..."
@@ -1324,11 +1333,8 @@ kill_process() {
 		killall tuic-client
 	fi
 
-	local ANYTLS_PID=$(ps | grep "anytls-zig" | grep -v grep | awk '{print $1}')
-	if [ -n "${ANYTLS_PID}" ];then
-		echo_date "关闭anytls-zig进程..."
-		killall anytls-zig
-	fi
+	# Only stop the single-node instance owned by this plugin.
+	/bin/sh /koolshare/scripts/ss_anytls_helper.sh stop /tmp/fss_anytls_single.pid /tmp/anytls_pass 127.0.0.1:23456
 
 	local OBFSLOCAL_PID=$(ps | grep "obfs-local" | grep -v grep | awk '{print $1}')
 	if [ -n "${OBFSLOCAL_PID}" ];then
@@ -1344,6 +1350,8 @@ kill_process() {
 }
 
 shunt_hot_restart_eligible() {
+	fss_require_shunt_lib >/dev/null 2>&1 || return 1
+	fss_shunt_has_anytls && return 1
 	[ "${ss_basic_status}" = "1" ] || return 1
 	[ "${ss_basic_mode}" = "7" ] || return 1
 	[ "${ss_basic_shunt_hot_reload}" = "1" ] || return 1
@@ -1558,7 +1566,7 @@ start_dns_x(){
 		fi
 	fi
 	[ -n "${special_dns_hint}" ] && echo_date "${special_dns_hint}"
-	if ! proxy_core_supports_udp;then
+	if ! dns_proxy_supports_udp;then
 		local trust_udp_fallback=""
 		local n=""
 		if [ "${dns_plan_runtime}" = "1" ];then
@@ -1667,6 +1675,35 @@ smartdns_server_flags() {
 	esac
 }
 
+smartdns_format_tls_endpoint() {
+	local proto="$1" endpoint="$2" port="$3"
+	local prefix="" authority="" suffix="" rest="${endpoint}" default_port=853
+	case "${proto}" in
+	https)
+		prefix="https://"
+		rest="${endpoint#https://}"
+		default_port=443
+		;;
+	dot)
+		case "${endpoint}" in tls://*) prefix="tls://"; rest="${endpoint#tls://}";; esac
+		;;
+	esac
+	authority="${rest%%[/?#]*}"
+	suffix="${rest#"${authority}"}"
+	# An explicit URI/address port wins over the separate, often defaulted field.
+	case "${authority}" in
+	\[*\]:*) printf '%s\n' "${endpoint}"; return;;
+	\[*\]) ;;
+	*:*:*) authority="[${authority}]";;
+	*:*) printf '%s\n' "${endpoint}"; return;;
+	esac
+	[ -n "${port}" ] || port="${default_port}"
+	if [ "${port}" != "${default_port}" ]; then
+		authority="${authority}:${port}"
+	fi
+	printf '%s\n' "${prefix}${authority}${suffix}"
+}
+
 smartdns_append_server_line() {
 	local outfile="$1"
 	local proto="$2"
@@ -1689,18 +1726,18 @@ smartdns_append_server_line() {
 		line="server-tcp $(smartdns_format_addr "${addr}" "${port}")"
 		;;
 	dot)
-		line="server-tls ${host}"
+		line="server-tls $(smartdns_format_tls_endpoint dot "${host}" "${port}")"
+		;;
+	https)
+		line="server-https $(smartdns_format_tls_endpoint https "${host}" "${port}")"
 		;;
 	*)
 		return 0
 		;;
 	esac
 	[ -n "${extras}" ] && line="${line} ${extras}"
-	if [ "${proto}" = "dot" ];then
+	if [ "${proto}" = "dot" ] || [ "${proto}" = "https" ];then
 		line="${line} -host-ip ${host_ip}"
-		if [ -n "${port}" ] && [ "${port}" != "853" ];then
-			line="${line} -port ${port}"
-		fi
 	fi
 	echo "${line}" >> "${outfile}"
 }
@@ -1719,7 +1756,7 @@ smartdns_append_group_servers() {
 	[ "${group}" = "gfw" ] && use_proxy="1"
 	while IFS="${sep}" read -r id proto provider description kind slot addr port host host_ip isp net
 	do
-		if [ "${group}" = "gfw" ] && ! proxy_core_supports_udp && [ "${proto}" = "udp" ];then
+		if [ "${group}" = "gfw" ] && ! dns_proxy_supports_udp && [ "${proto}" = "udp" ];then
 			skip_udp_count=$((skip_udp_count + 1))
 			continue
 		fi
@@ -1737,7 +1774,7 @@ smartdns_append_group_servers() {
 	done <<-EOF
 $(smartdns_group_items_tsv "${group}")
 EOF
-	if [ "${group}" = "gfw" ] && ! proxy_core_supports_udp;then
+	if [ "${group}" = "gfw" ] && ! dns_proxy_supports_udp;then
 		if [ "${skip_udp_count}" -gt 0 ];then
 			echo_date "⚠️smartdns ${scope}：已跳过 ${skip_udp_count} 个 gfw 组 UDP DNS。"
 		fi
@@ -1882,6 +1919,12 @@ EOF
 		smartdns_append_airport_dns_ipv6_lines
 		;;
 	esac
+	# Explicit proxy policy must win over broader China/DIRECT AAAA exceptions.
+	# Otherwise Graph can resolve IPv6 through chnlist and bypass IPv4 TPROXY.
+	cat >> "${outfile}" <<-'EOF'
+address /domain-set:black_list/#6
+address /domain-set:shunt_proxy/#6
+EOF
 }
 
 smartdns_generate_runtime_conf() {
@@ -2451,10 +2494,10 @@ start_chinadns_ng(){
 		fi
 	fi
 
-	if ! proxy_core_supports_udp && [ "${FDNS_SKIPPED_UDP_COUNT}" -gt 0 ];then
+	if ! dns_proxy_supports_udp && [ "${FDNS_SKIPPED_UDP_COUNT}" -gt 0 ];then
 		echo_date "⚠️chinadns-ng：已跳过 ${FDNS_SKIPPED_UDP_COUNT} 个可信 UDP DNS。"
 	fi
-	if ! proxy_core_supports_udp && [ -z "${FDNS_1}${FDNS_2}${FDNS_3}" ];then
+	if ! dns_proxy_supports_udp && [ -z "${FDNS_1}${FDNS_2}${FDNS_3}" ];then
 		FDNS_1="tcp://8.8.8.8"
 		echo_date "⚠️chinadns-ng：可信组没有可用 TCP/DoT DNS，已使用 tcp://8.8.8.8 兜底。"
 	fi
@@ -2907,11 +2950,11 @@ iter_dns_udp_relay_targets(){
 		do
 			local chk="$(eval echo \$ss_basic_chng_trust_dns_${numb}_chk)"
 			local net="$(get_dns_selected_net trust "${numb}")"
-			if [ "${chk}" = "1" ] && [ "${net}" = "udp" ] && proxy_core_supports_udp;then
+			if [ "${chk}" = "1" ] && [ "${net}" = "udp" ] && dns_proxy_supports_udp;then
 				printf '%s\037%s\037%s\037%s\037%s\n' "$((SMARTDNS_RELAY_PORT_BASE + numb - 1))" "$(get_dns_para trust "${numb}" addr)" "$(get_dns_para trust "${numb}" port)" "chinadns-ng trust DNS ${numb}" ""
 			fi
 		done
-	elif [ "${ss_basic_dns_plan}" = "2" ] && proxy_core_supports_udp;then
+	elif [ "${ss_basic_dns_plan}" = "2" ] && dns_proxy_supports_udp;then
 		smartdns_iter_gfw_udp_relays
 	fi
 }
@@ -3054,7 +3097,7 @@ get_dns(){
 	local dns_opt=$(eval echo \$ss_basic_chng_${type}_${net}_${numb}_opt)
 	local dns_usr=$(eval echo \$ss_basic_chng_${type}_${net}_${numb}_usr)
 
-	if [ "${type}" = "trust" ] && ! proxy_core_supports_udp && [ "${net}" = "udp" ];then
+	if [ "${type}" = "trust" ] && ! dns_proxy_supports_udp && [ "${net}" = "udp" ];then
 		return 0
 	fi
 
@@ -5149,27 +5192,8 @@ start_anytls(){
 	local pass_file="/tmp/anytls_pass"
 	local verify_arg=""
 
-	if [ -f "/koolshare/bin/anytls-zig" ];then
-		chmod +x /koolshare/bin/anytls-zig
-		ret=$(run /koolshare/bin/anytls-zig --version 2>&1)
-		if [ -z "${ret}" ];then
-			echo_date "检测到/koolshare/bin/目录下存在anytls-zig文件，但是无法运行！"
-			echo_date "请确保你下载了正确的二进制文件！"
-			close_in_five flag
-		fi
-	else
-		local pkg_arch=$(cat /koolshare/webs/Module_shadowsocks.asp | tr -d '\r' | grep -Eo "PKG_ARCH=.+"|awk -F "=" '{print $2}'|sed 's/"//g')
-		echo_date ""
-		echo_date "+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
-		echo_date ""
-		echo_date "重要提醒！！"
-		echo_date ""
-		echo_date "检测到你需要使用AnyTLS！但是当前/koolshare/bin目录下缺少anytls-zig二进制文件！"
-		echo_date "请安装fancyss full版本，或确认对应平台的anytls-zig已经正确安装。"
-		echo_date "当前平台：${pkg_arch}"
-		echo_date ""
-		echo_date "+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
-		echo_date ""
+	if ! /koolshare/bin/fss-anytls-client --version >/dev/null 2>&1; then
+		echo_date "AnyTLS 并发客户端缺失或无法运行，请安装对应平台的 fork 包。"
 		close_in_five flag
 	fi
 
@@ -5184,7 +5208,8 @@ start_anytls(){
 	}
 
 	server_addr="$(anytls_hostport "${ss_basic_anytls_server}" "${ss_basic_anytls_port}")"
-	printf '%s' "${ss_basic_anytls_pass}" > "${pass_file}"
+	(umask 077; printf '%s' "${ss_basic_anytls_pass}" > "${pass_file}")
+	chmod 600 "${pass_file}"
 	if [ "${ss_basic_anytls_ai}" = "1" ]; then
 		verify_arg="--insecure"
 	else
@@ -5196,12 +5221,11 @@ start_anytls(){
 	detect_running_status2 ipt2socks 23456
 
 	echo_date "开启AnyTLS客户端进程..."
-	if [ -n "${ss_basic_anytls_sni}" ]; then
-		run_bg /koolshare/bin/anytls-zig -server "${server_addr}" --password-file "${pass_file}" -l 127.0.0.1:23456 -sni "${ss_basic_anytls_sni}" "${verify_arg}"
-	else
-		run_bg /koolshare/bin/anytls-zig -server "${server_addr}" --password-file "${pass_file}" -l 127.0.0.1:23456 "${verify_arg}"
-	fi
-	detect_running_status3 anytls-zig 23456 1 force
+	/bin/sh /koolshare/scripts/ss_anytls_helper.sh start /tmp/fss_anytls_single.pid "${pass_file}" 127.0.0.1:23456 "${server_addr}" "${ss_basic_anytls_sni}" "${verify_arg}" || {
+		echo_date "AnyTLS 客户端启动失败。"
+		close_in_five flag
+	}
+
 }
 
 write_cron_job() {
@@ -5595,6 +5619,10 @@ get_acl_udp_flag() {
 	local acl="$1"
 	local proxy_mode="$2"
 	local udp_flag=""
+	if [ "${ss_basic_mode}" = 7 ] && fss_shunt_has_anytls; then
+		[ "${proxy_mode}" = 0 ] && echo 0 || echo 1
+		return
+	fi
 	if ! acl_proxy_supports_udp; then
 		if [ "${proxy_mode}" != "0" ]; then
 			note_acl_udp_unsupported_once
@@ -5630,6 +5658,8 @@ get_acl_quic_flag() {
 	local proxy_mode="$2"
 	local udp_flag="$3"
 	local quic_flag=""
+	# Preserve DIRECT UDP/443: AnyTLS rejection is attached to Xray targets.
+	if [ "${ss_basic_mode}" = 7 ] && fss_shunt_has_anytls; then echo 0; return; fi
 	if [ -n "${acl}" ];then
 		eval quic_flag=\$ss_acl_quic_${acl}
 	else
@@ -6518,6 +6548,11 @@ _start_iptables() {
 	dns_hijack_control 4
 	#-----------------------FOR ROUTER---------------------
 	# router itself
+	if [ "${ss_basic_mode}" = "7" ]; then
+		# Reserved shunt egress mark: DIRECT sockets must not re-enter 3333.
+		append_if_not_exists nat -A OUTPUT -m mark --mark 0xff/0xffffffff -m comment --comment SHADOWSOCKS_SHUNT_EGRESS -j RETURN
+		append_if_not_exists mangle -A OUTPUT -m mark --mark 0xff/0xffffffff -m comment --comment SHADOWSOCKS_SHUNT_EGRESS -j RETURN
+	fi
 	if [ "${ss_basic_mode}" != "6" ];then
 		append_if_not_exists nat -A OUTPUT -p tcp -m set --match-set router dst -j REDIRECT --to-ports 3333
 
@@ -6767,6 +6802,10 @@ _start_ipv6_iptables() {
 	fi
 
 	if [ "${ss_basic_mode}" != "6" ];then
+		if [ "${ss_basic_mode}" = "7" ]; then
+			append_if_not_exists6 nat -A OUTPUT -m mark --mark 0xff/0xffffffff -m comment --comment SHADOWSOCKS6_SHUNT_EGRESS -j RETURN || return 1
+			append_if_not_exists6 mangle -A OUTPUT -m mark --mark 0xff/0xffffffff -m comment --comment SHADOWSOCKS6_SHUNT_EGRESS -j RETURN || return 1
+		fi
 		append_if_not_exists6 nat -A OUTPUT -p tcp -m set --match-set router6 dst -j REDIRECT --to-ports $(get_tproxy_port6) || return 1
 		append_if_not_exists6 mangle -A OUTPUT -p udp -m set --match-set router6 dst -m udp --dport 53 -j MARK --set-mark 0x7/0xffffffff || return 1
 	fi
@@ -7022,7 +7061,7 @@ detect_ip(){
 		local IP=$(run curl-fancyss ${CURL_IP_FLAG} -s -m ${TIMEOUT} ${SUBJECT} 2>&1 | grep -Eo "([0-9]{1,3}[\.]){3}[0-9]{1,3}" | grep -v "Terminated")
 	elif [ "${METHOD}" == "1" ];then
 		# 检测代理ip
-		local SOCKS5_OPEN=$(netstat -nlpt 2>/dev/null|grep -w "23456"|grep -Eo "v2ray|xray|naive|tuic|anytls-zig")
+		local SOCKS5_OPEN=$(netstat -nlpt 2>/dev/null|grep -w "23456"|grep -Eo "v2ray|xray|naive|tuic|fss-anytls-clie|anytls-zig")
 		if [ -n "${SOCKS5_OPEN}" ];then
 			local IP=$(run curl-fancyss ${CURL_IP_FLAG} -s -x socks5h://127.0.0.1:23456 -m ${TIMEOUT} ${SUBJECT} 2>&1 | grep -v "Terminated")
 		else
@@ -7037,7 +7076,7 @@ detect_ip(){
 check_frn_public_ip(){
 	echo_date "开始代理出口ip检测..."
 
-	local SOCKS5_OPEN=$(netstat -nlp 2>/dev/null | grep -w "23456" | grep -Eo "v2ray|xray|naive|tuic|anytls-zig" | head -n1)
+	local SOCKS5_OPEN=$(netstat -nlp 2>/dev/null | grep -w "23456" | grep -Eo "v2ray|xray|naive|tuic|fss-anytls-clie|anytls-zig" | head -n1)
 	if [ -n "${SOCKS5_OPEN}" ];then
 		echo_date "检测方式1：socks5"
 	else
@@ -7182,6 +7221,24 @@ apply_ss() {
 	local shunt_hot_restart="0"
 	local shunt_prev_xray_json=""
 
+	fss_require_base_dns || return 1
+	fss_require_shunt_lib || return 1
+	local airport_ids="/tmp/fss_airport_start_ids.$$"
+	{
+		fss_get_current_node_id
+		if [ "${ss_basic_mode}" = 7 ]; then
+			fss_shunt_get_default_node_id
+			fss_shunt_get_effective_default_target
+			fss_shunt_rules_json_resolved | jq -r '.[]?|select((.enabled//1|tostring)!="0")|.target_node_id//empty'
+		fi
+	} | awk '/^[0-9]+$/' | sort -u > "${airport_ids}"
+	if ! fss_airport_bootstrap_sync --ids-file "${airport_ids}"; then
+		rm -f "${airport_ids}"
+		echo_date 'AIRPORT_DNS_PREFLIGHT_FAILED：保留现有运行实例，未执行切换。'
+		return 1
+	fi
+	rm -f "${airport_ids}"
+
 	echo_date ======================= 梅林固件 - 【科学上网】 ========================
 	echo_date
 	if [ "${ss_basic_status}" == "1" ];then
@@ -7237,6 +7294,13 @@ apply_ss() {
 		start_dns_x
 		if ! refresh_current_node_server_ip_runtime; then
 			echo_date "节点服务器域名运行时解析失败，将继续启动代理主程序，并等待客户端后续自行解析。"
+		fi
+	fi
+
+	if [ "${ss_basic_mode}" = 7 ]; then
+		if ! fss_shunt_start_runtime_artifact_helpers "${FSS_SHUNT_RUNTIME_DIR}/cache_ids.txt"; then
+			echo_date 'ANYTLS_HELPER_NOT_READY：拒绝启动不完整的分流配置。'
+			close_in_five flag
 		fi
 	fi
 
@@ -7461,7 +7525,7 @@ flush_nat)
 		;;
 start_nat)
 	# start on nat-start
-	SOCKS5_OPEN=$(netstat -nlpt 2>/dev/null|grep -w "23456"|grep -Eo "v2ray|xray|naive|tuic|anytls-zig")
+	SOCKS5_OPEN=$(netstat -nlpt 2>/dev/null|grep -w "23456"|grep -Eo "v2ray|xray|naive|tuic|fss-anytls-clie|anytls-zig")
 	if [ -z "${SOCKS5_OPEN}" ];then
 		# 代理程序没有运行，可能是刚开机，不继续
 		return 0

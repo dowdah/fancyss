@@ -2,6 +2,27 @@
 
 # fancyss smartdns / airport dns lazy-loaded helpers
 
+# The independent 6053 service survives proxy restarts. No fallback on failure.
+fss_airport_bootstrap_sync() {
+	[ -f /jffs/configs/airport-smartdns.conf ] || return 0
+	[ -x /jffs/scripts/airport-node-dns.sh ] || { echo_date 'AIRPORT_DNS_SCRIPT_MISSING'; return 1; }
+	/bin/sh /jffs/scripts/airport-node-dns.sh sync "$@"
+}
+
+fss_airport_bootstrap_check_id() {
+	local id="$1" ids="" work="/tmp/fss_airport_target.$$.${RANDOM:-0}"
+	[ -f /jffs/configs/airport-smartdns.conf ] || return 0
+	case "${id}" in ''|*[!0-9]*) return 1;; esac
+	(umask 077; mkdir "${work}") || return 1
+	ids="${work}/ids"
+	printf '%s\n' "${id}" > "${ids}"
+	fss_airport_bootstrap_sync --ids-file "${ids}"
+	local result=$?
+	rm -f "${ids}"
+	rmdir "${work}"
+	return "${result}"
+}
+
 generate_smartdns_whitelist_file() {
 	local outfile="$1"
 	[ -n "${outfile}" ] || return 1
@@ -220,7 +241,7 @@ fss_airport_dns_raw_to_tsv() {
 		proto="quic"
 		hostport=$(printf '%s' "${raw#quic://}" | sed 's#/.*$##')
 		port=$(printf '%s' "${hostport}" | awk -F: 'NF>1{print $NF}')
-		[ -n "${port}" ] || port="853"
+		[ -n "${port}" ] || { [ "${proto}" = https ] && port=443 || port=853; }
 		case "${hostport}" in
 		\[*\]:*)
 			host=$(printf '%s' "${hostport}" | sed -n 's/^\[\(.*\)\]:[0-9][0-9]*$/\1/p')
@@ -587,12 +608,13 @@ smartdns_validate_group_value() {
 		(.items | length > 0) and
 		(.items | length <= 16) and
 		all(.items[];
-			(.proto == "udp" or .proto == "tcp" or .proto == "dot") and
+			(.proto == "udp" or .proto == "tcp" or .proto == "dot" or .proto == "https") and
 			(
 				((.kind // "preset") == "isp" and ((.slot | tostring) == "1" or (.slot | tostring) == "2")) or
 				((.kind // "preset") == "preset" and (
 					((.proto == "udp" or .proto == "tcp") and ((.addr // "") != "")) or
-					(.proto == "dot" and ((.host // "") != "") and ((.host_ip // "") != ""))
+					(.proto == "dot" and ((.host // "") != "") and ((.host_ip // "") != "")) or
+					(.proto == "https" and ((.host // "") | test("^https://[^[:space:]]+$")) and ((.host_ip // "") | test("^[0-9a-fA-F:.]+$")))
 				))
 			)
 		)
@@ -633,10 +655,10 @@ EOF
 		port="53"
 		net="$(echo "${addr}" | grep -q ':' && echo ipv6 || echo ipv4)"
 	fi
-	if [ "${proto}" = "dot" ];then
+	if [ "${proto}" = "dot" ] || [ "${proto}" = "https" ];then
 		[ -n "${host}" ] || return 1
 		[ -n "${host_ip}" ] || return 1
-		[ -n "${port}" ] || port="853"
+		[ -n "${port}" ] || { [ "${proto}" = https ] && port=443 || port=853; }
 	else
 		[ -n "${addr}" ] || return 1
 		[ -n "${port}" ] || port="53"
@@ -700,10 +722,10 @@ smartdns_group_items_tsv() {
 			port="53"
 			net="$(echo "${addr}" | grep -q ':' && echo ipv6 || echo ipv4)"
 		fi
-		if [ "${proto}" = "dot" ];then
+		if [ "${proto}" = "dot" ] || [ "${proto}" = "https" ];then
 			[ -n "${host}" ] || continue
 			[ -n "${host_ip}" ] || continue
-			[ -n "${port}" ] || port="853"
+			[ -n "${port}" ] || { [ "${proto}" = https ] && port=443 || port=853; }
 		else
 			[ -n "${addr}" ] || continue
 			[ -n "${port}" ] || port="53"

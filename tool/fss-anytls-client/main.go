@@ -21,7 +21,7 @@ import (
 	"github.com/sagernet/sing/common/logger"
 )
 
-const version = "fss-anytls-client 0.1.1 (sing-anytls v0.0.11 + cancellation.1)"
+const version = "fss-anytls-client 0.1.2 (sing-anytls v0.0.11 + cancellation.1)"
 
 type config struct {
 	Listen, Server, PasswordFile, SNI, CAFile string
@@ -90,7 +90,7 @@ func readPassword(path string) (string, error) {
 func tlsConfig(c config) (*tls.Config, error) {
 	host, _, _ := net.SplitHostPort(c.Server)
 	name := c.SNI
-	if name == "" && c.Verify {
+	if name == "" {
 		name = host
 	}
 	t := &tls.Config{ServerName: name, InsecureSkipVerify: !c.Verify, MinVersion: tls.VersionTLS12}

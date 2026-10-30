@@ -1675,6 +1675,35 @@ smartdns_server_flags() {
 	esac
 }
 
+smartdns_format_tls_endpoint() {
+	local proto="$1" endpoint="$2" port="$3"
+	local prefix="" authority="" suffix="" rest="${endpoint}" default_port=853
+	case "${proto}" in
+	https)
+		prefix="https://"
+		rest="${endpoint#https://}"
+		default_port=443
+		;;
+	dot)
+		case "${endpoint}" in tls://*) prefix="tls://"; rest="${endpoint#tls://}";; esac
+		;;
+	esac
+	authority="${rest%%[/?#]*}"
+	suffix="${rest#"${authority}"}"
+	# An explicit URI/address port wins over the separate, often defaulted field.
+	case "${authority}" in
+	\[*\]:*) printf '%s\n' "${endpoint}"; return;;
+	\[*\]) ;;
+	*:*:*) authority="[${authority}]";;
+	*:*) printf '%s\n' "${endpoint}"; return;;
+	esac
+	[ -n "${port}" ] || port="${default_port}"
+	if [ "${port}" != "${default_port}" ]; then
+		authority="${authority}:${port}"
+	fi
+	printf '%s\n' "${prefix}${authority}${suffix}"
+}
+
 smartdns_append_server_line() {
 	local outfile="$1"
 	local proto="$2"
@@ -1697,10 +1726,10 @@ smartdns_append_server_line() {
 		line="server-tcp $(smartdns_format_addr "${addr}" "${port}")"
 		;;
 	dot)
-		line="server-tls ${host}"
+		line="server-tls $(smartdns_format_tls_endpoint dot "${host}" "${port}")"
 		;;
 	https)
-		line="server-https ${host}"
+		line="server-https $(smartdns_format_tls_endpoint https "${host}" "${port}")"
 		;;
 	*)
 		return 0
@@ -1709,9 +1738,6 @@ smartdns_append_server_line() {
 	[ -n "${extras}" ] && line="${line} ${extras}"
 	if [ "${proto}" = "dot" ] || [ "${proto}" = "https" ];then
 		line="${line} -host-ip ${host_ip}"
-		if [ -n "${port}" ] && [ "${port}" != "853" ] && [ "${port}" != "443" ];then
-			line="${line} -port ${port}"
-		fi
 	fi
 	echo "${line}" >> "${outfile}"
 }

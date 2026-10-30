@@ -16,6 +16,9 @@ CLI: `-server host:port --password-file path -l 127.0.0.1:port [-sni name]
 file bytes; a regular, nonempty private file (0600) is required. Never pass
 passwords on the command line. `--ca-file` optionally adds a CA certificate.
 `--version` prints the wrapper and protocol library versions.
+When SNI is omitted, the server hostname is used even with `--insecure`.
+Go TLS omits IP literals from the SNI extension. Disabling certificate checks
+does not disable SNI or introduce a retry without SNI.
 
 256 local TCP connections are admitted without a worker queue. Additional
 connections close immediately. SOCKS negotiation has a 5-second deadline;

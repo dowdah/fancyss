@@ -1,0 +1,35 @@
+#!/bin/sh
+
+# fancyss script for asuswrt/merlin based router with software center
+# this script help to set dnsmasq upstream dns server to 127.0.0.1#7913
+# ss_basic_dns_serverx=0，dns query → dnsmasq(53) → chinadns-ng(7913)
+# ss_basic_dns_serverx=1，dns query → dnsmasq(53) → martdns(7913)
+
+source /koolshare/scripts/ss_base.sh
+CONFIG=$1
+INDEX=$2
+
+perpare(){
+	# remove config
+	[ -n "$(cat ${CONFIG}|grep no-resolv)" ] && sed -i '/no-resolv/d' ${CONFIG}
+	[ -n "$(cat ${CONFIG}|grep dhcp-script)" ] && sed -i '/dhcp-script/d' ${CONFIG}
+	[ -n "$(cat ${CONFIG}|grep servers-file)" ] && sed -i '/servers-file/d' ${CONFIG}
+	[ -n "$(cat ${CONFIG}|grep resolv-file)" ] && sed -i '/resolv-file/d' ${CONFIG}
+	
+	# add config
+	[ -z "$(cat ${CONFIG}|grep conf-dir=)" ] && echo "conf-dir=/jffs/configs/dnsmasq.d" >>${CONFIG}
+}
+
+fancyss_mod(){
+	if [ "$(dbus get ss_basic_dns_serverx)" == "1" ];then
+		sed -i '1i\port=0' ${CONFIG}
+		pc_insert "dhcp-option" "dhcp-option=option:dns-server,0.0.0.0" ${CONFIG}
+	else
+		pc_replace "cache-size=1500" "cache-size=9999" ${CONFIG}
+		pc_insert "no-poll" "server=127.0.0.1#7913" ${CONFIG}
+		pc_insert "no-poll" "no-resolv" ${CONFIG}
+	fi
+}
+
+perpare
+fancyss_mod

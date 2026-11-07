@@ -1,0 +1,1087 @@
+fancyss Changelog
+
+3.5.30（20260601）
+   - update	Xray-core 升级到自编译 `v26.6.1-94ffd50`。
+   - update	node-tool 升级到 0.1.16，全平台产物进入 binaries/node-tool。
+   - update	webtest 缓存生成版本更新到 `20260601_1`，避免升级后复用旧测速运行产物。
+   - fix	适配 Xray-core `v26.5.9` 在 2026-06-01 后移除 `allowInsecure`：主配置、webtest shell 生成器和 node-tool 原生 webtest 产物不再写入该字段，继续保留 `pinnedPeerCertSha256 / verifyPeerCertByName`。
+   - fix	修复已使用新版 Xray 的机型上，批量 webtest 因临时 `wt-xray` 配置启动失败而导致所有节点显示 `failed` 的问题。
+
+3.5.29（20260520）
+   - update	SS http obfs 改为纯 Xray TCP HTTP header。
+   - update	新增 MTK 机型 GS-BE7200X 安装支持。
+   - update	Xray-core 升级到 `v26.5.9-1bdb488`。
+   - update	node-tool 升级到 0.1.14。
+   - update	sub-tool 升级到 0.1.17，支持 Clash/Mihomo AnyTLS。
+   - update	订阅节点主身份改为 `profile_<profile_id>`，重新订阅后优先按 profile 恢复节点映射。
+   - fix	Xray 分流支持 SS 无 obfs / http obfs。
+   - fix	Xray 分流继续拒绝 tls obfs。
+   - fix	切换节点时清理 obfs helper 残留。
+   - fix	修复节点管理/节点分流互切重复 webtest。
+   - fix	修复节点数变化绕过刷新时间触发 webtest。
+   - fix	修复订阅启动阶段可能卡住的问题。
+   - fix	修复订阅错误页触发 `base64 -d` 常驻占用 CPU。
+
+3.5.28（20260510）
+   - note	本次更新重点刷新核心代理二进制，并针对 Xray-core 新版配置字段变化、详细状态展示和 TUIC/Naïve 运行兼容做补丁收口。
+   - update	Xray-core 升级到自编译 `v26.3.27-d2758a0`，使用 Go `1.26.3` 构建，已重新编译并 UPX 压缩 `arm64 / armv7 / armv5` 产物，同步进入 `binaries/xray` 与对应 `fancyss/bin-*` 分发链路。
+   - update	`binaries/xray/make_latest.sh` 支持显式指定 tag 构建，并会检测本地 Go 工具链版本，不匹配时自动替换为脚本指定版本，避免复用旧 Go 重新编译 Xray。
+   - update	适配 Xray-core `v26.3.27` 配置变更：VMess/VLESS/Trojan WebSocket 配置改用 `wsSettings.host`，Hysteria2 的拥塞、上下行和 UDP Hop 参数迁移到 `finalmask.quicParams`，减少新版 Xray 的弃用警告并保持后续兼容。
+   - update	`node-tool` 升级到 `0.1.13`，native webtest 生成器同步适配新版 Xray WS/HY2 配置结构；已重新编译 `x86_64 / aarch64 / armv5te / armv7a / armv7hf` 全平台产物，路由器平台产物已按脚本完成 UPX 压缩并生成 `SHA256SUMS-v0.1.13`。
+   - update	`tuic-client` 升级到 `v1.8.1`，并在 TUIC 启动与 webtest 临时运行配置中写入 `startup_mode: eager`，减少首次建连等待对启动和测速的影响。
+   - update	NaïveProxy 升级到 `v148.0.7778.96-2`，已刷新 `arm64 / armv7 / armv5` 分发产物并同步到对应平台 `fancyss/bin-*`。
+   - update	“详细状态”中的订阅数量改为读取订阅 profile，显示总数、启用数量和关闭数量；进程状态表新增运行时长列，并将 `status-tool` 和 `websocketd` 纳入检测，`status-tool` 仅在 serve/daemon 模式下显示对应运行状态和内存占用。
+   - fix	修复 Xray-core 新版中 Hysteria2 旧字段仍可解析但只输出弃用警告的问题；运行配置和 webtest 生成配置现在统一写入新字段，避免未来版本移除旧字段后启动失败。
+   - test	已在本机使用 Xray `v26.3.27` 对 VLESS WS、Trojan WS、Hysteria2 finalmask 样例配置执行 `run -test` 验证通过；已将 Xray/node-tool/配置生成脚本同步到 GS7 并完成版本、MD5 和脚本语法验证。
+
+3.5.27（20260509）
+   - update	SmartDNS 运行配置生成时，将 BlockList 屏蔽规则改为前置 `address /domain-set:block_list/#` 硬屏蔽，该规则始终拥有最高优先级。
+   - update	补充 Adobe 相关成功解析域名到 `rules_ng/block_list.txt`。
+   - update	`anytls-zig` 升级到 `0.1.6`，改用固定连接 worker 池和固定 relay worker 池处理 SOCKS5 连接，显式限制线程栈大小，并在连接结束时主动 shutdown 远端 TLS socket，降低长时间运行内存占用。
+   - update	已重新编译 `anytls-zig` 全平台产物并同步进入 `binaries/anytls-zig` 分发链路：`x86_64 / aarch64 / armv5te / armv7a / armv7hf`；路由器平台产物已按脚本完成 UPX 压缩，并生成 `SHA256SUMS-v0.1.6` 校验文件。
+   - fix	修复 AnyTLS 节点长时间使用或频繁短连接请求后，`anytls-zig` 因每连接动态创建线程和连接退出不够主动导致内存占用持续增长，极端情况下可能占满路由器可用内存并触发重启的问题。
+
+3.5.26（20260507）
+   - note	本次更新针对 HTTPS 访问路由器后台时顶部“插件运行状态”长期 Waiting 或刷新不稳定的问题做补丁收口，并继续优化 `status-tool serve` 在弱性能机型上的按需探测链路。
+   - update	HTTPS 访问 `Module_shadowsocks.asp` 时全局禁用 WebSocket 通道，顶部运行状态、webtest、提交日志等前后端交互统一走 HTTP(S) API fallback，避免浏览器阻止不安全 `ws://` 导致状态请求卡住。
+   - update	未开启故障转移且运行状态检测模式为 `serve` 时，HTTP(S) API 会通过 `ss_status.sh` 调用 `statusctl probe-once` 从常驻 `status-tool serve` 获取结果；前端只在首次进入页面/刷新时显示 Waiting，后台标签页切回不再额外重置状态。
+   - update	`status-tool` 升级到 `0.1.3`，为 TCP connect、读写和 `statusctl` Unix socket 客户端补充超时控制，避免 IPv6 探测失败或 `serve` 单线程忙碌时导致 `statusctl`、`ss_status.sh` 和 HTTP 请求堆积。
+   - update	已重新编译 `status-tool/statusctl` 全平台产物并同步进入 `binaries/status-tool` 分发链路：`x86_64 / aarch64 / armv5te / armv7a / armv7hf`；路由器平台产物已按脚本完成 UPX 压缩，并生成 `SHA256SUMS-v0.1.3` 校验文件。
+   - fix	修复 `status-tool serve` 正在执行探测时，`ss_status.sh` 使用 `statusctl ping` 判断存活会误判失败并反复重启 `serve`，导致首次开启 IPv6 代理后三行状态持续 Waiting 的问题；现在按 socket、启动参数和进程状态判断常驻服务是否有效。
+   - fix	修复 HTTPS + 非故障转移场景下前端 HTTP 状态请求可能读取旧 `ss_status_daemon.json` / `ss_status.txt` 或与 WebSocket 状态请求并发的问题；现在关闭故障转移时由前端按间隔主动触发 `ss_status.sh`，开启故障转移时才轮询 daemon 写出的状态文件。
+   - fix	修复插件停止、重启或状态 runtime reset 后可能残留 `statusctl`、`ss_status.sh`、状态历史 `tail -f`、`ss_status_ws.sh follow_*` 和状态锁目录的问题；停止链路会统一清理 HTTP/WS lock、serve 参数记录和状态历史流跟随进程。
+
+3.5.25（20260504）
+   - note	本次更新针对 AnyTLS 订阅节点兼容性做补丁收口，重点修复部分机场使用伪装 SNI 与不匹配证书时，`anytls-zig` 在 `--insecure` 模式下仍触发证书主机名校验导致节点不可用的问题。
+   - update	`anytls-zig` 升级到 `0.1.5`，在 `--insecure` 模式下若带 SNI 连接触发 `CertificateHostMismatch`，会自动退回不发送 SNI 重连，并在进程内缓存该兼容路径，避免后续连接重复经历失败重试。
+   - update	已重新编译 `anytls-zig` 全平台产物并同步进入 `binaries/anytls-zig` 分发链路：`x86_64 / aarch64 / armv5te / armv7a / armv7hf`；路由器平台产物已按脚本完成 UPX 压缩，并生成 `SHA256SUMS-v0.1.5` 校验文件。
+   - fix	修复订阅中 `anytls://...&insecure=1&sni=apple.com`、`sni=ads.apple.com`、`sni=crl.apple.com` 等节点在官方 Go `anytls-client` 可用、但 fancyss 内置 `anytls-zig` 启动后出口检测失败的问题。
+   - fix	修复节点管理卡片视图中，点击节点卡片或收起/展开分组时列表会自动滚动回当前运行节点、导致用户视图位置跳动的问题；现在只有进入节点管理页或从其它标签切回时才自动定位当前节点，用户点击和分组操作会保持当前滚动位置。
+   - fix	修复 DNS 设定页“DNS解析测试(dig)”选择自定义域名时，后端仍使用下拉框占位值 `99` 执行 `dig 99` 的问题；现在会读取自定义域名输入框，并对空值和非法域名做提示。
+   - fix	优化 DNS 测试脚本初始化 chnroute 检测逻辑，避免将完整 ipset 列表写入 shell 变量导致大规则集场景下出现 `Argument list too long`。
+   - fix	修复订阅管理中新建订阅并点击“保存并同步”后，订阅成功返回卡片界面时节点数量仍显示为 `0` 的问题；现在同步完成后会先刷新节点数据缓存，再重新拉取订阅 profile 状态并渲染卡片。
+
+3.5.24（20260503）
+   - note	本次更新新增 AnyTLS 协议支持（注意：Anytls为独立二进制实现，所以不支持节点分流），并针对在线升级链路、多平台打包元数据和详细状态展示做补丁收口。
+   - add	full 版本新增 AnyTLS 节点支持：订阅解析、手动添加/编辑、账号设置节点选择、schema2 字段映射、节点导入导出、节点卡片/表格展示、分享链接生成和启动配置均已接入；lite 版本打包会按 full-only 协议规则移除 AnyTLS 支持。
+   - add	新增 `anytls-zig` 轻量客户端工具并接入 full 版本分发链路，已编译并 UPX 压缩 `x86_64 / aarch64 / armv5te / armv7a / armv7hf` 全平台产物，打包时按平台复制到对应 `fancyss/bin-*`。
+   - update	AnyTLS 运行链路使用 `anytls-zig` 本地 SOCKS5 入站配合 `ipt2socks` 透明代理；因 AnyTLS 不支持 UDP，启动时会过滤可信/GFW 组 UDP DNS，必要时使用 `tcp://8.8.8.8` 兜底并输出日志提醒。
+   - update	AnyTLS 按非 Xray-like 协议处理，暂不允许作为 Xray 分流节点或兜底出站；web 落地延迟测速按 Naïve/TUIC 类原生单节点进程模型处理并加入线程限制，避免批量测速时过量拉起进程。
+   - update	`sub-tool` 升级到 `0.1.15`，支持 AnyTLS URI 解析、协议统计、full/lite 过滤和认证密码规范化比较；`node-tool` 升级到 `0.1.11`，支持 AnyTLS schema2 字段、legacy/raw 密文字段处理、webtest 原生产物生成和节点分布 summary 输出。
+   - update	“详细状态”中的节点分布改为通过 `node-tool stat --format summary` 统计，减少大量节点场景下 shell+jq 逐项统计带来的等待；主要二进制版本展示补充 `status-tool`、`webtest-tool` 和 `anytls-zig`。
+   - update	节点管理卡片视图进入页面或从其它标签切回时，会自动定位到当前正在运行的节点卡片；定位后会按完整卡片行微调滚动位置和容器高度，避免顶部或底部露出半张卡片。
+   - fix	修复 AnyTLS 节点启动后顶部运行状态国外链接可能显示失败的问题；状态检测和 webtest 对一次性 SOCKS 探测场景做了短连接兼容，避免测速行为提前触发 AnyTLS 客户端退出。
+   - fix	修复 full 版本顶部协议说明文本过长导致换行的问题；full 版本移除“九种协议”字样，lite 版本保持原展示。
+   - fix	修复点击“详细状态”后状态文本区域自动滚动到底部的问题；现在保持显示最前面的状态内容，便于优先查看节点分布和核心运行信息。
+   - fix	修复 `ss_update.sh` 下载插件离线安装包时 SOCKS5 判断分支写反的问题：现在与在线版本检测保持一致，检测到本地 `23456` SOCKS5 代理时使用 `socks5h://127.0.0.1:23456` 下载安装包，未检测到代理时才直连，避免“能检测版本但下载包超时”的问题。
+   - fix	修复打包时 `Module_shadowsocks.asp` 内 `PKG_ARCH / PKG_TYPE / PKG_EXTA` 只按默认值替换的隐患；现在每个平台、full/lite、release/debug 打包都会无条件写入正确包元数据，避免源码或调试同步污染后产出错误包名。
+   - test	已在 RT-AX89X(qca)、TUF-AX3000(hnd)、GS7(mtk)、RT-AX86U-home(hnd_v8) 实机验证在线更新安装包下载会在检测到 SOCKS5 时走代理并成功下载对应平台包；AnyTLS 接入已在 GS7(mtk) 做启动、页面展示和运行状态 smoke test。
+
+3.5.23（20260502）
+   - note	本次更新针对弱性能机型顶部“插件运行状态”检测带来的周期 CPU 峰值做收口，重点优化未开启故障转移时的前端状态刷新链路。
+   - add	附加功能 - 性能优化新增“运行状态检测模式”选项，支持 `serve` 常驻低开销、`once` 按次启动和兼容模式；新安装或清空配置后默认使用 `serve`，便于弱性能机型减少反复拉起 shell 和探测工具的开销。
+   - update	未开启故障转移且 WebSocket 可用时，顶部运行状态优先直接通过 `statusctl --socket-path /tmp/status-tool.sock probe-once` 触发 `status-tool serve` 按需探测，不再每轮都启动 `ss_status.sh` 与 `status-tool fancyss`。
+   - update	故障转移开启时继续使用稳定的 `status-tool daemon` 周期检测；关闭故障转移且检测模式为 `once` 或兼容模式时，保留原按次探测路径，便于对比和回退。
+   - fix	修复顶部状态 WebSocket 与 HTTP API 可能同时发起请求的问题；现在前端会在 WebSocket 可用时优先使用 WebSocket，失败或返回异常 payload 时才回退 HTTP API。
+   - fix	修复状态检测锁残留时可能导致前端持续 Waiting 或重复排队的问题；状态脚本会等待已有探测缓存、清理 stale lock，插件重启/停止/故障转移重置时也会同步清理状态锁和 socket。
+   - fix	修复插件停止或重启时可能残留 `status-tool fancyss/serve/daemon` 进程的问题，停止链路现在会统一匹配并清理所有状态检测运行模式。
+
+3.5.22（20260429）
+   - add	节点管理卡片现在可以拖拽改变顺序。
+   - add	节点管理底部“延迟测试”菜单新增“关闭批量延迟测试 / 打开批量延迟测试”开关。
+   - update	关闭批量延迟测试后，节点卡片不再渲染 `ss_node_lt_*` 延迟块，表格视图不再显示“web落地延迟”列，操作栏也不再显示单节点测速按钮；重新开启后会立即重绘节点列表并启动一次批量测速。
+   - fix	关闭批量延迟测试时会同步清理后端 webtest 结果文件、备份文件、历史文件、锁文件、临时工作目录、缓存状态和持久化 webtest cache，并移除延迟测试定时任务，避免关闭后旧结果或旧缓存继续回填到前端。
+   - fix	关闭状态下后端 `web_webtest` 和批量测速入口会直接返回，不再因为页面刷新、缓存读取或异步轮询重新生成测速结果；前端轮询和 WebSocket 回调也会在开关关闭后拒绝旧结果写回。
+   - update	安装阶段针对常驻 `websocketd` 增加安全替换流程：先比较已安装和待安装二进制校验值，未变化时跳过替换和重启；二进制变化时区分软件中心离线安装、普通安装和 fancyss 自更新，避免自更新过程中直接杀掉旧 websocketd 导致 WebSocket 日志中断。
+   - update	优化安装前 JFFS 空间预估：先按实际安装流程剔除不会写入 JFFS 的文件，再根据 `/jffs` 文件系统类型选择候选文件夹占用或候选压缩包大小作为估算基准，并增加动态余量，提升 ubifs/jffs2 与 USB bind ext3/ext4 场景下的判断准确性。
+   - update	安装前会清理 JFFS 根目录中可安全移除的临时日志和旧安装包：截断 `syslog.log / driver_log.log / hostapd.log`，删除对应轮转日志与 `uu.tar.gz*`，并在空间统计前输出释放空间估算，降低旧日志占满 JFFS 导致安装失败的概率。
+   - fix	修复软件中心卸载插件后 `websocketd` 进程和文件可能残留的问题；卸载时会清理 websocketd pidfile、自更新延迟重启标记和异步 helper，并通过多种进程匹配方式停止 fancyss 专用 websocketd。
+
+3.5.21（20260429）
+   - note	本次更新针对顶部“插件运行状态”时间回跳和旧缓存复用问题做补丁收口，并完成 GS7 / TUF-AX3000 在 IPv6 代理、故障转移、WebSocket/HTTP fallback 共 16 种组合下的实机验证。
+   - fix	修复故障转移开启时顶部运行状态可能复用 `/tmp/upload/ss_status_front.txt` 或 `ss_status_ws.txt` 中的多天前旧缓存，导致状态时间在旧时间和当前时间之间跳动的问题；现在状态缓存会校验当前 IPv6 展示模式和时间新鲜度，超过有效窗口会强制重新探测。
+   - fix	修复 WebSocket 状态通道遇到残留旧缓存或 stale lock 时可能直接返回过期结果的问题；现在 WS 缓存同样校验新鲜度，并对锁目录加入 PID 校验和 stale lock 清理。
+   - fix	修复 GS7 等部分机型上 `status-tool` 生成的状态时间使用 UTC、比路由器本地时间少 8 小时的问题；状态脚本、daemon 和 reset 流程会根据路由器 `nvram` 时区启动 `status-tool`。
+   - fix	修复开启/关闭 IPv6 代理后，前端可能被旧的两项/三项状态 payload 覆盖，导致国外 IPv4/IPv6 状态栏显示错乱或被隐藏的问题；前端会拒绝与当前 IPv6 模式不匹配的状态结果。
+
+3.5.20（20260427）
+   - note	本次更新针对故障转移“切换到 web 延迟最低节点”的选择逻辑做补丁收口，避免异常测速结果被误判为最低延迟。
+   - fix	修复 Xray 分流模式下账号设置或节点管理切换当前节点时，运行节点可能仍被兜底节点覆盖，导致保存&应用日志显示“重启节点”而不是“切换节点”的问题；现在 23456 SOCKS、当前运行节点和日志节点均以用户当前选择节点为准。
+   - fix	修复 Xray 分流模式 DIRECT 兜底下，当前选择节点没有作为隐藏运行出站参与配置的问题；现在状态检测域名会自动走当前节点隐藏规则，最后再进入用户配置的节点/DIRECT 兜底，且节点兜底与当前节点不同时会补齐对应 outbound。
+   - fix	修复 Xray 分流模式下修改节点分流参数并切换运行/兜底节点后，主面板旧节点表单可能被写入新选中节点，导致订阅节点配置互相覆盖的问题；保存时现在只有主面板表单与当前节点一致才写回节点内容，单纯切换节点只更新引用。
+   - fix	修复 WebSocket 保存链路在 schema 2 节点内容变更时可能先执行 postsave 脚本并中断后续 `ss_config.sh`，导致“保存&应用”无日志、无重启、无生效的问题；现在先预写字段并由启动脚本统一处理 postsave，异常自动回退 HTTP 保存。
+   - fix	修复故障转移选择 web 延迟最低节点时，`timeout` 等非数字结果会被 `sort -n` 当作 0 排到最前，导致直接切到第一个超时节点的问题；现在只允许最后一次结果为纯数字延迟的节点参与排序，并会跳过当前节点和已不存在的旧节点。
+   - fix	修复找不到可用 web 延迟最低节点时没有真正回退到“下个节点”策略的问题；单节点场景关闭插件后不再继续执行后续重启流程。
+   - fix	修复 Xray 分流模式下“入口策略：全量引流、兜底：DIRECT（直连）”保存后被还原为“大陆白名单引流、兜底节点”的问题；入口策略保存不再污染原始比较快照，当前运行节点同步也不再覆盖用户选择的兜底直连。
+
+3.5.19（20260426）
+   - note	本次更新针对机场专属节点 DNS 特调失效问题做补丁收口，重点修复 Nexitally 这类 Clash 订阅在缓存快路径下无法恢复专属解析配置的问题。
+   - fix	修复订阅原始内容未变化、直接复用 parsed cache 时，机场特调配置不会重新生成的问题；现在会根据缓存节点元数据恢复 `airport_special.list` 和对应机场配置文件，并从 Clash YAML 中重新提取 `dns.nameserver`。
+   - fix	修复机场专属节点 DNS 配置发生变化但节点列表本身无变化时，订阅流程提前结束导致 smartdns/chinadns 运行态不刷新的问题；现在即使节点未写入，也会刷新节点域名解析运行态，确保 `airport_nexitally` 等专属 upstream 生效。
+   - fix	修复订阅/分享链接导入在 WebSocket 日志通道可用时可能未先写入 `ss_base64_links` 等提交字段，导致后端解析不到用户输入 URI 的问题；现在订阅任务会先通过 `_api` 提交参数，再启动 WebSocket 日志执行，并保留 HTTP 回退。
+   - fix	修复 lite 版本打包时前端字段剥离规则误删对象属性名，导致 `Module_shadowsocks.asp` 生成非法 JavaScript、页面无法加载的问题；lite 打包会先移除 Naïve/TUIC 对象键值对，再清理字段数组。
+
+3.5.18（20260426）
+   - note	本次更新针对 3.5.17 后继续暴露出的配置备份恢复和订阅关键词过滤问题做补丁收口，并刷新 `sub-tool` 订阅解析器分发产物。
+   - update	`sub-tool` 升级到 `0.1.11`，已重新编译并 UPX 压缩 `x86_64 / aarch64 / armv5te / armv7a / armv7hf` 全平台产物，最终二进制和校验文件已同步进入 `binaries/sub-tool`，后续打包会从该分发链路复制到对应 `fancyss/bin-*`。
+   - fix	修复“附加功能 - 导出新版本JSON配置”后再恢复时，订阅节点可能全部变成本地节点、订阅管理中对应机场节点数变为 0 的问题；新版导出会保留节点 `_source` 字段，恢复旧版缺陷 JSON 备份时也会根据 `_profile_id`、`_source_scope`、`_airport_identity` 等订阅归属元数据自动恢复为订阅节点。
+   - fix	修复订阅关键词过滤只按节点原始名称精确匹配的问题：订阅解析和 shell 兜底过滤均支持常见地区中英文别名与英文大小写匹配，例如包含关键词填 `Hong` / `hong` 可正确匹配 `香港` / `Hong Kong` 节点，同时收紧 `US/HK/SG` 等短国家码边界，避免误命中 `AUS/RUS` 等节点名。
+
+3.5.17（20260426）
+   - note	本次更新继续围绕 3.5.16 的订阅 profile 升级、旧版升级迁移、节点归属、卡片视图、运行状态和 webtest 测速链路做补丁收口。
+   - update	节点卡片视图排序独立于表格真实顺序：卡片中优先展示本地节点，再按订阅机场聚合展示订阅节点；表格视图仍保留可调整的真实节点顺序。
+   - update	增强“附加功能 - 导出新版本JSON配置”的进度日志：导出前提示节点较多时耗时较长，并按环境准备、普通配置、ACL配置、节点读取、节点规整和最终文件生成输出阶段进度，避免用户误以为导出卡死。
+   - update	安装脚本日志时间格式统一为短格式 `【YYYYMMDD HH:MM:SS】:`，与 `ssconfig.sh` 启停日志保持一致。
+   - update	schema 1 -> schema 2 旧节点迁移优先使用 `node-tool` 快速路径完成批量转换、raw 密码写入、当前节点引用恢复和订阅来源归属处理；保留 shell 兜底路径，降低 3.5.0 等旧版本升级时的安装等待时间。
+   - update	旧版节点升级和前端编辑页会统一补齐协议默认值：SS 混淆为空或缺失时按关闭处理，SSR 默认 `origin/plain`，VMess/Xray 默认网络与 TLS/传输选项，Hy2 混淆为空时按关闭处理；保存比较时也按同一默认语义判断，减少无意义身份变化。
+   - update	`node-tool` 升级到 `0.1.8`：修复 `0.1.5 ~ 0.1.7` 快速迁移 schema 1 时可能丢失 SS 默认混淆字段的问题；安装阶段会拒绝低于 `0.1.8` 的 node-tool 快迁移并自动回退 shell 迁移，避免旧二进制继续污染升级结果。
+   - update	`status-tool` 升级到 `0.1.2`：运行状态延迟检测复用单连接执行 `warm + score`，并结合历史结果只在异常偏高时追加补测，使顶部国内/国外延迟更接近旧版 curl warm 机制的稳定结果。
+   - update	`webtest-tool` 升级到 `0.1.1`：web 落地延迟测速同样复用 SOCKS5/HTTP 连接执行 warm 与打分请求，并把已有 webtest 结果传给工具用于历史异常补测；所有平台产物已同步进入 `binaries/webtest-tool` 与 `fancyss/bin-*` 分发链路。
+   - update	`websocketd` 升级到 `0.1.2`，并刷新 `node-tool / status-tool / webtest-tool / websocketd` 等多平台分发产物，确保打包和离线安装包携带最新工具。
+   - fix	修复 3.5.0 等旧版 schema 1 升级到 schema 2 时，订阅节点因旧 group 后缀不等于订阅 URL hash 而被误归类为本地节点的问题；安装后的归属修复也会覆盖已误迁移节点。
+   - fix	schema 1 -> schema 2 迁移阶段现在直接写入 raw 密码字段并标记 `fss_data_secret_mode=raw`，避免安装后再次逐节点执行耗时的密码字段校正。
+   - fix	修复 3.5.0 等旧版升级后可能自动切回第一个节点的问题：迁移和缓存重建后会尽量恢复升级前选中的当前节点引用。
+   - fix	修复升级后顶部运行状态可能长期停留在 `Waiting...` 的问题：前端 WebSocket 状态请求改为直接执行 `ss_status.sh ws`，后端不再复用只包含“等待”的旧状态缓存。
+   - fix	修复顶部运行状态和 web 落地延迟在迁移到 Zig 工具后，因每次打分都重新建连导致延迟明显偏高的问题；
+   - fix	修复软件中心删除插件后，`ss_*` 与 `fss_*` dbus 配置、订阅 profile 和节点数据可能残留的问题。
+
+3.5.16（20260425）
+   - note	1. 升级此此版本如果希望保留配置使用，建议重新同步一次订阅。
+			2. 升级后如果机场节点变成了本地节点，建议在: 附加功能处，点击清空配置按钮，然后全部重新设置插件。
+			3. 升级后如有其它异常，建议在软件中心内卸载插件后重新使用离线安装包安装。
+   - note	本次更新是 `3.5.15 -> 3.5.16` 的订阅 profile、节点视图、webtest/websocket 和弱机型性能收口版本。重点从“全局一套订阅配置”迁移到“每个订阅链接一个独立 profile”，并同步打通订阅、节点展示、节点分流、测速和运行时引用恢复。
+   - add	新增机场级订阅 profile 管理：每个 profile 独立保存别名、订阅链接、启用状态、下载策略、UA、关键词过滤、Hy2 默认参数、定时同步和最近同步摘要；旧版 `ss_online_links` 会在升级或首次打开订阅管理时自动迁移为独立 profile。
+   - add	新增订阅节点与 profile 的显式绑定：订阅解析和写入节点时记录 `_profile_id`，并保留 `_source_scope` 兼容回退；后续可按 profile 维度展示节点数量、隐藏停用订阅、同步单个订阅、删除对应节点、过滤 webtest 和恢复当前/备用节点引用。
+   - add	新增节点列表卡片视图和订阅来源分组：保留原表格视图，同时增加卡片/chip 展示、来源分组折叠、当前节点高亮、节点快捷操作和不同主题皮肤适配，提升高节点数量场景下的浏览效率。
+   - add	新增订阅管理弹窗：统一承载“订阅配置管理”和“分享链接导入”，支持新增/编辑/删除/单独同步/全部同步 profile，并对保存中的遮罩、按钮区、计划任务和 Hy2 参数输入做了压缩优化。
+   - update	节点管理默认体验调整：所有平台默认启用 web 落地延迟测试并默认使用卡片视图，移除“开启/关闭延迟测试功能”菜单项；节点列表和卡片视图会默认显示延迟信息，仅保留手动开始批量测速、停止测速、清空缓存和测速设置等操作。
+   - update	全新安装或清空配置后，若没有任何节点，首次弹出的“添加节点”提示中点击“订阅节点”会直接打开订阅管理弹窗，用户可从同一入口新增订阅、同步 profile 并回到节点管理查看节点卡片。
+   - update	订阅写入完成后的后处理进一步瘦身：节点写入成功后，将 `sync` 和运行缓存刷新改为后台异步执行，并补充关键阶段日志，避免大订阅场景下“节点信息写入成功”后长时间无输出。
+   - update	Zig 工具分发链路重新收口：`build.sh` 打包时不再每次重编所有 `tool/` 下的 Zig 工具，而是统一从 `binaries/` 复制最新产物到 `fancyss/bin-*`；各 Zig 工具发布脚本会在构建和 UPX 压缩完成后同步最终二进制回 `binaries/` 对应平台目录，确保打包使用的是最新分发产物。
+   - update	`sub-tool` 升级到 `0.1.10`，支持订阅解析时携带 `_profile_id`；`node-tool` 升级到 `0.1.4`，补齐 `current-env` 等运行时快路径，并同步更新 `build.sh` 与各平台 `fancyss/bin-*` 分发文件。
+   - update	web 延迟测速继续收口到 websocket 优先、HTTP 兜底：批量/单节点测速统一状态流转为 `waiting / loading / booting / queued / testing / result`，节点分流页也可复用同一套测速结果，不再依赖先打开节点管理页。
+   - update	xray 节点分流联动进一步统一：节点管理中的当前节点选择会同步分流兜底节点，分流页修改兜底节点也会同步当前节点；分流运行态跟随限制为单实例，避免弱机型累积多个常驻 shell。
+   - update	启动、停止和规则准备链路继续降耗：减少多处 `jq/dbus` 热路径，当前节点环境优先由 `node-tool current-env` 导出，关闭阶段优先批量清理 `iptables/ipset`，SmartDNS 组解析和规则更新元数据读取也做了缓存/合并。
+   - update	分流代理域名运行态增加“无额外代理域名”缓存：同配置重复重启时无需反复完整扫描，弱机型第二次启动可减少等待。
+   - fix	修复 profile 存入 dbus 后可能因明文 JSON 嵌套导致 `skipd数据读取错误` 的问题：profile/state 统一使用紧凑 base64 存储，并补充迁移、修复、校验和宽松读取逻辑。
+   - fix	修复旧节点缺少 `_profile_id` 时，profile 节点统计、profile 删除和 `_profile_id` 回填可能只看新字段而漏掉 `_source_scope` 兼容节点的问题。
+   - fix	修复订阅 profile 停用后，旧表格视图、卡片视图、节点摘要和 webtest 仍可能继续展示或测速对应节点的问题。
+   - fix	修复全新安装或刚清空配置后仍可能误判为旧版节点结构的问题：schema 2 原生空数据会写入明确标记，并清理遗留 `ssconf_basic_*_[0-9]` 节点键，避免刷新页面后反复出现节点数据升级提示或升级失败弹窗。
+   - fix	修复“附加功能 - 清空配置”实际只走关闭插件日志、节点没有被清空的问题；现在清空前会先关闭服务，再批量清理普通配置、订阅 profile、schema 1/schema 2 节点和测速缓存，并统一使用短时间格式日志。
+   - fix	修复首次新增订阅并同步成功后，节点卡片已出现但不会自动开始第一次 web 延迟测速的问题；进入节点管理或订阅完成刷新节点后会触发自动测速，且当 `webtest.txt` / `webtest_bakcup.txt` 只剩 `stop>stop` 或结果数与节点数不一致时，后端会清理旧缓存并重新启动测速。
+   - fix	修复节点删除和 profile 删除引发的副作用：避免无意义的全量 webtest 重跑、后台递归进程堆积和前端长时间卡死；删除后只做必要的节点/测速缓存清理。
+   - fix	修复 websocket/webtest/status 跟随链路的多处边界问题：页面关闭后旧跟随进程能及时退出，单节点测速不会误复用旧结果，状态快照读取避免半截内容和重复跳变。
+
+3.5.15（20260414）
+   - note	本次更新继续围绕安装升级和运行状态链路做收口，重点解决三个问题：一是 `3.5.13 -> 3.5.14` 升级时 schema 2 节点 secret 纠偏仍会重复全量扫描，导致安装阶段长时间无日志；二是安装完成后和启动阶段重复触发 `node-tool` webtest 缓存预热，造成启动日志里同一组预热信息出现两次；三是多个内部脚本仍沿用带“年月日”字样的旧日志时间格式。
+   - update	安装脚本中的 schema 2 secret 纠偏条件进一步收紧：现在只会对真正需要修正的更老版本执行，不再对已经过 `3.5.13` 及之后版本的数据重复全量扫描；同时为仍需执行的旧数据纠偏补充了阶段开始、进度和完成日志，避免用户在安装阶段误判为卡死。
+   - update	安装阶段的缓存刷新链路进一步瘦身：安装后仍会清理旧版 `< 3.6.0` 的节点配置缓存和 `webtest` 缓存，但不再在安装阶段额外触发一次 `webtest` 缓存预热，只保留节点运行缓存重建；这样启动【科学上网】后的 `node-tool` webtest 预热日志不会再和安装阶段重复叠加。
+   - update	统一 fancyss 内部多份脚本的日志时间格式为短格式 `【20260414 09:56:08】:`，不再夹杂 `【2026年04月14日 09:56:08】:` 这类长格式，涉及 `install.sh`、`ss_update.sh`、`ss_rule_update.sh`、`ss_xray.sh`、`ss_status_reset.sh`、`ss_dns_test.sh` 等脚本。
+   - fix	修复旧版 `< 3.6.0` 升级到 `3.5.14` 时，安装日志中“节点数据已经升级到 schema 2 存储。”之后长时间无进度反馈的问题；现在不会对 `3.5.13 -> 3.5.15` 这类已是 schema 2 且已纠偏的数据重复做慢路径扫描。
+   - fix	修复安装完成后立即启动插件时，`node-tool` webtest 节点配置缓存预热日志出现两次的问题；新的安装链路下，这组日志只保留在真正需要的启动阶段。
+
+3.5.14（20260414）
+   - note	本次更新继续围绕 3.5.13 后续暴露出的前后端时序问题做收口，重点解决两类现象：一是部分机型在插件重启后顶部运行状态长时间停留在“等待...”；二是若干前端按钮依赖 `_api_` 成功回调后才开始展示日志，导致后端实际已在执行但前端窗口仍空白。
+   - update	前端公共提交函数 `push_data()` 现在对需要展示实时日志的长任务脚本统一采用“请求发出后延迟启动日志轮询”的模式，不再依赖 `_api_ success` 才调用 `get_realtime_log()`；这样即使软件中心接口长时间 `pending`，日志窗口也能及时开始显示输出。
+   - update	`restore_ss_conf()` 等少数未走 `push_data()` 的手写 `_api_` 调用，也补上了相同的异步日志启动逻辑，避免配置恢复这类操作继续受旧时序影响。
+   - update	顶部运行状态在无 WebSocket 场景下，前端 HTTP fallback 现在优先读取 `/_temp/ss_status_front.txt`，只有缓存解析失败时才回退到旧的 `_api_ -> ss_status.sh` 路径；这让 TX-AX6000 这类浏览器会中断 `_api_` 状态请求的场景也能正常显示延迟。
+   - update	WebSocket 可用性探测和顶部状态栏不再复用同一个 `wss` 连接；`ws_ok` 探测成功后会先关闭测试连接，再由状态栏建立新的正式连接，避免某些机型上刚探测成功就因复用即将关闭的连接而导致状态栏一直 `waitting`。
+   - update	`ss_status.sh` 前台状态检测现在增加更严格的就绪判断：除已有的 `ssconfig.sh` / `ss_basic_wait` 外，在非 failover 场景下还会显式检查 `127.0.0.1:23456` 的 socks5 监听是否已就绪；只有代理主进程和本地 socks5 端口真正 ready 后才开始探测延迟。
+   - update	前端在读取 `ss_status_front.txt` 时，如果发现文件内容仍只是“等待...”占位文本，不再把它当成有效结果缓存，而会继续触发真实探测；这样插件重启后等待态一旦结束，就能更快切换到实际延迟，而不是长时间停留在中文“等待...”。
+   - fix	修复 GS7 上“检查并更新”按钮点击后无任何日志打印的问题；`ss_update.sh` 现改为先快速回软件中心响应，再后台异步执行更新流程写日志文件，前端日志窗口已完成实机验证。
+   - fix	修复 GS7、TX-AX6000 等机型在顶部运行状态检测上的多处时序竞态：包括 `ws_ok` 连接复用、等待态缓存误判、`_api_` fallback 被浏览器中断，以及插件重启后 socks5 尚未 ready 就提前探测等问题。
+
+3.5.13（20260413）
+   - note	本次更新是 3.5.12 之后的收口版本，重点围绕三个方向继续修正一致性问题：一是安装升级链路中 schema 2 secret 与缓存的历史兼容问题；二是“详细状态”页面在 GS7 等机型上的交互体验和输出稳定性；三是统一刷新并确认所有会进入安装包的 Zig 工具分发产物，避免打包时继续混入旧二进制。
+   - update	`install.sh` 现在会在安装阶段显式处理 schema 2 secret 兼容：
+			1. `schema1 -> schema2` 迁移完成后，会再次校正 `password / naive_pass`，确保最终落成 raw；
+			2. 如果当前节点存储已经是 schema 2，但旧插件版本低于 `3.6.0`，安装时会自动探测节点里的 `password / naive_pass` 是否仍误存为 base64，若识别为 base64 则统一纠正为 raw。
+   - update	针对旧版 `< 3.6.0` 的升级路径，`install.sh` 现在会明确强制清理节点运行缓存和 `webtest` 缓存，然后再重建 `node_json_cache` 并预热测速缓存，避免旧缓存格式在安装后继续污染运行时行为。
+   - update	“详细状态”页面重新改为更符合预期的实时执行模型：当前端 WebSocket 可用时，点击“详细状态”会直接通过 `ws` 执行 `ss_proc_status.sh ws`，并将 stdout 流式回传到前端，不再依赖旧的“先执行后台脚本、再读缓存文件”方式，因此不会再优先显示上一次缓存内容。
+   - update	`ss_proc_status.sh` 对详细状态输出顺序做了调整：将最慢的“节点分布”统计移到最后，保证 GS7 这类节点较多的场景下，基础信息、二进制版本和 iptables 状态可以更快显示，不会长时间卡在“节点数量”后面。
+   - update	详细状态页中的“插件主要二进制程序版本”现已补充 fancyss 自带 Zig 工具的版本与备注说明，涵盖 `node-tool`、`sub-tool`、`xapi-tool`、`statusctl`、`webtestctl`、`geotool`、`websocketd` 等工具，并统一为固定宽度排版，便于阅读和排障。
+   - update	恢复 `websocketd` 的旧兼容模型：前端 `push_data_ws()` 重新回到原样发命令，`/koolshare/ss/websocket` 也去掉了大部分 `run_*` 桥接分支，恢复到“前端发什么，后端脚本就执行什么”的模式，降低升级后因 websocket 脚本未及时重启而出现命令不匹配的概率。
+   - update	刷新并重新确认所有会进入安装包的 Zig 工具分发产物：`geotool / node-tool / sub-tool / xapi-tool / status-tool / statusctl / webtest-tool / webtestctl / websocketd` 均已重新走发布构建并同步回 `binaries/`，后续 `build.sh` 打包会统一携带这批最新产物。
+   - fix	修复 GS7 等机型在点击“详细状态”后，弹窗长期停留在“请稍后，正在获取状态中...”，或者第一次显示旧缓存、第二次又不再刷新的问题；当前链路在 GS7 上已完成实机验证。
+   - fix	修复详细状态页面在读取 `ss_proc_status.txt` 时可能读到半截内容、导致文本一开始只显示到“节点数量”，随后又跳变成另一段的问题；现在 HTTP fallback 路径改为临时文件原子落盘，避免读取半成品。
+   - fix	修复详细状态页面中 Zig 工具版本探测串行超时过长，导致“插件主要二进制程序版本”整块刷新过慢的问题；现已改为对可快速返回版本号的工具直接调用固定命令读取。
+
+3.5.12（20260413）
+   - note	本次更新重点围绕升级后的一致性问题收口：补齐安装升级后的缓存刷新、修复 websocket 命令文件热更新失配、统一 schema 2 节点 secret 的 raw 语义，并刷新 `node-tool / sub-tool` 分发链路，避免路由器升级后继续复用旧缓存或旧工具产物。
+   - update	安装脚本升级后会默认刷新节点运行缓存：清理 `node_json_cache`、`node_env_cache`、`webtest_cache` 以及 `webtest` 运行态结果，并在安装完成后重新生成节点 JSON 缓存、异步预热测速缓存，减少“脚本/工具已更新但缓存仍是旧格式”带来的行为不一致。
+   - update	`websocketd` 更新后的切换流程强化：安装完成后若插件未启用，会异步延迟重启 `websocketd` 并清理旧的 `/koolshare/ss/websocket` 子进程，避免旧 websocket 进程继续持有旧脚本；若插件已启用，则由插件完整重启流程接管 websocket 服务切换。
+   - update	前端通过 WebSocket 提交 `ss_config` 时，重新改回直接执行脚本命令 `sh /koolshare/scripts/ss_config.sh ...`，不再强依赖 `/koolshare/ss/websocket` 中的预定义 `run_ss_config_*` 分支，降低更新过程中因 websocket 脚本未及时重启而出现 `not found` 的概率。
+   - update	`node-tool` webtest cache 生成逻辑修正：Hysteria2 节点在端口范围场景下，`settings.port` 现在正确写为 `null`，`udphop.port` 正确保留端口范围字符串，同时 `gen_rev` 对齐到 `20260409_1`，避免 RT-AX89X 等机型继续生成非法 JSON 并导致整组 xray-like 节点 `booting -> failed`。
+   - update	刷新 `node-tool v0.1.1` 分发产物并同步进入 `binaries/node-tool` 与 `fancyss/bin-*`，确保 `build.sh` 打包使用的是修复后的最新版本。
+   - update	刷新 `sub-tool v0.1.9` 分发产物并同步进入 `binaries/sub-tool` 与 `fancyss/bin-*`；`build.sh` 中 `SUBTOOL_VER` 已更新到 `v0.1.9`，后续打包会自动携带新版 `sub-tool`。
+   - fix	修复 RT-AX89X 上因旧版 `node-tool` webtest cache 对 Hysteria2 端口范围输出错误，导致 `wt-xray` 配置文件非法、整组节点测速全部 `failed` 的问题；修复后 RT-AX89X 上 xray-like 节点已可恢复正常测速，仅剩真实节点本身的超时/连接重置结果。
+   - fix	修复 schema 2 下当前节点环境导出与运行态 secret 处理不一致，导致 SS/Naive 等节点在 `webtest` 正常、但正式启用后运行时密码被错误二次处理的问题；schema 2 当前节点 secret 统一按 raw 导出，`ss_base.sh` 不再对 schema 2 的 `password / naive_pass` 做 legacy base64 解码。
+   - fix	修复 SS 分享 URI 导出兼容性：新的二维码/复制 URI 逻辑改为标准形式，只对 `method:password@server:port` 做 base64，节点名单独放到 `#encodeURIComponent(name)`，避免旧版“整段 base64 + emoji 节点名”生成无效 URI。
+   - fix	修复通过分享链接离线导入旧式 `ss://` 节点时，remark 非法 UTF-8 会被当成错误节点整体拒绝的问题；现在 shell 离线导入会在 remark 不可用时回退为 `server:port`，确保节点仍可写入。
+   - fix	`sub-tool` 新增对旧式整段 base64 `ss://` 的兼容解析：支持处理 base64 主体内嵌 `#remark`，并在 CESU-8/非法 UTF-8 场景下尽量恢复可读节点名。对于你提供的旧 URI，当前 `sub-tool` 已可恢复出 `🇭🇰 香港 11` 与正确密码。
+   - fix	优化 `full -> lite` 升级路径：schema 2 下的 `full2lite()` 现在先批量 dump 节点快照，再本地筛出 `naive/tuic` 等 lite 不支持节点并统一重写顺序，避免逐节点 `dbus + base64 + jq` 带来的长时间停顿。
+
+3.5.11（20260412）
+   - note	本次更新重点围绕两条主线继续推进：一是彻底移除节点服务器预解析及其派生设置，统一收敛到动态解析；二是继续瘦身启动链和 WebSocket 通道实现，降低弱性能机型上的启动等待与常驻负担。
+   - add	新增 `ws-tool` 轻量级 `websocketd` 替代实现，并作为独立 Zig 工具项目引入；当前已覆盖 fancyss 前端实际使用的 WebSocket 场景，包括 `echo ws_ok`、`show_message`、实时日志、`. script arg` 指令和 `follow_webtest` 流式输出。
+   - add	新增 `status-tool` / `statusctl` 轻量状态检测工具，将前端按需状态检测和故障转移后台检测从多次 `curl` 调用迁移到 Zig 原生 HTTP/SOCKS5 探测；未开启故障转移时使用常驻 `serve` 按需检测，开启故障转移时使用 `daemon` 周期检测。
+   - add	新增 `webtest-tool` / `webtestctl` 批量测速工具，用 Zig 原生 SOCKS5 + HTTP 探测替代 `ss_webtest.sh` 中最重的 `curl_test` 链路；工具支持批任务 JSON、结果快照、事件流、并发 worker，以及 per-node `start_script / stop_script / wait_port` 钩子。
+   - update	插件 WebSocket 通道已切换到新的 `ws-tool` 发布链路：二进制仍保持 `websocketd` 命名，`build.sh` 与 `binaries/Makefile` 已接入新的多平台产物；`hnd` 平台使用 `armv7hf`，`qca/ipq32` 使用 `armv7a`，`hnd_v8/mtk/ipq64` 使用 `aarch64`。
+   - update	`websocketd` 现已随所有平台、所有安装包一并分发，前端 `ws_ok` 连通性探测不再对特定 `lite` 包关闭；弱性能平台也可统一使用 WebSocket 实时日志与测速状态回传能力。
+   - update	启动链路继续瘦身：`ssconfig.sh` 顶层 `nvram/ps/dbus` 初始化改为进入启动流程后再执行；`ss_base.sh` 当前节点环境导出、分流函数和 SmartDNS/机场特调辅助函数改为按需加载，显著缩短弱性能机型上点击后首行日志出现时间。
+   - update	运行状态检测链路重构：前端状态检测优先通过 WebSocket 与 `status-tool serve` 通讯，HTTP API 仅作为兜底；故障转移后台检测由 `status-tool daemon` 生成统一状态缓存，历史状态日志改为 WebSocket 首屏快照 + 增量追加，避免频繁轮询拖垮路由器 `httpd`。
+   - update	故障转移保存逻辑接入 WebSocket 控制命令，并修复 HTTP fallback 下 `http_response` 的 `curl` 进度输出污染日志窗口的问题；保存本页设置时日志窗口只显示正常业务日志。
+   - update	批量 web 延迟测速主链路迁移到 `webtest-tool`：xray-like 节点一次性准备全部本地入口并以 12 并发交给工具测速；`SS + simple-obfs` 通过 per-node hook 在进入 `testing...` 前按需拉起 `obfs-local`，测速后自动关闭，避免一次性拉起大量 obfs 进程。
+   - update	`SSR / NaiveProxy / TUIC` 的 webtest 运行方式统一为 target manifest + hook 模型，由 `ss_webtest.sh` 生成 `start/stop/wait_port` 信息，再交给 `webtest-tool` 按协议线程限制执行，为后续迁移到 `node-tool` 生成测速运行产物做准备。
+   - update	webtest 状态展示进一步细化并稳定化：新增 `queued...` 状态表示端口已就绪但尚未进入 worker；`waiting / loading / booting / queued` 改为快照刷新，前端收到 `refresh>snapshot` 后整表刷新，避免大量节点时中间状态逐行爬升。
+   - update	外围脚本中的若干二进制调用进一步统一为 `run/run_bg` 的干净环境启动方式，减少杂乱环境变量对子进程的影响，统一 `xray` 更新、故障转移和分流热重载等路径的行为。
+   - update	更新 bundled Zig 工具二进制：同步刷新 `node-tool`、`sub-tool`、`xapi-tool`、`geotool` 的发布产物和打包链路，修正 `hnd` 平台 Zig 工具架构映射，提升不同平台上的一致性。
+   - update	移除前后端“插件触发重启设定”功能及相关逻辑，避免在动态解析模式下继续保留已经失效的基于节点 IP 变化触发重启配置。
+   - update	节点服务器预解析相关前后端配置已完全移除，普通启动、`webtest`、节点分流和故障转移相关链路统一围绕动态解析工作；插件启动末尾仍保留“节点服务器解析地址”日志，便于继续观察当前节点最终解析结果。
+   - update	机场特调 DNS 日志调整为汇总展示所有活跃特调机场；当多个机场均需要 SmartDNS 时，启动日志会以 `AmyTelecom、Nexitally` 这类形式同时显示，便于确认特调是否生效。
+   - fix	修复 RT-BE88U 等机型在订阅完成后，因旧版 `node-tool` 缺少 `airport-domains` 能力而回退 shell 慢路径，导致“节点信息写入成功”后仍额外等待较长时间的问题；更新后的 `node-tool` 可正确支撑机场域名缓存刷新。
+   - fix	修复离线安装或插件重启早期阶段中，`smartdns_ensure_dns_groups` 初始化顺序不当导致的报错；同时为 SmartDNS relay 端口范围补充数值兜底，避免异常环境变量触发启动阶段的越界错误。
+   - fix	修复 `ssconfig.sh` 懒加载当前节点环境后，schema 2 下 SS/SSR 的 `password` 可能沿用 legacy 兼容值并被写成 base64，导致 webtest 有延迟但正式启用 SS 节点无法代理的问题；启动时会从当前节点对象刷新 raw secret 字段，修正过程不再输出面向用户的内部日志。
+   - fix	修复 WebSocket 日志命令未同步导致前端发送 `run_ss_config_start` 时被当作普通命令执行并报 `not found` 的问题；节点应用、停止和分流热重载均改为预设安全命令。
+   - fix	修复通过 WebSocket 应用节点后，后续“查看日志”页面缺少本次启动日志的问题；`start_by_ws` 现在也会同步写入 `/tmp/upload/ss_log.txt`。
+
+3.5.10（20260327）
+   - note1	重要！！此版本定义为非稳定版本/尝鲜版本，升级前请备份设置，如在你的机型和固件版本上有问题，请及时回滚
+			1. 目前测试过mtk，hndv8，hnd，qca的部分机型
+			2. lite版本未作测试因此暂时不推送，建议使用full版本
+			3. 3.5.xx版本将持续一段时间，直到3.6.0稳定版本
+   - note2	本次更新是一次较大范围的重构，重点覆盖四条主线：`xray分流模式`落地、订阅解析和节点存储重构、`webtest`/运行产物统一化，以及机场特调 DNS/SmartDNS 协作优化。
+			1. xray分流模式目前已经是可用状态，前端UI还有待进一步优化，geo规则的在线更新还有待落实
+			2. webtest本次更新中再次进一步优化（对于性能较好机型aarch64 1G内存及其以上）测速更顺畅
+			3. 节点订阅现在速度更快了，实测96个节点机场订阅完成最快6-8s
+			4. 订阅新增了clash配置文件订阅的支持
+			5. 新增了一些机场级别的特调，目前针对奶昔，按摩院（需要使用clash配置文件订阅才能生效）
+   - add	新增独立的`xray分流模式`（mode 7）：节点分流作为与gfw黑名单、大陆白名单、游戏、全局并列的一套主模式存在；支持`大陆白名单引流`和`全量引流`两种入口策略。
+   - add	新增节点分流完整前后端：支持规则卡片展示、添加/编辑/删除、拖拽排序、预设规则、自定义域名/IP规则、入口策略选择、兜底节点选择，以及`代理节点 / 直连 / 拒绝`三类命中动作。
+   - add	新增节点分流规则格式：支持`domain` / `full` / `keyword` / `regexp`域名规则、`IP-CIDR`规则和`GEOIP`规则，并可在同一规则链路中混合使用。
+   - add	新增分流规则资产体系：`rules_ng2`按`site/`、`ip/`、`meta/`、`dat/`拆分，内置AI、OpenAI、Telegram、Twitter/X、Discord、GitHub、Google、Apple、媒体、流媒体、游戏、测速、直连等预设规则集，并随包提供`geosite.dat` / `geoip.dat`。
+   - add	新增`geotool`规则工具，用于 geosite / geoip 规则资产的构建、导出和统计，作为节点分流 geodata 资产链路的基础组件。
+   - add	新增分流运行态展示和`xray热重载`能力：节点分流页面可查看当前运行节点、规则数、目标节点、累计流量和各出站节点使用情况；分流规则修改后可优先通过 Xray API 热更新 routing / outbound，失败时自动回退完整重启。
+   - add	新增`xapi-tool`轻量控制工具，替代直接调用 `xray api` 的部分场景，用于节点分流热重载、路由更新和运行态统计。
+   - add	新增`sub-tool`订阅解析器，并开始把订阅解析、协议统计、差异对比、身份生成、结果摘要等能力下沉到 Zig 工具，减少大订阅场景下 shell 的处理压力。
+   - add	新增`node-tool`本地节点工具，支持节点导出、统计、查找、去重、重排、缓存预热、运行产物导出等能力；通过 socket 直接访问 `skipd`，不再依赖外部 `dbus` 可执行文件。
+   - add	节点存储进一步围绕 schema 2 强化：节点对象增加`_identity / _identity_primary / _identity_secondary / _source_scope / _airport_identity`等稳定身份字段，用于订阅复用、节点编辑、故障转移、当前节点/备用节点恢复。
+   - add	新增机场特调 DNS 基础能力，支持按机场身份识别专属 DNS、提取 Clash 配置中的 nameserver，并落地为独立机场配置；SmartDNS 运行时会为不同机场建立独立解析组，避免多个特调机场共用一组上游。
+   - add	新增 Clash 订阅解析支持，当前至少覆盖`ss`、`ss2022`、`trojan`等常见 Clash 节点映射，并支持按域名、文件名前缀和映射配置识别机场名称。
+   - add	新增`sub-tool`维护文档、`node-tool`路线文档和多份设计/实施文档，补齐后续协议扩展、订阅维护、节点运行产物和工具链维护参考。
+   - update	重构订阅处理流程：订阅变更判断、节点身份生成、差异分析、旧节点 ID 复用、信息节点过滤、机场映射、部分统计与摘要输出由`sub-tool`/`node-tool`统一处理，显著降低大订阅场景下 shell 负担。
+   - update	优化订阅写入策略：新增节点尽量增量追加，已有节点尽量复用旧 ID、旧引用和旧排序，减少无意义的全量写入、重排和节点误判。
+   - update	`webtest`主链路完成去 env 化：主流程不再依赖持久化`node_env_cache`，改为优先使用`node_json_cache`和最终的`outbounds.json`运行产物；`shunt`也开始优先复用统一运行产物。
+   - update	新增统一运行产物思路：`node-tool warm-cache --webtest`与`runtime-artifact --profile webtest|shunt`可直接生成最终运行产物，普通 xray-like 节点、用户 JSON 节点以及部分`SS + simple-obfs`节点都能直接生成可复用配置。
+   - update	`webtest`缓存和分流运行产物新增摘要信息，如`builder_native / builder_shell / builder_shell_reasons`，并在日志中输出摘要，便于判断当前有多少节点走 native 生成、多少节点仍回退 shell。
+   - update	新增慢设备友好的缓存重建状态与阶段日志：`webtest`缓存重建和`runtime-artifact`生成会输出更明确的阶段日志、等待日志和状态文件；前端在测速缓存重建中会提示“节点配置缓存重建中...”，并提醒用户不要重复点击。
+   - update	优化节点延迟测试页面行为：页面进入节点管理后，可按配置决定在`15 / 20 / 30 / 60`分钟后自动刷新测速结果；定时测速开启时，该项自动隐藏并失效。自动触发批量测速时，也会显示`waiting... / loading... / booting... / testing...`等中间状态，不再是旧值静默变化。
+   - update	节点数量变化时不再强制触发全量批量测速：删除节点后保留已有测速结果，新增节点也不会自动全量重测，用户可按需对新增节点手动补测。
+   - update	优化机场特调 DNS 日志展示：当存在多个需要 SmartDNS 的特调机场时，日志会汇总显示机场集合；当前节点命中特调机场时，也会额外标明当前命中的机场。
+   - update	调整`dnsmasq.postconf`，fancyss 触发的 `dnsmasq` 重载会主动过滤 `dhcp-script`，避免某些机型上 `dhcpc_lease` 进程异常堆积。
+   - fix	修复订阅导入的 VLESS 节点在使用`encryption=`参数时会丢失`xray_encryption`的问题；手工添加与订阅导入现在行为一致。
+   - fix	修复通过分享链接离线添加节点时，重复节点处理策略异常的问题；当前策略改为自动调整重复名称，避免误覆盖现有节点。
+   - fix	修复节点编辑和“保存&应用”后，部分订阅节点的`_source_scope / _source_url_hash / _identity`被错误改写，导致后续订阅误判为新增/删除的问题。
+   - fix	修复`sub-tool`、`node-tool`、`webtest`和统一运行产物在不同平台、不同缓存状态下的一系列兼容性问题，包括 malformed base64 订阅容错、结果摘要一致性、缓存索引一致性、运行产物输出目录一致性以及 ARM 平台打包适配问题。
+
+3.5.9（20260327）
+   - note	本次更新重点围绕web延迟测速和运行状态探测做整体重构：重新梳理了测速链路、结果回传、线程调度、节点域名缓存与运行状态延迟检测，让节点较多、协议较杂的场景下也能获得更快、更稳定、更可中断的测速体验。
+   - update	web延迟测速结果回传链路升级：批量测速支持基于`webtest.stream`的WebSocket流式推送，前端可实时接收`waiting...`、`loading...`、`booting...`、`testing...`和最终结果；WebSocket不可用时自动回退到原有HTTP轮询。
+   - update	重构测速探测策略：节点测速与运行状态检测统一引入warm预热，并改为单进程串行多transfer执行；批量测速默认采用`warm + score`并结合历史结果按需补测，在兼顾测速精度的前提下尽量缩短总耗时。
+   - update	优化测速启动与批量调度：xray-like节点进一步压缩配置准备与启动等待时间，ssr / tuic / naive改为FIFO补位并发模型，任一线程结束后立即补上下一个节点；同时新增批量测速中止能力，用户可在测速过程中主动停止并保留当前结果。
+   - update	优化不同机型下的测速性能限制：按CPU架构、核心数量、内存容量对xray / tuic / naive并发进行分级，分别为aarch64、armv7l及RT-AX89X等机型设置更合适的线程数，降低低内存设备负载，并提升高性能机型的测速吞吐。
+   - update	进一步理顺节点域名缓存与测速耦合：Schema 2节点列表支持更快的服务端域名收集，`node_direct`缓存与运行态DNS规则仅在必要时同步刷新；动态解析模式下，测速不再为了补齐直连规则而强制重启smartdns / chinadns-ng，减少测速前准备的额外阻塞。
+   - update	继续优化测速缓存生成：xray-like节点测速缓存优先复用持久化`node_env_cache`，减少重复环境展开；同时精简outbound缓存生成链路，直接写入单节点outbound对象，降低缓存预热和批量测速前的配置准备耗时。
+   - update	优化测速端口分配和缓存一致性校验：改进批量测速可用端口分配逻辑，并在测速前补充`materialize_index`、聚合`outbounds`与节点列表的一致性检查，避免缓存残缺时被误判为可复用。
+   - update	运行状态页的国内/国外延迟检测同步升级：状态检测改用与web测速一致的warm + score思路，并引入最近一次成功延迟缓存，让前端状态显示和故障转移后端检测都更贴近稳定时延。
+   - update	补充`webtest`维护文档，整理测速缓存、节点域名缓存、多线程批量执行、动态解析耦合关系和后续可维护方向，便于后续继续迭代和调参。
+   - fix	修复节点新增/删除/编辑后，前端延后触发的`node_direct`刷新与测速缓存预热任务可能与手动测速竞争，导致连续删改节点后立即批量测速时，前段一批xray-like节点异常`failed`的问题；现在手动单测/批量测速会先取消待发任务，后台也会在测速进行中跳过这类调度。
+   - fix	修复tuic批量测速运行时为临时JSON补写本地监听和relay地址时，因`jq`改写路径兼容性问题产生`jq parse error`日志的情况；现在改为shell直接生成运行态tuic配置。
+   - fix	修复hysteria2节点测速缓存outbound JSON收尾括号错误，导致xray-like聚合测速配置整体失效，进而出现除tuic外批量测速节点大面积`failed`的问题。
+   - fix	修复一个vless + tcp + vision节点因配置生成错误无法工作的问题。
+
+3.5.8（20260325）
+   - note	本次更新重点补上了节点服务器域名动态解析能力。旧版为避免“先解析节点域名、后才能连上代理”的鸡蛋问题，会在启动前先把节点域名预解析成IP写进xray / tuic / naive等客户端配置。
+			这种做法对自建节点影响不大，但机场常会通过修改域名解析来切换服务器；一旦解析变更，旧版仍会持续使用启动时写入的旧IP，往往要等插件重启后才能恢复。
+			3.5.8新增【动态解析】模式后，会直接把域名写入客户端配置，并在chinadns-ng / smartdns中为节点域名补充直连解析规则，让客户端自己跟随解析变化；原有【预解析】模式仍保留，便于兼容回退。
+   - add	新增节点服务器地址解析方式：`动态解析` / `预解析`，默认启用动态解析；可在DNS设定中按需切换，兼容保留原有预解析方案。
+   - update	重构节点服务器域名处理链路：统一提取普通节点、NaiveProxy、Hysteria2、TUIC、VMess/Xray JSON节点的原始服务器地址，并收敛`ss_basic_server`、`ss_basic_server_orig`、`ss_basic_server_ip`三者语义。
+   - update	chinadns-ng / smartdns 现会为当前节点服务器域名动态注入直连解析规则；动态解析模式下，客户端配置文件保留域名写入，运行中可自行跟随解析变化，并同步回填运行时解析结果用于状态展示。
+   - update	动态解析模式下，节点IP变更触发重启任务会自动跳过，避免与客户端运行时解析机制冲突；对应实施方案文档已写入`doc/design/node-server-dynamic-resolve-design.md`。
+   - update	为节点域名直连解析新增`node_direct`持久化缓存，并在订阅写入、离线导入、配置恢复后自动刷新；测速前若检测到缓存与运行态DNS规则不一致，会自动轻量刷新DNS后再继续测速。
+   - update	Web延迟测速现已完整对齐动态解析 / 预解析逻辑：普通节点、TUIC、VMess/Xray JSON节点在测速生成配置时都会按当前解析模式保留域名或写入预解析IP。
+   - update	精简订阅脚本中的历史遗留示例和过时注释，保留必要的流程说明，减少维护时的噪音信息。
+   - fix	修复Schema 2节点切换过程中，`xray_use_json` / `v2ray_use_json`等布尔字段可能残留，导致从JSON节点切回普通节点后仍误走自定义JSON配置分支的问题。
+   - fix	修复部分Shadowrocket / sing-box风格TUIC订阅链接将`uuid`、`password`写在query参数中时，fancyss无法正确解析并导入TUIC节点的问题。
+   - fix	修复Web延迟测速在生成部分VLESS/VMess/TLS节点配置时，因直接删除`null`字段破坏JSON逗号结构，导致批量测速出现`jq parse error`的问题。
+   - fix	修复Schema 2下节点顺序末尾缺少换行导致最后一个节点在部分`while read`链路中被漏读，进而造成批量测速偶发漏测最后一个节点的问题。
+   - fix	修复手动触发批量web延迟测速时，旧缓存结果可能被误复用，导致前端只闪一下后不再显示进度的问题；现在会强制开启新一轮测速，并明确显示测速中状态。
+   - fix	修复订阅脚本缺失时前端仅报`not found`、排障信息不足的问题；现在会明确提示脚本缺失，并给出重装插件/升级较新固件的建议。
+   - fix	修复拖拽移动节点后，节点列表会自动跳回当前节点附近而非保持原滚动位置的问题；现在排序完成后会恢复用户拖拽前的列表滚动位置。
+
+3.5.6 - 3.5.7（20260324）
+   - note	本次更新解决了fancyss长期存在的一个底层设计问题：旧版节点按字段拆分为大量dbus KV，节点数量一多，会同时加重前端节点列表渲染、节点排序/移动、订阅整理，以及后端脚本取值和维护的负担；3.5.6起改为schema 2单节点单KV（JSON + Base64）存储。
+			此次升级对日常使用的感知可能不强，但这是fancyss后续继续维护、扩展协议字段和优化性能的必要基础改动；现有用户升级后，旧版节点会自动迁移到新结构。
+			由于旧版fancyss无法直接识别新节点结构，如需回退旧版本，请先在新版本导出一份【旧版兼容配置】；新版本则同时支持导出/恢复JSON配置，以及恢复旧版`.sh`配置，方便新旧版本之间切换。
+   - add	节点存储结构升级到schema 2，节点改为单节点单KV（JSON + Base64）存储，并支持旧版节点自动迁移、迁移提示和旧版配置恢复。
+   - add	新增新版本JSON配置与旧版兼容配置双格式备份/恢复能力，并补充新旧键值映射、节点数据结构和协议配置文档。
+   - update	围绕schema 2重写前后端节点读写、编辑、切换、排序、删除、测速与状态展示逻辑，减少节点较多时的页面渲染和脚本处理负担。
+   - update	重构订阅流程，新增订阅来源元数据与原始/解析结果缓存，支持更快的变更判断与恢复，并正确处理多订阅源、同机场订阅链接变更、关键词/订阅模式变化、本地节点保留、emoji节点名、无效group清理和过期缓存回收。
+   - update	优化配置导出/恢复流程：导出文件名统一为机型 + 时间格式，旧版兼容备份改为原子生成，JSON/SH恢复增加阶段和进度日志，并保留emoji节点名称；迁移快照自动仅保留最近几份，避免长期累积占用JFFS空间。
+   - update	重构SmartDNS实现：1-3号策略由fancyss按当前模式和DNS组设置动态生成，不再依赖可编辑模板；同步移除SmartDNS/ChinaDNS-ng单独重启入口，避免DNS与代理配置状态脱节。
+   - update	SmartDNS新增chn组/gfw组上游DNS图形化配置，支持udp/tcp/dot三类上游、运营商DNS默认注入、每组最多16个DNS，并改为JSON + Base64单值存储，便于后续扩展和维护。
+   - update	为chinadns-ng可信UDP DNS与SmartDNS gfw组UDP DNS新增统一的xray DNS UDP relay支持，并改为复用主Xray进程完成转发；NaïveProxy场景下自动在运行时回退为TCP上游，避免UDP能力缺失导致DNS启动异常。
+   - update	优化DNS设定页面交互：统一chinadns-ng/smartdns“策略”命名，收敛主DNS与策略下拉框宽度，新增主DNS方案及三种策略说明提示，并调整SmartDNS DNS组选择器、标签样式和添加/删除交互。
+   - update	优化插件运行状态、详细状态和web延迟测试：开启IPv6代理时支持拆分国外IPv4/IPv6状态检测，补充节点数量、节点类型、IPv6代理、iptables/ip6tables、ipt2socks等运行信息，并完善包架构识别和相关页面展示。
+   - update	完善二维码和订阅解析能力：补充Xray/Hysteria2相关URI字段解析与二维码生成，新增TUIC、NaiveProxy订阅解析支持；二维码功能默认开启，弹窗支持协议类型标识和复制节点链接，关闭二维码时服务器地址列可直接作为拖拽手柄移动节点。
+   - update	优化NaiveProxy/TUIC等协议支持和相关交互：修正Naive进程状态识别，Naive下自动约束UDP/QUIC行为，并补充TUIC、NaiveProxy配置实践文档。
+   - update	调整访问控制默认规则语义：默认规则统一为“当前节点模式 / 不通过代理”二选一，游戏模式下端口与UDP展示会强制匹配实际生效值，同时保留切回其它模式后的原始设置。
+   - update	规范访问控制默认端口历史键兼容逻辑：新版本运行态统一使用ss_acl_default_ports，并自动清理旧版遗留的ss_acl_default_port；导出旧版兼容配置时会同时写入新旧键，兼容回退到3.5.4及更早版本。
+   - update	由于xray-core将于2026年6月1日起正式取消allowInsecure，因此插件在用户勾选允许不安全后予以提醒用户尽快升级服务器端。
+   - fix	修复full版本刷lite版本时，lite版本不支持的节点移除不干净的问题（保留hysteria2节点）。
+   - fix	修复订阅节点时产生"null" "_"类型group的问题。
+   - fix	修复Xray节点在生成配置文件时，因直接删除null字段导致json结构损坏的问题，影响部分VLESS/VMess等节点启用。
+   - fix	修复部分机型包架构识别错误导致页面标题、详细状态、包名显示异常的问题，安装时同步包元数据到运行环境，并修复安装脚本存在误删/tmp目录的风险。
+   - fix	修复chinadns-ng自定义中国DNS使用`ip:port`、`ip#port`、`[ipv6]#port`等格式时被错误判定为非国内IP或导致启动失败的问题。
+   - fix	修复访问控制页面在非ACL标签页切换时重复请求ss_acl接口、默认规则/单主机代理端口保存后前端被错误回填旧值，以及节点列表在中部编辑/删除后滚动位置丢失的问题。
+   - fix	修复部分精简固件环境缺少`seq`命令时，插件重启/保存&应用阶段报错的问题。
+   - fix	修复插件清空配置后，附加功能-定时任务页面未重新应用前端显隐逻辑，导致部分定时重启选项显示错乱的问题。
+   - fix	修复smartdns方案下，未开启ipv6代理时，部分代理流量被解析到ipv6地址导致直连请求的问题
+
+3.5.5（20260319）
+   - add	新增MTK平台机型：GS7_Air支持。
+   - add	全面支持ipv6透明代理，开关位于附加功能-代理行为-开启ipv6代理，可加载ipv6的tcp/udp透明代理规则（其中NaiveProxy仅支持tcp）。
+   - add	访问控制新增MAC匹配能力，普通主机规则会优先按MAC匹配，CIDR规则继续按IP/CIDR匹配，并支持通过ARP自动补全MAC地址。
+   - add	ipv6 ACL支持复用现有访问控制规则，可按设备控制ipv6流量的代理模式、udp代理和quic屏蔽，并新增ipv6 DNS劫持。
+   - add	新增tuic协议配置实践文档，在doc目录下，并在README中增加TUIC协议文档入口。
+   - add	新增NaiveProxy配置实践文档，在doc目录下，并在README中增加NaiveProxy协议文档入口。
+   - update	优化DNS逻辑，开启ipv6代理后，chinadns-ng和smartdns将不再过滤代理域名AAAA记录，并同步支持gfwlist6、black_list6、router6等ipv6规则集。
+   - update	Xray配置文件生成逻辑更新，开启ipv6代理时会自动追加ipv6透明代理inbound。
+   - update	TUIC节点现已支持ipv6透明代理，优化TUIC配置解析和状态展示，可在运行检测中显示relay.server对应的解析地址。
+   - update	NaiveProxy节点现已支持ipv6透明代理（仅tcp，udp仍不支持）。
+   - update	SSR节点现已支持ipv6透明代理，开启ipv6代理时ssr-redir将监听在ipv6地址上以接管透明代理流量。
+   - update	优化DNS设定中AAAA过滤逻辑：开启ipv6代理后，前端会自动取消并禁用chinadns-ng的【过滤代理】开关；未开启ipv6代理时，后端会自动纠正chinadns-ng配置，smartdns继续保持代理域名默认屏蔽AAAA解析。
+   - update	优化访问控制前端显示，客户端地址支持悬浮显示MAC信息，并根据是否启用ipv6代理显示不同提示。
+   - fix	修复开启ipv6代理后，代理出口IP检测和国外状态检测仍强制使用ipv4的问题。
+   - fix	优化ipv6透明代理的预检查和回退逻辑：当系统未开启ipv6、固件缺少libip6t_REDIRECT扩展，或ip6tables规则写入失败时，将自动关闭ipv6代理开关并回退到纯ipv4代理模式继续运行。
+   - update	ipt2socks更新到v1.14，新增二进制自动获取/打包同步逻辑，并调整透明代理启动参数以适配新版本。
+   - update	tuic-client更新到v1.7.1，full版本默认提供对应平台的二进制，并新增二进制自动获取/打包同步逻辑。
+   - update	安装脚本补充ss_basic_proxy_ipv6默认值写入。
+
+3.5.4（20260313）
+   - fix	修复某些时候gfw黑名单模式下无法翻墙的问题。
+   - fix	修复当服务器ip为纯ipv6的时候，ip归属判断错误的问题。
+   - update	同步最新版本规则（gfwlist、chnroute、chnroute6、chnlist、adslist）。
+   - update	优化ipv6相关日志输出。
+   - update	优化账号设置页面显示，部分输入框和加密方式选择框支持按内容长度自动调整宽度，并增加最小/最大宽度限制。
+   - update	优化访问控制页面布局和交互，代理端口改为下拉选择，udp代理和屏蔽quic拆分为独立控制列。
+   - add	访问控制支持为每个设备单独控制udp代理和海外quic流量屏蔽。
+   - fix	修复访问控制下udp/quic相关前后端逻辑不一致的问题，按不同acl模式正确处理海外udp流量的直连、代理和拦截。
+   - update	调整访问控制默认规则：默认模式改为大陆白名单模式，默认关闭udp代理，默认开启quic屏蔽，默认代理端口改为22,80,443,8080,8443。
+   - update	访问控制默认端口dbus键由ss_acl_default_port更名为ss_acl_default_ports，确保升级用户使用新的默认值。
+   - update	订阅脚本ss_online_update.sh更名为ss_node_subscribe.sh，以防止部分机型固件中被删除，并同步更新前端及相关调用。
+   - update	同步最新版本规则。
+
+3.5.3（20260214）
+   - fix	修复游戏模式下屏蔽quic流量失效的问题。
+   - fix	修复lite版本下节点列表无法选择节点的问题。
+   - fix	节点启用/重启/切换识别错误的问题。
+   - update	同步最新版本规则。
+
+3.5.1 - 3.5.2（20260211）
+   - fix	修复使用远程访问fancyss页面，状态一直waiting的问题。
+   - update	优化fancyss前端页面逻辑，前端代码量减小约70kb。
+   - update	优化websockset连接，现在页面加载时只会进行一次连接。
+   - update	更新xray二进制到v26.2.6
+   - update	更新xray配置文件生成以适应新版本xray
+   - update	vless/hysteria2/trojan出站协议新增pinnedPeerCertSha256，verifyPeerCertByName支持，以备未来（2026.06.01）取消允许不安全（AllowInscure）
+   - remove 移除xray底层传输安全的xtls，xtls在自xray-core 1.7.x开始就被XTLS Vision取代了
+   - fix	修复hysteria2节点无法测试落地延迟的问题
+   - update	节点列表新增测试按钮，可以对单节点进行落地延迟测试
+   - update	批量延迟测试机制更新，现在ss, vless, vmess, trojan, hysteria2使用xray多outbound测试
+   - update	批量延迟测试针对不同性能机型使用不同线程数量
+
+3.5.0（20260129）
+   - update	chinadns-ng二进制更新到2026.01.29版本，修复一个内存泄露问题
+
+3.4.13（20260127）
+   - update	chinadns-ng二进制更新到2026.01.27版本，修复一个导致进程崩溃的问题
+   - remove	前端屏蔽回国模式，自3.3.9以来，相关改动并未适配回国模式，目前回国模式是不可用状态
+       		等未来版本回国模式适配好了再开放，有回国模式需求请用3.3.8及以下版本！
+   - remove	移除xray分流模式选项，这个是未来计划，还没有开始实施。
+   - remove	移除udp代理控制中的仅chatgpt选项，现在不管是否开启udp代理都能访问chatgpt等http3网站，此功能已经无用
+   - add	添加屏蔽quic流量的开关，详情如下：
+       		一些海外网站和APP用优先使用http3/quic协议，此协议基于udp协议443端口。此时有两个选择，A：代理udp 443，B：屏蔽udp 443
+       		A：代理udp 443：
+       		    代理udp 443需要节点支持udp代理，即使你有支持udp代理的节点，这也不一定美好，因为很多时候udp被运营商，国际出口等qos限速，会导致用quic看youtube视频速度慢等情况。
+       		B：屏蔽udp 443
+       		    屏蔽udp 443后，此时无法使用使用quic，将会自动回落到基于tcp的http2，而代理软件都是支持tcp的，所以最后也能成功访问这类网站，且不会有udp qos限速的情况。
+       		屏蔽udp开关与udp代理控制的关系：
+       		1. 当udp代理开启时（或使用游戏模式），开启此处将不会代理443端口udp流量，且屏蔽本机发往海外的udp 443端口数据包，此时海外http3网站访问将自动回落到基于tcp的http2，最后正确走tcp代理。
+       		2. 当udp代理开启时（或使用游戏模式），关闭此处将代理443端口udp流量，此时访问海外http3网站将会走udp代理，有时候udp代理速度不及tcp，会导致比如看youtube速度较慢。
+       		3. 当udp代理关闭时，开启此处将后将会屏蔽本机发往海外的udp 443端口数据包，效果跟情形1一样，将回落到http2后走tcp代理
+       		4. 当udp代理关闭时，关闭此处后海外udp 443流量将直连，可能导致chatgpt等http3网站检测到国内ip而不可用（不建议这么用）。
+       		总之，除非你特别了解这个功能，否则请默认勾选屏蔽quic流量，以保证http3/quic协议网站的正确访问。
+   - add	DNS设定中添加：[屏蔽BlockList域名解析]选项，默认不启用
+       		fancyss提供了一份屏蔽域名解析名单：block list：https://github.com/hq450/fancyss/blob/3.0/rules_ng/block_list.txt
+       		目前该list收录了一些Adobe激活相关的域名，开启后这些域名将不会得到解析，如果你使用正版adobe软件，请保持此处关闭。
+   - add	订阅功能新增：自定义UserAgent，目前提供了几个常见的以供选择，未来有需要可以开放用户填写
+   - add	订阅功能新增：订阅节点允许不安全，一些机场的vmess/vless/trojan/hysteria2节点必须设置允许不安全才能工作，勾选这里后订阅的节点将默认勾选允许不安全！
+   - remove	【附加功能】移除所有trojan强制允许不安全，如有需要，请在订阅阶段勾选允许不安全。
+   - fix	修复添加vless节点弹窗页面显示bug（issues/33692）
+
+3.4.12 (20260126)
+   - update	[重要]chinadns-ng二进制更新到2026.01.26版本，修复内存泄露问题和cpu占用问题！
+   - fix	修复chinandns-ng自定义dns为局域网地址时被识别为非国内地址的问题
+   - update 更新包内规则为最新版本
+   - update	更新xray二进制到v26.1.23-f1aee0b
+
+3.4.10 - 3.4.11 (20260124)
+   - note	！！从3.4.6 - 3.4.8升级到此版本可能无法启动chinadns-ng，需要重新提交一次。
+   - fix	更新chinadns-ng二进制更新到2026.01.24版本，修复异常时cpu占用率
+   - update	脚本增加防呆检测，禁止用户使用chinadns-ng的时候在中国dns部分使用国外dns
+   - fix	修复chinadns-ng和smartdns配置的默认值没有写入的问题
+   - fix	修复chinadns-ng自定义udp tcp DNS时chinadns无法启动的问题
+   - update	现在替换dnsmasq为实验特性，默认不开启。由于华硕/梅林机型的一些服务和dnsmasq深度绑定，部分机型替换后可能会有问题，请谨慎使用。
+   - remove	移除重启chinadns-ng和smartdns的按钮，因为现在dns和xray配置深度绑定，有时只重启dns程序无法达到效果。现在建议重启整个插件。
+   - update	更新xray二进制到v26.1.23版本
+
+3.4.9 (20260123)
+   - fix	修复lite版本勾选故障转移开关无用的问题
+   - fix	修复lite版本插件定时重启设定界面错乱的问题
+   - fix	修复lite版本无法手动添加节点的问题
+   - fix	重要！更新chinadns-ng二进制更新到2026.01.23版本，修复运行一阵就会崩溃的问题！添加根据协议指定是否走proxy的功能。
+       		注意：从fancyss 3.3.9开始，chinadnsdns-ng经过魔改，专门给fancyss使用，感谢原作者！
+   - fix	修复DNS解析测试，cdn、gfwlist、chnlist测试失效的问题
+   - update	修改前端页面的密码/UUID输入框，避免被1password/lastpass等密码管理插件识别
+   - update	更新xray二进制到v26.1.18版本最新commit：2d2102f，修复hysteria2 speedtest测速后断线问题
+   - fix	udp代理控制选择仅chatgpt，但是其它h3网站也走了代理的问题
+   - add	chinadns-ng trust组支持udp协议dns，默认走xray inbound转发（tcp和dot还是走socks5转发）
+   - fix	修复部分机场订阅时候vless节点报错误节点的问题
+   - fix	修复部分机场订阅vless节点无法使用的问题
+   - update 更新包内规则为最新版本
+
+3.4.8 (20260120)
+   - fix	修复hysteria2使用单443端口时候代理不通的问题
+   - fix	修复tuic-client运行中，详细状态显示未运行的问题
+   - fix	修复订阅ss节点时，由于密码解析错误导致节点不可用的问题（v3.3.9修ss2022订阅挖的坑，更新后请重新订阅一次）
+   - update	支持更多的机场订阅格式（订阅内容非base64编码）
+   - update	现在支持 obfs-local + WebSocket伪装类型的trojan节点了（此为群友报告的trojan节点不可用的类型）
+   - update	trojan订阅支持obfs-local WebSocket伪装类型节点
+   - fix	修复因quic流量屏蔽导致hysteria2等443 udp通讯的节点挂掉的问题
+   - update	【屏蔽quic流量】控制将更加精细化，而不是一刀切，如果代理开启了udp，将不会屏蔽quic流量(udp 443)
+       		在【附加设置】- 【udp代理控制】中：
+       		1. 关闭 udp：将屏蔽海外udp 443数据包
+       		2. 开启 udp：不屏蔽海外udp 443数据包
+       		3. 仅chatgpt：将屏蔽除了udplist以外的海外udp 443数据包
+       		注意：游戏模式中，无论是否勾【屏蔽quic流量】，选始终不屏蔽海外udp 443数据包
+
+3.4.7 (20260119)
+   - fix	修复部分机场订阅后出现skipd错误的问题
+   - fix	修复部分规则文件编码格式错误的问题
+   - update 更新包内规则为最新版本
+
+3.4.6 (20260119)
+   - add	新增屏蔽quic流量功能，在[附加功能中]，默认开启，防止未开启udp代理/代理不支持udp导致直连被屏蔽的http3站点
+   - fix	修复部分机场因UA识别问题导致无法订阅的问题
+   - update	现在识别到clash配置文件的订阅会加以提醒
+   - update	魔改版chinadns-ng版本更新到2026.01.18，增强稳定性
+   - update	chinadns-ng本地缓存由16384默认改为8192（未来根据机器性能做不同值）
+   - add	[详细状态] - [检测当前相关进程工作状态]增加程序内存占用显示
+   - update	xray二进制更新到 26.1.18
+   - update	hysteria2节点新增congestion（拥塞算法）设置，可选：reno, bbr, brutal, force-brutal
+   - update	hysteria2不设置上下行也能订阅了，但是congestion会被默认写为bbr
+   - update	hysteria2订阅新增congestion（拥塞算法）设置，可以在订阅时设置好hy2节点的拥塞算法
+   - fix	hysteria2现在可以直接写端口范围，不用指定单端口，如：20000-50000
+
+3.4.5 (20260117)
+   - add	hysteria2节点支持端口跳跃配置，现有端口处填写即可，示例：443,20000-50000
+   - fix	修复ss+obfs节点订阅时候，混淆域名解析错误导致节点不可用（更新插件后请重新订阅）
+   - fix	修复创建vless/vmess配置文件时，日志打印错误的问题
+   - fix	修复插件在线更新/规则更新/在线订阅的时候，经常出现Terminated错误导致中断的问题
+   - fix	修复落地延迟测试过程中，经常连续几个几点failed，实际情况节点又可用的情况
+   - update	优化在线订阅，提升订阅成功率
+   - update	更新dnsclient 代码，添加ipv6解析功能，添加ipv4 only，ipv6 only，ipv4 优先，ipv6 优先功能。
+   - update	现在插件节点域名解析支持ipv6，可以使用[ipv6地址 + ipv4 NAT] vps搭建的节点。
+   - note	注意，插件能虽然使用ipv6地址的节点，但是并不意味着能代理ipv6的数据包，所以DNS方案中请勾选过滤代理AAAA记录
+
+3.4.4 (20260116)
+   - fix	修复vmess节点运行失败的问题
+   - fix	修复ss协议节点启动时提示错误的问题
+
+3.4.3 (20260115)
+   - note	全面拥抱xray-core，现在在出站协议上，v2ray仅独有vlite出站（还需要配置目前没几个人用的V5 json）
+       		其它的vmess、vless、trojan、shadowsocks、socks、http、freedom、blackhole、dns、hysteria2，xray都有，xray还独有wireguard
+       		底层传输上，xray还独有splithttp（xhttp实现，底层实现对应splithttp）和reality，其它底层传输虽有差异，但xray-core基本都有
+       		因此虽然xray-core现在无法做到完全的v2ray的超集，但是绝大多数多数情况下都能替代v2ray使用！
+       		所以，本插件现阶段会全面拥抱xray，删除v2ray二进制还可以节约6MB多空间！这为未来可能上singbox内核做好了准备！
+   - remove	移除v2ray二进制，现在vmess出站协议节点默认由xray来运行
+   - add	由于移除v2ray二进制，full版本插件包和lite版本已经相差无几，因此full版本将tuic-client和naive二进制请回
+   - update	更新自编译xray二进制到最新commit id：a384be0
+   - update	更新naive二进制，进一步缩小armv5和armv7版本的体积
+   - fix	修复某些协议下，重启路由器后插件启动异常代理无法工作的问题	
+   - fix	修复udp代理控制中，仅chatgpt失效的问题
+   - fix	修复hysteria2因json配置日志导致/tmp生成大量日志占用空间的问题
+   - fix	修复因chinadns-ng/smartdns替换dnsmasq后，路由重启后客户端可能无法获取ip地址的问题
+   - fix	修复iptables规则加载/删除报错的问题
+   - fix	修复有时路由器因内核模块加载问题导致插件启动失败
+   - update	优化路由器因防火墙重启插件重载速度
+   - update	更新规则到最新
+
+3.4.2 (20260115)
+   - note	此版本的一个已知问题，hy2节点落地延迟测试会失败（后面会针对落地延迟测试集中修改，这次先不改了，改了也是临时版本）
+   - fix	修复fancyss_arm_lite 页面bug无法提交保存的问题
+   - fix	修复fancyss_arm [full|lite] xray chinadns-ng smartdns无法运行得问题
+   - upate	xray二进制更新到 26.1.13
+   - uadd	现在所有lite版fancyss支持hysteria2协议了！(插件包体积几乎不变)
+   - upate	由于新版xray支持hyseria2入栈，现在hysteria2节点由xray运行
+   - upate	移除hyseria2二进制，插件包进一步缩小！
+   - fix	修复hysteria2节点订阅时，混淆类型可能无值的情况
+   - upate	详细状态页面生成脚本移除一些历史遗留代码
+   
+3.4.1 (20260114)
+   - fix	修复GFW黑名单模式下google相关域名无法访问的问题
+   - fix	修复lite版本fancyss无法编辑节点的问题
+   - fix	修复lite版本fancyss会订阅到hysteris2节点的问题
+   - fix	修复chinadns-ng未监听在本地ipv6网络的问题
+   - upate	修复部分机型因不支持timeout导致一些网络请求时间过长的问题
+   - upate	现在使用DNS方案[国内优先]和[国外优先]，会自动和代理模式匹配
+   - remove	移除一些shadowsocks-libev的历史遗留代码
+
+3.4.0 (20260114)
+   - remove	移除旧版本中无用的xray/v2ray dns废弃代码
+   - fix	修复在线升级后chinadns-ng因可信DNS-3默认值错误导致chinadns-ng启动失败的问题
+
+3.3.9 (20260113)
+   - note	此版本对DNS的逻辑和相关代码进行了较大改动，现在不再份基础和进阶，默认使用chinadns-ng，同时支持smartdns
+   - note	此版本改动较多，但远没达到设想的阶段，后面还会继续优化，考虑到上个版本时间过长，因此先更新一个版本，后面再继续更新。
+   - update	chinadns-ng基于原作者的最新重构版，原生支持UDP/TCP/DoT协议，且在此基础上魔改了国外解析组socks5代理支持
+   - add	chinadns-ng方案预设三组配置：国内优先，国外优先，智能判断。
+       		分别对应chinadns-ng文档中的【gfwlist 分流】，【chnlist 分流】和【chnroute 分流】（https://github.com/zfl9/chinadns-ng）
+       		国内优先：gfwlist.txt (tag:gfw) 走可信上游，其他域名 (tag:chn) 走国内上游（优点：国内CDN效果好；缺点：国外非墙域名走国内DNS解析）
+       		国外优先：chnlist.txt (tag:chn) 走国内上游，其他域名 (tag:gfw) 走可信上游（优点：无DNS泄露；缺点：国内未收录域名走国外DNS解析）
+       		智能判断：chnlist (tag:chn)走国内上游，gfwlist (tag:gfw) 走可信上游，其他域名 (tag:none) 同时走国内和可信上游，根据 IP 测试结果决定最终响应（优点：综合解析效果最好；缺点：轻微DNS泄露）
+       		插件默认使用【智能判断】，有洁癖的可以使用国外优先模式，因为是纯域名分流，可以保证无DNS泄露
+   - update	添加smartdns支持，预设三组配置：国内优先，国外优先，智能判断，外加三组自定义配置
+       		通过对smartdns配置的调教，使其实现了chinadns-ng一样的分流解析，还可以在此基础上实现国内域名的解析ip优选。
+   - update	重新整理了插件规则，详情：https://github.com/hq450/fancyss/tree/3.0/rules_ng#readme
+   - update	ipset支持ipv6集合，用于chinadns-ng判断和未来ipv6支持
+   - remove	移除了DNS中，dns2tcp和ecs的相关逻辑和二进制文件
+   - remove	移除了dns2socks，因为现在chinadns-ng魔改版自带tcp dns和socks5代理支持支持
+   - update	xray 二进制更新到最新:25.12.8
+   - update	xray 二进制更新按钮更新，不再支持v1.7.5回滚
+   - add	xray vless配置新增httpypgrade传输协议支持
+   - add	xray vless配置新增xhttp传输协议支持（暂不支持配置extra json实现上下行分离，暂不支持配置抗量子密钥对，需要的请使用json配置）
+   - add	xray 订阅支持httpypgrade和xhttp
+   - fix	修复部分机场SS2022加密节点订阅由于密码解析错误导致节点不可用的问题
+   - update	v2ray 二进制更新到最新:5.42.0
+   - add	xray vmess配置新增httpypgrade传输协议支持
+   - update	hysteria2二进制更新到最新:v2.6.5，现在hy2二进制由本项目裁剪构建，以缩小体积
+   - update	websocketd二进制移除不需要的功能后拆件构建，减小了约2.3MB体积
+   - remove	移除了shadowsocks-rust，现在ss节点默认用xray运行
+   - remove	移除ss-rust更新按钮和功能
+   - remove	移除ss协议开启TCP_NODELAY（ss_basic_tnd），因为不再使用ss-libev和ss-rust
+   - remove	移除：udp加速功能（二进制已经在之前的版本中移除）
+   - remove	移除：kcp加速功能（二进制已经在之前的版本中移除）
+   - remove	移除对国内dns可用性的检测功能
+   - remove	移除xray/v2ray等二进制的实时进程守护功能（实测不需要）
+   - remove	移除ss-menu.js里所有没用到的提示
+   - update	检测到vmess协议使用的时候才检查时间是否一致
+   - update	优化插件整理启动速度
+   - fix	[订阅]修复订阅链接格式处理中的一个bug
+   - fix	[订阅]修复有时候ss-2022节点订阅密码写入错误导致节点不可用的问题
+   - fix	[订阅]修复订阅时，有时curl或wget运行很久不结束的问题
+   - update	[订阅]现在订阅时curl可以处理跳转的订阅链接
+   - update	[订阅]现在订阅wget走代理时不会重启dnsmasq
+   - update	[订阅]【下载订阅时走代理网络】新增自动判断，会尝试直连，再尝试代理（如果可用）
+   - update	[订阅]现在订阅会有fancyss独有的UA，比如："AsusWRT/koolcenter/RT-BE88U/102.5/fancyss/mtk/lite/3.3.9"
+       		分别对应字段："系统名/改版方/机型/固件版本/fancyss/fancyss平台类型/fancyss包类型/fancyss版本"
+   - fix	修复vmess节点测试延迟失败
+   
+3.3.8 (20251106)
+   - fix	此次仅修复一个web的小错误，同时同步下最新规则，建议更新
+   - note	由于华硕最新固件内核原因，导致singbox插件开发受阻，fancyss最近将继续更新
+       		1. 首先会将DNS逻辑进行一次较大的更新，比如更好的解析，比如做到DNS零泄露
+       		2. 其次考虑将Xray版本提升上去，但是会导致旧的配置不兼容，比如reality + grpc等配置
+       		3. 剩下的后面再考虑...
+
+3.3.7 (20250226)
+   - add	新增华硕GS7(ROG魔盒)、ZenWiFi_BT8P(灵耀魔方Pro WiFi7)机型支持(mtk7988D)，使用fancyss_mtk_full/lite
+   - add	新增华硕ZenWiFi_BD4机型支持(ipq5322，内核32位)，由于jffs过小，建议安装fancyss_ipq32_lite
+   - add	新增华硕TUF-BE6500机型支持(ipq5322，内核64位)，建议安装fancyss_ipq32_full/lite
+   - fix	修复状态检测时：有时状态显示X，但实际代理可用的问题
+   - fix	修复节点实际可用，但是插件在做国外出口检测时却检测到不可用的问题
+   - fix	修复部分协议节点下，可信dns选择udp协议，插件启动后无法检测国外出口的问题
+   - update	更新shadowsocks-rust二进制: v1.22.0
+   - update	同步最新规则
+   - update	在非aarch64机型上，默认不开启webtest（落地延迟检测），因为该检测要求较多性能
+   - remove	由于icmp ping协议检测不具有实际意义，完全移除icmp ping检测
+   
+3.3.6 (20250114)
+   - update	因上游不再更新，移除shadowsocks-libev二进制及相关功能，现在full版ss协议默认由shadowsocks-rust运行，lite版ss协议由xray运行
+   - update	在【附加功能】中新增开关：用xray核心运行ss协议，勾选后ss协议可强制由xray运行（full版本功能，否则用ss-rust运行）
+   - update	xray运行ss协议情况下支持simple obfs
+   - update	现在lite版本的fancyss也可以使用AEAD-2022加密方式了
+   - fix	修复通过vless://链接添加节点时候，在grpc模式下，serviceName可能漏掉添加的问题
+   - fix	修复xray在底层传输安全为reality时候，有时因错误提交了flow参数导致节点不可用的问题
+   - fix	修复当服务器出口是ipv6地址时，代理出口ip检测失败的问题
+   - fix	修复开启chinands-ng可信DNS-2 (直连)功能后，当DNS为空时出错的问题
+   - fix	修复某些情况下切换节点实际上还是用的上一个节点的问题
+   - fix	修复web落地延迟检测时，有时候因为端口冲突造成节点延迟检测失败的问题
+   - fix	修复在102固件中，当网络划分了vlan时，开启fancyss后，该vlan无法访问网络的问题
+   - update	现在在102固件中，新划分的vlan网络也能使用透明代理网络（未来考虑给开关）
+   - update	在【附加功能】中新增开关：用xray核心运行ss协议，勾选后ss协议可由xray运行（full版本功能），否则用ss-rust运行
+   - update	现在开启插件前会检测并尝试解决端口冲突问题，以避免部分二进制无法启动的问题
+   - update	优化web落地延迟检测功能，现在ss节点默认由xray来运行检测
+   - update	优化iptables清除相关代码
+   - update	同步最新规则
+   - remove	移除ss协议的v2ray-plugin功能
+   - remove	因上游不再更新，移除ss-libev二进制及相关功能，现在full版ss协议默认由ss-rust运行，lite版ss协议由xray运行
+
+3.3.5 (20241209)
+   - fix	修复hysteria2节点下，无法检测国外出口的问题
+   - update 更新hysteria2二进制: v2.6.0
+   - update 更新xray二进制: v24.11.30
+   - update 更新v2ray二进制: v5.22.0
+   - update 更新shadowsocks-rust二进制: v1.21.2
+   - update 更新naiveparoxy二进制: v131.0.6778.86-1
+   - update	同步最新规则
+
+3.3.4 (20241203)
+   - note	此次主要更新各个协议的二进制，同时进一步优化jffs空间占用，另外修复了国内外出口检测的一些bug及其它问题。
+   - update	shadowsocks-rust二进制更新到v1.21.0，且安装包内置
+   - update	v2ray二进制更新到v5.21.0
+   - update	xray二进制更新到v24.9.30
+   - update	naiveproxy二进制更新到v130.0.6723.40-5
+   - rules	规则更新：chnroute规则合并了多个来源，覆盖更全面，包含misakaio, cnisp, apnic, ipip, ipip_17mon, maxmind
+   - rules	规则更新：gfwlist在原有基础Loukky/gfwlist-by-loukky上合并了pexcn/daily的规则
+   - fix	修复国外状态检测时因代理不支持ipv6而国外×的问题（只检测ipv4）
+   - fix	修复国内状态检测因部分站点跳转显示国内×的问题
+   - fix	修复插件开启时国内出口ip地址可能检测出错的问题
+   - fix	修复插件开启时国外出口ip地址在一些情况下无法检测到出口ip的问题
+   - fix	修复手动安装插件时，天选路由器皮肤无法识别的问题
+   - fix	修复插件在最新102固件中（RT-BE86U），前端js报错，页面加载左侧经常黑边的问题
+   - fix	修复ss-rust二进制在线更新出现md5不一致的情况（在线修复）
+   - fix	修复hysteria2二进制在启动时候被运行两次的问题（thx to 1euk0cyte）
+   - fix	修复修复服务器ip变化重启触发功能（thx to 1euk0cyte）
+   - update	优化插件安装时占用的jffs空间，实测在BE86U上，全新安装仅需7M的jffs空间（利用了固件的/data分区，并至少保留其256KB空间）
+   - update	现在RT-AX57机型在安装前会尝试释放更多jffs空间后再进行安装
+   - update	现在检测到固件自带jq程序，将不会安装包内jq，因为部分最新102固件（如BE86U）自带jq，
+   - update	现在检测到固件curl支持proxy（102改版固件支持该特性），将不会安装包内curl-fancyss，将节省1MB多的空间，
+   - update	hnd版本更新curl二进制，减小体积，现在hnd_lite全新安装只占用大约只有8.5MB，
+   - update	更新v2ray，ss-rust更新机制（当安装在/data时，也应该更新到/data）
+   - update	更新默认值，附加设置 - 插件开启检测中，除了国内ip检测和出口ip检测默认开启，其余关闭（打勾）
+
+3.3.3
+   - note	本次主要为并修复一些已知问题，并继续优化插件占用jffs储存空间，实测全新安装，BE88U占用24.3MB
+   - add	添加GT-BE96等102官改固件的支持
+   - fix	修复某些情况下节点实际可用，国外出口ip检测失败的问题
+   - fix	修复telegram交流群地址失效，新地址：https://t.me/+PzdfDBssIIFmMThl
+   - fix	修复shadowsocks-rust无法在线更新的问题
+   - fix	修复full版本覆盖安装lite版本时，不支持的节点删除不干净的问题
+   - fix	修复hysteria2订阅，现在定于hy2节点时，如果未设置上下行速度，节点无法写入
+   - update	shadowsocks-rust二进制更新到v1.20.3（需要手动更新）
+   - update	优化新装插件后的引导弹窗
+   - update	现在如果系统curl支持proxy，那curl-fancyss不会安装，以进一步节约jffs空间
+   - update	同步最新规则
+   - remove	默认不提供udp2raw和udpspeeder二进制（如需要使用，会提示下载二进制）
+   - update	默认关闭kcp加速和udp加速功能，需要开启请前往【附加功能】-【其它】
+   - remove	默认不提供tuic二进制（如果使用tuic协议，会提示下载二进制），fancyss将逐步移除tuic支持，因为作者已放弃项目：https://www.eaimty.com/2023/opensource-project-based-on-hormone/
+
+3.3.2  (20240802)
+   - add	添加RT-BE88U等102固件的支持
+   - note	因插件体积越来越大，本次主要是做插件瘦身，移除了一些二进制，DNS进阶部分只保留了chinands-ng
+       		后期会将chinands-ng升级到ChinaDNS-NG 2.0（https://github.com/zfl9/chinadns-ng/issues/144）
+   - remove	移除dohclient及其相关功能
+   - remove	移除smartdns及其相关功能
+   - remove	移除trojan二进制（4年未更新），现在trojian协议由xray运行
+   - remove	移除haproxy及负载均衡功能
+   - remove	移除v2ray-plugin二进制（机场基本上没有这个混淆插件，如自建shadowsocks + v2ray-plugin节点，会提示下载二进制）
+   - remove	移除socks5页面（因六、七年未更新，且只支持纯ss节点）
+   - remove	默认不提供kcptun二进制（如果使用kcptun加速，会提示下载二进制）
+   - update	更新udplist，新增更多需要udp代理的域名
+   - update	xray二进制更新到v1.8.23
+   - update	v2ray二进制更新到v5.16.1
+   - update	naive二进制更新到v127.0.6533.64-1
+   - fix	修复xray、v2ray二进制更新时下载链接不完整的问题
+
+3.3.1  (20240302)
+   - fix	修复trojan节点无法订阅的问题
+   - update	udp代理控制，chatgpt选项新增更多的相关域名
+   - update	更新规则到最新
+   
+3.3.0  (20240229)
+   - fix	3.3.0：修复full版本手动添加任何节点都是hysteria2节点的问题
+
+3.2.8 - 3.2.9  (20240225)
+   - fix	3.2.9：修复lite版本无法手动添加节点的问题
+   - add	fancyss full添加hysteria2协议支持
+   - add	fancyss full添加hysteria2订阅支持，能在订阅的时候设定上下行带宽和 tcp fast open是否开启
+   - add	fancyss full添加hysteria2 web 延迟检测支持
+   - fix	修复当订阅链接中有空格的时候，订阅链接被切割，导致无法订阅的问题
+   - fix	修复从full版本安装成lite版本后，因部分节点lite版本不支持导致的问题
+   - update	现在节点订阅日志也走websocket通讯，避免httpd崩溃
+   - note	因新增协议支持，full版本安装包再次增加不少体积，安装请注意jffs空间，建议使用usb2jffs插件扩容jffs
+
+3.2.6 - 3.2.7 (20240205)
+   - update	安全性更新：关闭插件23456的socks5端口对外访问，以避免被人扫代和盗刷流量
+   - update	xray二进制更新到最新v1.8.7版本，go 1.21.6编译
+   - update	现在有帮助信息的文字将显示蓝色，鼠标悬浮上即可显示帮助信息
+   - update	代理服务器节点解析默认使用udp协议，且使用国内组，以避免多解析机场解析到不正确的服务器地址
+   - update	更新了fancyss的一些默认设置
+   - remove	移除使用tcp和doh对代理服务器节点进行解析
+   - remove	移除使用tcp和doh对代理服务器节点进行解析
+   - remove	因旧版本存在一定安全风险，且和新固件兼容性问题，移除了fancyss 3.0.5及其以前的历史安装包
+   - add	hnd_v8_full、mtk、qca版本新增使用websocket进行前后端通讯，将极大降低httpd崩溃频率
+   - add	【附加功能】新增New Bing模式，勾选new bing模式后，访问https://bing.com/将不会跳转到https://cn.bing.com/
+   - add	【附加功能】新增udp代理控制，可以开启gfwlist模式、大陆白名单模式、全局模式下的udp代理。
+       		udp代理控制还可以仅开启chatgpt模式（默认选项），以方便在非游戏模式下访问chatgpt页面
+   - fix	修复某些情况下，路由器公网出口IPV4地址检测不成功的问题
+   - fix	修复某些情况下，更改访问控制内主机模式保存不成功的问题
+   - fix	修复某些情况下，chinadns-ng中国DNS-2选项为空的问题
+   - fix	修复从旧版本升级后，不刷新浏览器缓存导致页面错乱的问题
+   - fix	修复升级版本后，chinadns-ng的丢弃AAAA记录开关无法保持开启的问题
+   - fix	修复fancyss_arm 3.2.6版本页面错误，不显示节点，无法点击的问题
+
+3.2.5 (20230731)
+   - fix	修复使用trojan运行trojan协议节点时代理不通的问题
+   - fix	修复请空插件所有配置后，再次配置节点无法进行ping和web延迟测试的问题
+   - fix	修复插件关闭时，trojan节点web延迟测试全部failed的问题
+   - fix	修复不支持web延迟测试的节点一直显示testing的问题
+   - fix	修复某些时候代理不通，顶部状态检测却显示正常的问题
+   - fix	修复v2ray/xray下，可能出现本地DNS端口冲突的问题
+
+3.2.4 (20230729)
+   - add	fancyss full版本添加tuic协议(https://github.com/EAimTY/tuic)支持，lite版本不支持;
+       		自己简单测试了下，同一个时间和节点，四川电信直连 BWG US: Los Angeles, California (DC9 CT CN2GIA)服务器，icmp ping 175ms
+       		tuic下行速度477MB/s，落地延迟183ms
+       		vless+grpc+reality下行速度132MB/s，落地延迟195ms
+       		测试机型：GT-AX6000，以上测试仅供参考！
+
+3.2.3 (20230728)
+   - note	再次提醒：从3.2.0及以前版本更新而来，访问插件页面请清理浏览器缓存（ctrl + F5），否则页面会显示错乱！
+   - fix	修复因curl-fancyss无法运行导致fancyss_arm插件工作状态双×，且无法进行web延迟测试的问题
+   - fix	修复dns测试功能在3.2.2无法使用的问题
+   - fix	修复关闭相关代理程序后，国外仍然显示 ✓ 的问题
+   - update	现在节点开启后会默认开启23456的socks5端口（之前是按需开启），用于插件状态检测
+   - update	现在首页国外状态检测不再走透明代理检测，而是走23456的socks5端口检测
+   - update	现在通过curl下载订阅走代理使用curl-fancyss，下载时DNS解析走远程解析
+   - update	现在状态检测信息经过编码后传给前端，避免因传特殊字符导致httpd崩溃（希望能让华硕httpd崩溃的次数再减少些）
+
+3.2.2 (20230727)
+   - note	此次更新后，建议访问fancyss插件页面请清理浏览器缓存（ctrl + F5）
+   - add	添加web落地延迟测试功能
+       		① web延迟测试能反映本地实际经过代理访问网页的延迟
+       		② web延迟测试能反映当前节点代理是否可用，能测出延迟即代表节点可用
+       		web延迟测试机制：
+       		1：使用脚本调用相应程序运行节点，使用curl-fancyss通过程序的socks5端口进行测试（节点域名为远端解析）
+       		2：距离上次测试超过15分钟后，进入节点页面后会自动测试web延迟，也可以在15分钟内手动测试
+       		3：在节点列表中连续的同类型节点会进行多线程测试，优先测试当前节点附近的节点
+       		目前暂不支持ss + v2ray-plugin和ss2022的web延迟测试
+       		由于性能原因，SoC为armv7的机型如TUF-AX3000，RT-AX82U等进行web延迟测试速度会比较慢
+   - add	现在国外状态检测的域名可以进行设置了，在【节点管理】标签页 → 【延迟测试】按钮 → 【设置】选项
+       		国外状态检测的域名将同时用于[节点web延迟测试]和[插件运行状态中的国外运行状态检测]（保存后立即生效）
+   - add	现在国内状态检测的域名也可以进行设置了，在【节点管理】标签页 → 【延迟测试】按钮 → 【设置】选项
+   - add	故障转移现在可以转移到web延迟测试延迟最低的节点
+   - update	原【附加功能】中ping测试移动到了【节点管理】标签页 → 【延迟测试】按钮中
+   - remove	移除httping二进制文件
+   - remove	新增curl-fancyss二进制，其实就是静态编译的curl，为了和系统curl区分，改名为curl-fancyss
+       		现在插件状态检测和节点web延迟测试均使用curl-fancyss进行
+   - fix	修复使用tcp和dohclient进行节点域名解析可能出错的问题
+   - fix	修复天选路由器的一些皮肤问题
+   - fix	修复通过明文vmess://xxx 链接添的节点在节点面板中信息显示不全的问题
+   - update	现在通过明文vmess://xxx 链接添的节点将由xray运行
+   - update	现在ss节点开启tcp fast open和TCP_NODELAY将不仅应用在ss-reidr上，还会应用在ss-local上
+   - update	优化开启故障转移时，页面获取后端状态数据的时间问题
+   - update	现在插件页面将不会通过ajax频繁请求系统的状态数据（希望能让华硕httpd崩溃的次数减少些）
+   - fix	fixed in 3.2.2：修复3.2.1版本清空配置/全新安装插件，插件页面bug标签页无法点击，无法使用插件的问题
+
+3.2.1 (20230727)
+   - remove	此版本插件页面有问题，导致无法在页面上进行任何操作，历史安装包已删除
+
+3.2.0 (20230718)
+   - fix	兼容更多机场订阅解析
+   - fix	修复部分机场vmess节点未提供net字段导致订阅出现v2ray：错误节点的问题
+   - fix	修复节点列表表格表头未对齐的问题（纯属为强迫症更新）
+   - fix	修复使用节点编辑器编辑当前正在使用节点后，保存应用后，节点数据又变回编辑前的问题
+   - update	现在更新日志的推送信息，在更新插件到最新版本后不予显示
+   - update	现在广告的显示会以滚动的形式显示，而不是占用多行导致显得很碍眼
+   
+3.1.9 (20230714)
+   - add	新增通过明文vmess://xxx 链接添加节点的支持
+   - fix	修复通过ss://, ssr://, vmess://, vless://, trojan://链接添加节点可能失败的问题
+   - fix	修复当添加新节点后，新节点的ping显示测试中，但是一致没有测试结果的问题
+   - fix	修复v2ray和xray配置json节点时，无法进行ping测试的问题
+   - fix	修复节点列表最大显示行数有时候不起作用的问题
+
+3.1.8 (20230713)
+   - fix	修复在3.1.6和3.1.7版本中，开启xray进程守护后，xray启动失败的问题
+   - fix	修复在3.1.6和3.1.7版本中，dohclient无法启动的问题
+   - fix	修复在3.1.6和3.1.7版本中，因部分固件不支持 find -type 导致虽然节点解析成功，但是无法写入的问题
+   - fix	修复订阅vless+grpc节点时，grpc模式字段没有写入的问题
+   - revert	为了更好的国内CDN，大陆白名单模式下chinadns-ng改为3.1.5及以前的解析策略
+   - add	由于部分机场节点名字过长，为了在节点列表里显示全，新增关闭服务器地址显示的功能，在【附加功能】
+
+3.1.7 (20230712)
+   - update	chinadns-ng的丢弃AAAA记录功能细化，现在可以单独丢弃部分AAA记录，比如经过代理的AAAA记录
+   - fix	修复大陆白名单模式下chinadns-ng启动参数不正确的问题
+   - fix	修复编辑naive节点时，顶部显示的是添加trojan节点的问题
+   - fix	修复添加trojan和naive节点时，xray相关配置没有隐藏的问题
+   - fix	修复进入节点列表时，ping测试结果不显示的问题
+   - fix	修复ping测试长度过长时候，显示不全的问题
+   - fix	修复naive节点无法进行ping测试的问题
+   - fix	修复基础DNS模式下，使用gfwlist模式时，黑名单域名没有走国外解析导致问题
+   - update	优化ping测试逻辑1，现在不再全部节点同时ping，而是根据机型性能限制ping的线程数来测试
+   - update	优化ping测试逻辑2，现在ping测试10分钟内，再次进入节点列表都会直接显示上次ping，
+       		超过10分钟后进入节点列表会自动重新请求ping测试，当然你也可以随时通过点击【附加功能】的开始ping！按钮随时进行测试！
+   - remove	移除ping单个节点的功能
+   - remove	移除显示全部节点列表的功能
+
+3.1.6 (20230710)
+   - update	重写订阅功能：
+       		0. 优化节点订阅逻辑，现在订阅成功后，节点会一次性写入后台数据库，不再进行节点变更检测；
+       		1. 大幅提升订阅速度，提升节点解析速度，提升节点更新速度（4核心2.0GHz ARMV8机型提升更明显）；
+       		2. 修复订阅中存在的各种小问题，如订阅时提示v2ray错误节点的问题；
+       		3. 修复当机场订阅文本超过128kb时候，节点无法解析的问题；
+       		4. 修复当使用trojan和naiveproxy节点时，订阅下载无法走代理的问题；
+       		5. 兼容更多的机场订阅链接！感谢把订阅链接通过邮件发给我的朋友们！
+       		6. 优化多机场订阅体验，优化混合节点类型的机场订阅；
+       		7. 优化日志显示，引入emoji图标，提升日志可读性。
+   - fix	修复当添加很多节点后，插件的启动/重启速度，订阅脚本的运行速度变慢的问题
+   - fix	修复一些dnsmasq设置无法保存的问题；
+   - fix	修复jq、sponge、isutf8的二进制插件安装的时候无法更新的问题
+   - fix	修复页面的一些小问题，如账号设置页面显示为空的问题
+   - fix	修复fancyss lite版本，DNS设定页面报错的问题！
+   - fix	修复节点服务器域名被解析成127.0.0.1从而导致节点工作异常的问题！
+   - add	插件顶部新增通知栏和广告栏，推送信息来自：https://gist.github.com/hq450/001dd0617a64e11a9492dcf9205a0e03
+       		推送信息为插件自己通过前端获取以上地址得到，不存在远程控制和推送恶意代码的可能。
+       		通知栏：未来有重要信息会通过通知栏进行通知，没有通知的时候不会有任何信息干扰用户
+       		广告栏：广告栏会尽量放一些不干扰人的广告，也希望能给我带来一些微薄的收益回报，望理解！
+   - remove	移除【订阅节点混淆参数设定（ssr）】，现在默认使用订阅设定的混淆参数
+   - update	更新32位jq到 version 1.6-226
+   - update	更新chinadns-ng二进制到2023.06.01版本（自编译，upx压缩）
+   - update	更新chinadns-ng运行策略，以规避DNS泄露的问题
+       		以前的策略（大陆白名单模式 + gfwlist模式）：
+       		1. 先匹配国内域名，走国内DNS上游
+       		2. 再匹配gfwlist域名，走可信DNS上游
+       		3. 剩余的未匹配域名，同时请求国内DNS和可信DNS，如果国内上游解析结果是大陆ip，则采用，否则采纳trust组。
+       		现在的策略（大陆白名单模式）：
+       		1. 先匹配国内域名，走国内DNS上游
+       		2. 剩余所有域名，走可信DNS上游
+       		现在的策略（gfwlist模式）：
+       		1. 先匹配国内域名，走国内DNS上游
+       		2. 再匹配gfwlist域名，走可信DNS上游
+       		3. 剩余的未匹配域名，全部走国内DNS上游
+   - update	精简了一些插件的日志输出信息
+
+3.1.5 (20230619)
+   - update	Xray二进制更新到1.8.3；
+   - fix	修复部分ss节点订阅后，节点名错误，加密方式没有的问题；
+   - note	如果因更新3.1.4导致ss-local启动失败的，请更新3.1.5后重新订阅后再使用。
+   
+3.1.4 (20230616)
+   - fix	修复部分机型trojan配置文件检查不过的问题；
+   - note	鉴于原版trojan已经几年没更新，而且xray完全兼容原版trojan协议，
+       		未来可能会删除trojan二进制文件，使用xray核心来运行trojan节点，以减小离线包体积。
+   - fix	修复Xray REALITY通过链接添加节点时，shortId丢失的问题；
+   - fix	修复部分ss节点无法通过通过链接添加的问题；
+
+3.1.2 - 3.1.3 (20230615)
+   - update	Xray二进制更新到1.8.1；
+   - add	节点支持添加Xray REALITY支持；
+   - add	添加切换xray二进制版本功能，在[账号设置]中使用Xray节点，或者在[更新管理]中都能看到此功能按钮；
+       		注意：
+       		Xray 1.8.x的security支持TLS和REALITY，不支持XTLS
+       		Xray 1.7.5的ecurity支持TLS和XTLS，不支持REALITY
+       		请根据以上情况选择Xray二进制版本，二进制的切换建议在fancyss正常工作的时候进行，以免下载速度过慢
+   - add	订阅：添加切换xray REALITY节点订阅支持；
+   - add	ss/ssr/vmess/vless链接添加节点功能：添加切换xray REALITY节点支持；
+   - fix	修复虽然获取到了代理出口ip，但是仍然无法应用可信DNS的ECS功能的问题
+   - fix	修复xray配置文件检测的一个bug
+   - fix	修复点击编辑节点按钮时，节点信息显示错误的问题
+   - update	naive二进制更新到最新v114.0.5735.91-3
+   - fix	fancyss 3.1.3：修复Xray非reality节点在非json配置下运行错误的问题
+
+3.1.1 (20230613)
+   - fix	修复xray节点在tls下无法使用flow的问题；
+   - fix	修复插件关闭时可能关闭系统自带的熵增进程的问题；
+   - add	新增：插件开启时 - 跳过网络可用性检测
+   - add	新增：插件开启时 - 跳过时间一致性检测（关闭可解决可能存在的系统时间同步失败的问题）
+   - add	新增：插件开启时 - 跳过国内DNS可用性检测
+   - add	新增：插件开启时 - 跳过可信DNS可用性检测
+   - add	新增：插件开启时 - 跳过国内出口ip检测（关闭后会禁用国内DNS的ECS功能）
+   - add	新增：插件开启时 - 跳过代理出口ip检测（关闭后会禁用可信DNS的ECS功能）
+   - add	新增：插件开启时 - 跳过程序启动检测
+   - note	以上检测功能，自3.0.4版本添加，有助于发现代理不通的一些问题，现在为这些功能添加开关，你可以选择将将一些/全部功能关闭，
+       		如果以上检测全部关闭，实测在4核心2.0GHz ARMV8路由器上，可以将插件开启时间缩短到2-3秒，重启时间缩短到3-4秒，
+       		注意：部分功能的关闭会影响到DNS的ECS功能的开启，但是如果你对ECS没有硬性的需求，也可以进行关闭。
+       		如果在开启ECS功能的情况下进行关闭，插件DNS的ECS功能将不会启动。
+   - update	提升插件日志刷新流畅度；
+
+3.1.0 (20230610)
+   - fix	修复一些xray节点因添加fingerprint导致xray启动失败的问题；
+   - fix	修复可能存在的黑白名单失效的问题；
+   - add	新增xray节点的配置检查功能；
+   - add	xray非json配置中，xtls flow新增xtls-rprx-vision选项；
+   
+3.0.9 (20230609)
+   - fix	修复xray json模式下，服务器配置ip地址识别成域名的问题；
+   - fix	修复hnd_v8包，使用trojan运行trojan节点，4.1.xx内核机型，如AC86U、AX86U等机型trojan配置文件检查不过的问题；
+   - fix	修复hnd_v8和mtk包，勾选ecs后国内/国外dns不通的问题；
+   - fix	修复mtk包ss-tunnel/ssr-tunnel无法运行的问题；
+   - fix	修复fancyss_lite包丢失ss-tunnel，导致在ss节点的chinadns-ng DNS模式下，可信DNS-1无法使用udp的问题；
+   - fix	修复故障转移总是转移到第一个节点的问题；
+   - fix	chinadns-ng模式下，可信dns-2设定为DoH + smartdns时，端口不正确的问题；
+   - add	xray非json配置新增fingerprint选项，默认为chrome；
+   - update	xray节点订阅支持fingerprint，如为空默认使用chrome；
+   - update	修复通过链接添加vless + grpc节点时，部分信息没有添加的问题；
+   - update	v2ray二进制更新到5.7.0；
+
+3.0.8 (20230601)
+   - fix	修复v2ray、xray在chinadns-ng DNS模式下代理不通的问题；
+   - add	添加天选路由器皮肤；
+
+3.0.7 (20230531)
+   - fix	修复dns2tcp在部分机型上无法运行的问题；
+
+3.0.6 (20230530)
+   - add	添加华硕TX-AX6000（天选路由器）的支持，天选AX6000采用联发科Filogic 830平台，SoC型号MT7986A，
+       		四核心A53 2.0GHz，固件linux内核版本5.4.171，为64位固件（内核 + 用户空间均为64位）
+       		为区分其它平台，天选路由器fancyss包名定为：fancyss_mtk，目前fancyss_mtk全部二进制文件均为64位
+   - fix	修复dns2tcp在部分hnd机型上崩溃的问题；
+   - fix	修复进阶DNS方案中，smartdns实际不可用的问题；
+   - fix	修复进阶chinadns-ng方案中，可信DNS-2 (直连)选择dohclient，dohclient进程无法运行的问题；
+   - del	删除已经没有在使用的resolveip二进制；
+   - del	删除附加选项中，使用旧DNS方案的功能（要用旧方案的话，在DNS方案中使用基础即可）；
+   - update	现在启动插件时，不再将所有节点域名添加到白名单，因为如果节点过多会有性能问题，导致启动插件耗时过久；
+   - add	新增hnd_v8安装包，hnd_v8版本集成的二进制文件全部是64位的，而hnd包里的二进制文件全是32位的
+       		博通armv8 Soc机型既可以使用hnd_v8包（64位），也可以使用hnd包（32位），如RT-AX86U、GT-AX6000、GT-AX11000等
+       		hnd_v8包不能用于32位内核的armv7机型，如RT-AX82U、TUF-AX3000等
+       		理论上armv8的机型使用hnd_v8版本的fancyss可以获得更好的性能（未测试）
+       		如果你的armv8机型正在使用hnd版本，只需要覆盖安装一次hnd_v8版本即可切换到v8版本。
+   - update	v2ray-plugin更新到最新（5.5.0）
+   - update	xray更新到1.7.5，关于reality支持，等xray 1.8.x正式版发布后再做跟进
+   - update	v2ray更新到5.4.1，此版本启动命令有所变化，因此旧版本插件无法通过二进制升级更新到此版本，只能通过升级插件或者此版本v2ray更新
+   - update	chinadns-ng升级到最新版本（2023.05.08），现在使用chinadns-ng方案，不会导致下级华硕路由器无法解析DNS了
+   - update	kcptun更新到最新（20230214）
+   - update	smartdns更新到最新（1.2023.05.07-1641）
+   - update	naive更新到最新（113.0.5672.62）
+   - update	gfwlist、cdn、chnroute等规则更新到最新（20230530）
+
+3.0.5
+   - fix	修复3.0.4下，gfwlist模式使用进阶DNS设定时无法访问被墙网站的问题
+
+3.0.4
+   - note	更新简要：本次更新主要针对DNS部分，同时添加了NaïveProxy，移除了koolgame支持，也有主脚本的一些优化，能记起来的更新都写在下面：
+       		对DNS部分进行更新的一个重要原因就是现有的很多方案，比如chinadns2、https_dns_proxy已经无法运作
+       		cdns、chinadns-1的解析效果又非常一般。 目前能用的最好的DNS分流方案就是chinadns-ng了
+       		因此将chinadns-ng的功能进行了丰富，再加上smartdns和新增的dohclient，一起作为进阶DNS方案。
+       		第二个原因就是一个在高校的朋友使用fancyss插件，国内总是出现×，经排查是因为校园网对udp的限制直接导致国内DNS出现了问题
+       		然后将国内DNS请求添加了tcp和DoH协议支持，解决了这个问题。
+       		第三个原因就是一个朋友给我一个自己搭建的xray节点测试，结果这个服务器不知道什么原因不支持udp，且封了包括53在内的很多端口
+       		这直接导致了udp全部端口和tcp 53端口的查询都不行，除非用tcp非53端口。这个情况下还想用经过代理节点进行查询，最后通过引入dohclient，经sock5代理进行DoH协议查询，解决了此问题。
+       		后来在前面的基础上就不断就行修改完善，比如添加ECS支持等，在三个月期间断断续续进行了修改后，形成了现在的样子。
+   - note	插件新增功能多数地方都写了较为详细的说明，请点击相应文字标题即可看到
+       		----------------------------------------------------------------------------------------------------------
+   - add	[插件开启前检测]: 检测网络连通性		（没有网络的情况下自然是不允许开启科学上网插件的）
+   - add	[插件开启前检测]: 检测路由时间是否正确	（因为部分代理协议要求本地时间和服务器时间一致才能工作）
+   - add	[插件开启前检测]: 检测公网出口IPV4地址	（检测是否经过多重代理）
+   - add	[插件开启前检测]: 检测WAN口IPV4地址		（对比公网出口IPV4地址，可得知是路由否为公网IP）
+   - add	[插件开启后检测]: 检测国内DNS可用性		（依次用主流国内网站：百度，淘宝，新浪，京东，腾讯去做检测）
+   - add	[插件开启后检测]: 检测国外DNS可用性		（会检测国外直连DNS可用性和代理DNS可用性）
+   - add	[插件开启后检测]: 检测代理出口IPV4地址	（用于EDNS，特别对于直连解析，加上EDNS后能得到更好的解析效果）
+   - note	以上检测结果经过一些对比，还能得知是否经过多重代理，代理是否为国内中转机场等...
+   - note	科学上网的前提是畅通的本地网络和可用的代理节点，所以在插件开启前后进行一些检测，能及时对插件的运行方式进行调整
+       		以避免因插件开启后，但是代理不通/DNS失效等原因，对本地非代理网络也造成影响！
+       		比如如果检测到经代理的DNS不通，代理出口IPV4地址也无法检测，基本可以判定节点不通！此时应该关闭插件相关的dns，iptables设定，以免影响本地网络。
+       		----------------------------------------------------------------------------------------------------------
+   - update	大陆IPV4地址段chnroute.txt源从ipip更换为misakaio：https://github.com/misakaio/chnroutes2
+   - update	更新dns2socks到V2.1，新增EDNS SUB CLIENT(ECS)支持
+   - update	更新v2ray二进制到v1.6.0
+   - update	更新smartdns二进制（commit 9fdf53b）到最新，现在smartdns为自己编译，以减小体积
+   - add	添加二进制dnsclient，用于替换nslookup进行节点域名解析和判断DNS工作状态。（https://github.com/atsheehan/dnsclient）
+   - add	添加二进制dohclient，类似于ChinaDNS，不过使用 DoH 作为上游服务器。（https://github.com/GangZhuo/dohclient）
+   - add	添加二进制dohclient-cache，用于管理dohclient的DNS缓存记录。（https://github.com/GangZhuo/dohclient）
+   - add	添加二进制dns2tcp，用于将 DNS 查询从 UDP 模式转换为 TCP 模式。（https://github.com/zfl9/dns2tcp）
+   - add	添加二进制dns-ecs-forcer，用于将 DNS 请求附加上ECS信息。（https://github.com/rampageX/DEF）
+   - add	添加二进制uredir，针对没有自带socat的机型，用于方便的对udp协议包进行端口转发。（https://github.com/troglobit/uredir）
+   - add	节点域名解析新增smartdns和dohclient	（针对近期出现较多的机场节点域名污染问题）
+       		1. smartdns能通过多个直连的dot和doh上游，解析代理服务器域名
+       		2. dohclient能通过直连doh上游，解析代理服务器域名
+       		----------------------------------------------------------------------------------------------------------
+   - add	新增进阶DNS方案，默认开启。如需使用以前的DNS方案，请在【附加功能】处切换
+       		进阶DNS方案不再使用dnsmasq来加载gfwlit和国内域名cdn.txt，而是使用dnsmasq上游软件进行分流
+       		进阶DNS方案提供了更加丰富的选项，对于smartdns还能自由编辑其配置文件，dohclient可以方便的编辑其DNS缓存
+       		进阶DNS方案1：chinadns-ng，可定义2个国内上游和2个国外上游，默认国外上游为dns2socks[经代理]
+       		进阶DNS方案2：smartdns，可定义多个国内和国外上游，默认国外上游为dot + doh[直连]
+       		进阶dns方案3：dohclient，支持chnroute分流，支持ECS，支持DOH dns服务器[直连]
+       		进阶DNS方案提供了插件预设值的方案，你也可以根据自己的需求来更改配置，达到自己的目的
+       		比如：禁止国外ipv6解析，但允许国内ipv6解析。可以使用chinands-ng方案，配置国外上游为smartdns，再编辑smartdns配置文件使其丢弃国外AAAA记录。
+   - add	新增进阶DNS解析测试，可以直观的了解到当前DNS方案的大致解析效果
+   - add	新增进阶DNS解析测试(dig)，可以方便的知道在本插件选定的DNS方案下，域名解析的ipv4结果，解析结果是否带ECS等
+       		----------------------------------------------------------------------------------------------------------
+   - del	移除一些已经失效，或者不是特别好的DNS解析方案，具体如下：
+   - del	移除cdns方案及其二进制程序
+   - del	移除chinadns-1方案及其二进制程序
+   - del	移除chinadns-2方案及其二进制程序
+   - del	移除https_dns_proxy方案及其二进制程序
+       		----------------------------------------------------------------------------------------------------------
+   - add	添加二进制naive并添加NaïveProxy支持。注意1：NaïveProxy不支持udp；注意2：lite包暂未提供NaïveProxy支持
+   - add	添加二进制ipt2socks，用于NaïveProxy的socks5代理和透明代理的转换
+       		----------------------------------------------------------------------------------------------------------
+   - update	现在插件如果后台主进程ssconfig.sh卡死，可以通过关闭插件解除了
+   - update	如果ssconfig.sh正在运行，再次点击【保存&应用】，日志会切换到正在运行的日志
+   - update	现在xray json模式下可以支持shadowsocks节点的运行，包括shadowsocks-2022加密方式。
+   - update	现在节点ping功能默认关闭，如有需要请自行开启。
+   - update	现在点击分流检测按钮会打开https://ip.skk.moe/新标签页
+   - update	重新优化编译了hnd包的ss和ssr相关二进制，进一步降低二进制大小，现在hnd_lite版本安装包只有6.21MB！
+   - update	更新了详细状态显示的信息，现在可以显示更多信息
+   - fix	在线订阅：修复了长期开自动订阅后发现订阅节点全部消失的问题
+   - fix	修复了很多脚本也页面上的一次错误
+       			
+3.0.3
+   - fix	Shadowsocks-rust在重启或IP地址更换后无法正常工作 #32846
+   - fix	修复节点域名解析服务器cloudflare dns错误的问题
+   - fix	修复部分机场节点订阅后，端口号最后以为缺失的问题
+   - fix	修复部分机场v2ray节点订阅显示错误节点的问题
+   - add	添加【所有trojan节点强制允许不安全】功能，位于【附加功能】标签页
+
+3.0.2
+   - update	更新arm|hnd|qca平台的httping，移除ssl支持以缩小体积（本插件不需要ssl功能）
+   - update	更新安装脚本，现在对应平台的路由器只能安装对应平台的离线安装包了
+   - update	更新在线规则更新脚本
+   - update	更新shadowsocks-rust更新脚本，确保不同平台更新到不同的二进制
+   - update	fancyss_arm版本的ss、kcptun二进制更新到最新版本（thx to piangere）
+   - fix	修复arm平台shadowsocks-libev错误开启多线程（arm平台不支持）
+   - add	添加实用二进制：sponge, sponge - soak up standard input and write to a file
+
+3.0.1
+   - fix	修复xray、v2ray二进制无法更新的问题
+   - update	同步fancyss_arm_full的v2ray二进制版本到最新v4.45.0
+
+3.0.0
+   - note1	将fancyss_hnd、fancyss_qca、fancyss_arm384共同纳入fancyss目录下进行维护，版本号3.0.0起步
+       		为了保持兼容性，以后3.x.x版本的维护在3.0分支下进行，master分支保留3.0.0以下版本的代码
+       		精简3.0分支目录结构，以方便后期维护
+       		1. fancyss：插件代码主目录，由build.sh打包成不同路由器的离线安装包
+       		2. binaries：一些在线更新的二进制程序，如v2ray、xray
+       		3. packages：离线安装包的最新版本，用于插件的在线更新
+       		4. rules：插件的规则文件，如gfwlist.conf、chnroute.txt、cdn.txt
+   - note2	如何升级到3.x.x版本
+       		1. 在线更新：通过在线更新fancyss_arm_1.0.6/fancyss_hnd_2.0.3/fancyss_qca_2.2.2过度版本后，即可再次通过在线更新升级到3.x.x
+       		2. 离线安装：下载并安装3.x.x，比如3.0.0的离线安装包，通过软件中心离线安装功能安装即可
+   - note3	3.x.x包含1.x.x - 2.x.x所有的功能和更新，为方便查询，提供日志回溯链接：
+       		fancyss_hnd 1.0.0 - 2.0.3 更新日志: https://github.com/hq450/fancyss/blob/master/fancyss_hnd/Changelog.txt
+       		fancyss_qca 2.0.0 - 2.2.2 更新日志: https://github.com/hq450/fancyss/blob/master/fancyss_hnd/Changelog.txt
+       		fancyss_arm 1.0.0 - 1.0.6 更新日志: https://github.com/hq450/fancyss/blob/master/fancyss_hnd/Changelog.txt
+       		----------------------------------------------------------------------------------------------------------
+   - add	增加dnsmasq重启按钮，方便在不重启整个插件的时候，通过重启dnsmasq来重建DNS缓存
+   - update	规则（rules）更新和二进制（binary）更新地址均切换到3.0分支
+   - update	fancyss_hnd更新trojan，版本号不变，体积减小
+   - update	离线安装包从shaowsocks.tar.gz更名为fancyss_xxx_yyy.tar.gz，包含以下：
+       		1.fancyss_arm_full.tar.gz
+       		2.fancyss_arm_lite.tar.gz
+       		3.fancyss_hnd_full.tar.gz
+       		4.fancyss_hnd_lite.tar.gz
+       		5.fancyss_qca_full.tar.gz
+       		6.fancyss_qca_lite.tar.gz

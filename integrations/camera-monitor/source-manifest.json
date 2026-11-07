@@ -1,0 +1,24 @@
+{
+  "camera_monitor/graph.py": {
+    "baseline_sha256": "77f187eb5d618c64dda20d29b431507cc53d9b1f05e1fecc12f411cc886cc12a",
+    "patched_sha256": "7f89e77ad370868891009ab69c43cb33b02bd3c4c9d4b7337a87980e26a4ccd7",
+    "accepted_v1_sha256": "0701f68c0c999597d6bf4b15c90415debfdd565ba30cd1e844fd2d3583adc293"
+  },
+  "camera_monitor/uploader.py": {
+    "baseline_sha256": "a598c61092f1882d1e958a4c44497ee1ee2cde8901e8d28a5c7307ac21d4369b",
+    "patched_sha256": "915cf7b6c142ba98fdbc0757190303c65985cc9206b3317fad4c9b5cba6a2cd9",
+    "accepted_v1_sha256": "915cf7b6c142ba98fdbc0757190303c65985cc9206b3317fad4c9b5cba6a2cd9"
+  },
+  "tests/test_direct_emergency_upload.py": {
+    "baseline_sha256": "e680e10353c461d6cbc94740f4eef77383efe4cd49de5a1b87b177220310899a",
+    "patched_sha256": "e2aabe6f64941d70edb9c113176a029b57e8f2a8e061a8b5a791e38e137d71d7"
+  },
+  "tests/test_cloud_graph.py": {
+    "baseline_sha256": "59410d1952a549faacf06188c0ecc88bfb33953fcdf04d03aecde2f29c882f1d",
+    "patched_sha256": "30b0ac174559dcf4f18e6e62bbbf0c1da862384487441ebe90e666b293e54f17"
+  },
+  "tests/test_direct_content.py": {
+    "baseline_sha256": null,
+    "patched_sha256": "a619b262dab8f95b119726a6efa304f2760a3de62d3caf6f6f98114e1f65d48f"
+  }
+}

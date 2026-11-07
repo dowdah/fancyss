@@ -1,0 +1,305 @@
+#!/bin/sh
+
+# fancyss script for asuswrt/merlin based router with software center
+
+source /koolshare/scripts/base.sh
+eval $(dbus export ss_basic_)
+alias echo_date='echo 【$(TZ=UTC-8 date -R +%Y%m%d\ %X)】:'
+RULE_FILE=/koolshare/ss/rules/rules.json.js
+URL_MAIN="https://raw.githubusercontent.com/hq450/fancyss/3.0/rules_ng"
+
+run(){
+	env -i PATH=${PATH} "$@"
+}
+
+rules_meta_by_key(){
+	local json_file="$1"
+	local key="$2"
+	[ -f "${json_file}" ] || return 1
+	[ -n "${key}" ] || return 1
+	run jq -r --arg key "${key}" '
+		def text($v):
+			if $v == null then
+				""
+			elif ($v | type) == "string" then
+				$v
+			else
+				($v | tostring)
+			end;
+		.[$key] as $item
+		| [
+			(text($item.name) | @base64),
+			(text($item.md5) | @base64),
+			(text($item.date) | @base64),
+			(if $item == null then "" else (($item | tojson) | @base64) end)
+		] | join("\u001f")
+	' "${json_file}" 2>/dev/null
+}
+
+rules_runtime_numbers_tsv(){
+	local json_file="$1"
+	[ -f "${json_file}" ] || return 1
+	run jq -r '
+		def text($v):
+			if $v == null then
+				""
+			elif ($v | type) == "string" then
+				$v
+			else
+				($v | tostring)
+			end;
+		[
+			text(.gfwlist.date),
+			text(.chnroute.date),
+			text(.chnlist.date),
+			text(.gfwlist.count),
+			text(.chnroute.count),
+			text(.chnroute.count_ip),
+			text(.chnlist.count)
+		] | join("\u001f")
+	' "${json_file}" 2>/dev/null
+}
+
+start_update(){
+	# 1. 检测规则版本号文件
+	if [ ! -f "${RULE_FILE}" ];then
+		echo_date "没有找到规则版本号文件: rules.json.js！请尝试覆盖安装插件解决！退出！"
+		echo XU6J03M6 >> /tmp/upload/ss_log.txt
+		exit
+	fi
+	run jq --tab . "${RULE_FILE}" >/dev/null 2>&1
+	if [ "$?" != "0" ];then
+		echo_date "本地规则版本号文件解析失败：${RULE_FILE}！请尝试覆盖安装插件解决！退出！"
+		echo XU6J03M6 >> /tmp/upload/ss_log.txt
+		exit
+	fi
+
+	# 3. 准备下载文件夹
+	rm -rf /tmp/fancyss_rule_download
+	mkdir /tmp/fancyss_rule_download
+	local rule_save_dir=/koolshare/ss/rules
+	local rule_down_dir=/tmp/fancyss_rule_download
+
+	# 4. 开始更新
+	echo ==================================================================================================
+	echo_date "开始更新fancyss规则，请等待..."
+
+	# 5. 先下载版本号文件
+	wget -4 --no-check-certificate --timeout=8 -qO - ${URL_MAIN}/rules.json.js > /tmp/rules.json.js
+	if [ "$?" == "0" ]; then
+		echo_date "检测到在线版本文件，继续..."
+	else
+		echo_date "没有检测到在线版本，可能是访问github有问题，去大陆白名单模式试试吧！"
+		rm -rf /tmp/rules.json.js
+		echo XU6J03M6 >> /tmp/upload/ss_log.txt
+		exit
+	fi
+	run jq --tab . /tmp/rules.json.js >/dev/null 2>&1
+	if [ "$?" != "0" ];then
+		echo_date "在线规则版本号文件解析失败：${URL_MAIN}/rules.json.js！退出！"
+		rm -rf /tmp/rules.json.js
+		echo XU6J03M6 >> /tmp/upload/ss_log.txt
+		exit
+	fi
+
+
+	update_rule() {
+		# $1: key in rules.json.js
+		# $2: enabled (1/0)
+		local key="$1"
+		local enabled="$2"
+
+		local online_meta=""
+		local local_meta=""
+		local online_name_b64=""
+		local online_md5_b64=""
+		local online_date_b64=""
+		local online_obj_b64=""
+		local local_name_b64=""
+		local local_md5_b64=""
+		local local_date_b64=""
+		local local_obj_b64=""
+		local online_name online_md5 online_date_cmp online_obj
+		local local_date_cmp local_md5
+		local tmp_file dst_file tmp_md5
+		local sep="$(printf '\037')"
+
+		if [ "${enabled}" != "1" ]; then
+			echo_date "你并没有勾选${key}更新！"
+			return 0
+		fi
+
+		online_meta="$(rules_meta_by_key /tmp/rules.json.js "${key}")" || online_meta=""
+		IFS="${sep}" read -r online_name_b64 online_md5_b64 online_date_b64 online_obj_b64 <<-EOF
+		${online_meta}
+		EOF
+		[ -n "${online_name_b64}" ] && online_name="$(printf '%s' "${online_name_b64}" | base64_decode 2>/dev/null)"
+		[ -n "${online_md5_b64}" ] && online_md5="$(printf '%s' "${online_md5_b64}" | base64_decode 2>/dev/null)"
+		[ -n "${online_date_b64}" ] && online_date_cmp="$(printf '%s' "${online_date_b64}" | base64_decode 2>/dev/null | sed 's/[[:space:]]/_/g')"
+		[ -n "${online_obj_b64}" ] && online_obj="$(printf '%s' "${online_obj_b64}" | base64_decode 2>/dev/null)"
+
+		if [ -z "${online_name}" ] || [ "${online_name}" = "null" ]; then
+			echo_date "在线版本文件缺少字段：.${key}.name，跳过！"
+			return 1
+		fi
+		if [ -z "${online_md5}" ] || [ "${online_md5}" = "null" ]; then
+			echo_date "在线版本文件缺少字段：.${key}.md5，跳过！"
+			return 1
+		fi
+		if [ -z "${online_date_cmp}" ] || [ "${online_date_cmp}" = "null" ]; then
+			echo_date "在线版本文件缺少字段：.${key}.date，跳过！"
+			return 1
+		fi
+
+		local_meta="$(rules_meta_by_key "${RULE_FILE}" "${key}")" || local_meta=""
+		IFS="${sep}" read -r local_name_b64 local_md5_b64 local_date_b64 local_obj_b64 <<-EOF
+		${local_meta}
+		EOF
+		[ -n "${local_md5_b64}" ] && local_md5="$(printf '%s' "${local_md5_b64}" | base64_decode 2>/dev/null)"
+		[ -n "${local_date_b64}" ] && local_date_cmp="$(printf '%s' "${local_date_b64}" | base64_decode 2>/dev/null | sed 's/[[:space:]]/_/g')"
+		if [ -z "${local_date_cmp}" ] || [ "${local_date_cmp}" = "null" ]; then
+			local_date_cmp="0"
+		fi
+		if [ -z "${local_md5}" ] || [ "${local_md5}" = "null" ]; then
+			local_md5="0"
+		fi
+
+		echo_date "--------------------------------------------------------------------"
+		if [ "${local_date_cmp}" = "${online_date_cmp}" ] && [ "${force_update}" != "1" ]; then
+			echo_date "检测到${key}本地版本号和在线版本号相同，不进行更新!"
+			return 0
+		fi
+
+		echo_date "检测到新版本${key}，开始更新..."
+		echo_date "下载${online_name}到临时文件..."
+
+		tmp_file="${rule_down_dir}/${online_name}"
+		dst_file="${rule_save_dir}/${online_name}"
+		rm -rf "${tmp_file}"
+
+		wget -4 --no-check-certificate --timeout=8 -qO - "${URL_MAIN}/${online_name}" > "${tmp_file}"
+		if [ "$?" != "0" ] || [ ! -s "${tmp_file}" ]; then
+			echo_date "${online_name}下载失败！"
+			rm -rf "${tmp_file}"
+			return 1
+		fi
+
+		tmp_md5="$(md5sum "${tmp_file}" | awk '{print $1}')"
+		if [ "${tmp_md5}" != "${online_md5}" ]; then
+			echo_date "下载完成，但校验未通过！本地md5：${tmp_md5}，在线md5：${online_md5}"
+			rm -rf "${tmp_file}"
+			return 1
+		fi
+
+		echo_date "下载完成，校验通过，覆盖到：${dst_file}"
+		mv "${tmp_file}" "${dst_file}"
+
+		if [ -n "${online_obj}" ] && [ "${online_obj}" != "null" ]; then
+			local tmp_rule_json="${rule_down_dir}/rules.${key}.json.js"
+			rm -rf "${tmp_rule_json}"
+			run jq --argjson obj "${online_obj}" ".${key} = \$obj" "${RULE_FILE}" > "${tmp_rule_json}"
+			if [ "$?" != "0" ] || [ ! -s "${tmp_rule_json}" ]; then
+				echo_date "更新规则版本号文件失败：${RULE_FILE}（.${key}）"
+				rm -rf "${tmp_rule_json}"
+				return 1
+			fi
+			mv "${tmp_rule_json}" "${RULE_FILE}"
+		fi
+
+		reboot="1"
+		echo_date "【更新成功】你的${key}已经更新到最新！"
+		return 0
+	}
+
+	# 用户可选更新项（UI上有勾选项）
+	update_rule "gfwlist" "${ss_basic_gfwlist_update}"
+	update_rule "chnroute" "${ss_basic_chnroute_update}"
+	update_rule "chnlist" "${ss_basic_chnlist_update}"
+
+	# 必要/常用规则：无UI开关，默认跟随规则更新
+	update_rule "chnroute6" "1"
+	update_rule "adslist" "1"
+	update_rule "rotlist" "1"
+	update_rule "white_list" "1"
+	update_rule "black_list" "1"
+	update_rule "block_list" "1"
+	update_rule "apple_china" "1"
+	update_rule "google_china" "1"
+	update_rule "cdn_test" "1"
+
+	echo_date " --------------------------------------------------------------------"
+	rm -rf /tmp/rules.json.js
+	
+	echo_date "规则更新进程运行完毕！"
+	# write number
+	IFS="$(printf '\037')" read -r rule_gfw_date rule_chnroute_date rule_chnlist_date rule_gfw_count rule_chnroute_count rule_chnroute_ip_count rule_chnlist_count <<-EOF
+	$(rules_runtime_numbers_tsv "${RULE_FILE}")
+	EOF
+	nvram set update_gfwlist="${rule_gfw_date}"
+	nvram set update_chnroute="${rule_chnroute_date}"
+	nvram set update_chnlist="${rule_chnlist_date}"
+	
+	nvram set gfwlist_numbers="${rule_gfw_count}"
+	nvram set chnroute_numbers="${rule_chnroute_count}"
+	nvram set chnroute_ips="${rule_chnroute_ip_count}"
+	nvram set chnlist_numbers="${rule_chnlist_count}"
+	#======================================================================
+	# reboot fancyss
+	if [ "${reboot}" == "1" ];then
+		echo_date "自动重启fancyss，以应用新的规则文件！请稍后！"
+		run sh /koolshare/ss/ssconfig.sh restart
+	fi
+	echo ==================================================================================================
+}
+
+change_cru(){
+	echo ==================================================================================================
+	sed -i '/ssupdate/d' /var/spool/cron/crontabs/* >/dev/null 2>&1
+	if [ "1" == "${ss_basic_rule_update}" ]; then
+		echo_date "应用fancyss规则定时更新任务：每天${ss_basic_rule_update_time}:00自动检测更新规则."
+		cru a ssupdate "0 ${ss_basic_rule_update_time} * * * /bin/sh /koolshare/scripts/ss_rule_update.sh"
+	else
+		echo_date "fancyss规则定时更新任务未启用！"
+	fi
+}
+
+case $1 in
+force)
+	ss_basic_gfwlist_update=1
+	ss_basic_chnroute_update=1
+	ss_basic_chnlist_update=1
+	force_update=1
+	start_update
+	;;
+update)
+	ss_basic_gfwlist_update=1
+	ss_basic_chnroute_update=1
+	ss_basic_chnlist_update=1
+	force_update=0
+	start_update
+	;;
+*)
+	change_cru
+	start_update
+	;;
+esac
+
+case $2 in
+1)
+	true > /tmp/upload/ss_log.txt
+	http_response "$1"
+	change_cru > /tmp/upload/ss_log.txt
+	echo XU6J03M6 >> /tmp/upload/ss_log.txt
+	;;
+2)
+	true > /tmp/upload/ss_log.txt
+	http_response "$1"
+	ss_basic_gfwlist_update=1
+	ss_basic_chnroute_update=1
+	ss_basic_chnlist_update=1
+	force_update=0
+	change_cru > /tmp/upload/ss_log.txt
+	start_update >> /tmp/upload/ss_log.txt
+	echo XU6J03M6 >> /tmp/upload/ss_log.txt
+	;;
+esac

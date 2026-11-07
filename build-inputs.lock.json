@@ -1,0 +1,4137 @@
+{
+  "schema": 1,
+  "release": "build-inputs-20261105.1",
+  "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13",
+  "submodules": {
+    "anytls-zig": {
+      "commit": "e491daa9930717f4235e78707b6654ddfdd896e8",
+      "version": "0.1.6"
+    },
+    "geotool": {
+      "commit": "6313740582c5a92354445e5281dfea964b2906fa",
+      "version": "1.3"
+    },
+    "node-tool": {
+      "commit": "c2918510f253ec20b77363a393a37d31e69b6748",
+      "version": "0.1.16-native.1"
+    },
+    "status-tool": {
+      "commit": "04efc90e4610b98f0b04431931551b1264f2da87",
+      "version": "0.1.3"
+    },
+    "sub-get": {
+      "commit": "3f59b396477e04059e3630da245cc610ddf9d5bb"
+    },
+    "sub-tool": {
+      "commit": "eb0d48b9f392db5a5237a343723354020770a6fd",
+      "version": "0.1.17"
+    },
+    "webtest-tool": {
+      "commit": "57c59dd87c47e8807a10440ca6ed73ea4a78a650",
+      "version": "0.1.1"
+    },
+    "ws-tool": {
+      "commit": "fa5e04077bbc52c7e7b65b634adccd991de6492e",
+      "version": "0.1.2"
+    },
+    "xapi-tool": {
+      "commit": "5e6d726aae371b370d07da10e4d004f927026916",
+      "version": "0.2.1"
+    }
+  },
+  "assets": [
+    {
+      "name": "legacy-build-inputs.tar.gz",
+      "url": "https://github.com/dowdah/fancyss/releases/download/build-inputs-20261105.1/legacy-build-inputs.tar.gz",
+      "sha256": "50bbea7c64d40a4e986f02b94aab292cf5c5a20eec67f2f52dc5d0d736b5198d",
+      "bytes": 141810531,
+      "files": [
+        {
+          "path": "binaries/Makefile",
+          "sha256": "1f93616c4263532da0541a48bc56a02b277355b0a421fd5e09f57664fa8b9bdb",
+          "bytes": 10827,
+          "mode": 420,
+          "component": "Makefile",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "binaries/anytls-zig/SHA256SUMS-v0.1.3",
+          "sha256": "c596b67b0425ba4f33ff719cfbd443e87125371e928eae23c7602a83a5fb837f",
+          "bytes": 488,
+          "mode": 420,
+          "component": "anytls-zig",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "e491daa9930717f4235e78707b6654ddfdd896e8"
+        },
+        {
+          "path": "binaries/anytls-zig/SHA256SUMS-v0.1.4",
+          "sha256": "eab4ee91b233295b830662a00a97b962c33e9410502528ccd7508066a4889cd4",
+          "bytes": 488,
+          "mode": 420,
+          "component": "anytls-zig",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "e491daa9930717f4235e78707b6654ddfdd896e8"
+        },
+        {
+          "path": "binaries/anytls-zig/SHA256SUMS-v0.1.5",
+          "sha256": "90750425b7100b37ee8d81d7df3e1f65da7fb3e6aff36c392096a94f2697c37f",
+          "bytes": 488,
+          "mode": 420,
+          "component": "anytls-zig",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "e491daa9930717f4235e78707b6654ddfdd896e8"
+        },
+        {
+          "path": "binaries/anytls-zig/SHA256SUMS-v0.1.6",
+          "sha256": "1ec4827bda6576879d3d7d7fb58b167913eb2cb0353f024ada9766a28c3a7a23",
+          "bytes": 488,
+          "mode": 420,
+          "component": "anytls-zig",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "e491daa9930717f4235e78707b6654ddfdd896e8"
+        },
+        {
+          "path": "binaries/anytls-zig/anytls-zig-v0.1.6-linux-aarch64",
+          "sha256": "7c693b4c9db8b7b42567d662c5e0fd320ad8ae46589aa347304959ceef8b7d2b",
+          "bytes": 169672,
+          "mode": 493,
+          "component": "anytls-zig",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "e491daa9930717f4235e78707b6654ddfdd896e8"
+        },
+        {
+          "path": "binaries/anytls-zig/anytls-zig-v0.1.6-linux-armv5te",
+          "sha256": "67dcccb1a6acab6542dd3474f3e7259a15ccdc0d7cc7bebc1291c7a817b18f20",
+          "bytes": 221980,
+          "mode": 493,
+          "component": "anytls-zig",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "e491daa9930717f4235e78707b6654ddfdd896e8"
+        },
+        {
+          "path": "binaries/anytls-zig/anytls-zig-v0.1.6-linux-armv7a",
+          "sha256": "32eb3b3d9009b4105655e5800449fb463a5d0000fc6265ca9a511dcb9d63907a",
+          "bytes": 222944,
+          "mode": 493,
+          "component": "anytls-zig",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "e491daa9930717f4235e78707b6654ddfdd896e8"
+        },
+        {
+          "path": "binaries/anytls-zig/anytls-zig-v0.1.6-linux-armv7hf",
+          "sha256": "bfd4f71511290eae886f172803e295239a59e8cc5e35f68f527c630f66bfc265",
+          "bytes": 197908,
+          "mode": 493,
+          "component": "anytls-zig",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "e491daa9930717f4235e78707b6654ddfdd896e8"
+        },
+        {
+          "path": "binaries/anytls-zig/anytls-zig-v0.1.6-linux-x86_64",
+          "sha256": "ecd9ae6f059a7cb0f168dec2fd16b838dfb0dc87487167854a0898a79c2b8b47",
+          "bytes": 420752,
+          "mode": 493,
+          "component": "anytls-zig",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "e491daa9930717f4235e78707b6654ddfdd896e8"
+        },
+        {
+          "path": "binaries/chinadns-ng/README.md",
+          "sha256": "707e5d8ce1f01839dbb95974052aface8315f001a17d94ea8203ff4c2044d25c",
+          "bytes": 225,
+          "mode": 493,
+          "component": "chinadns-ng",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "binaries/chinadns-ng/chinadns-ng+wolfssl@aarch64-linux-musl@generic+v8a@fast+lto.upx",
+          "sha256": "9bf214cf2a406a2756f7c2e331ff29669a2a8962a299ef4c26e237ab34cc03d0",
+          "bytes": 300504,
+          "mode": 420,
+          "component": "chinadns-ng",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "binaries/chinadns-ng/chinadns-ng+wolfssl@arm-linux-musleabi@generic+v5te+soft_float@fast+lto.upx",
+          "sha256": "becb403bc4928b3c467d892db65302bded0abfbaef5fceeae4c7ce1bc2cc0bbe",
+          "bytes": 301776,
+          "mode": 420,
+          "component": "chinadns-ng",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "binaries/chinadns-ng/chinadns-ng+wolfssl@arm-linux-musleabi@generic+v7a@fast+lto.upx",
+          "sha256": "2b228c49d971386fb91182d160c6af39516c2ef94bd5631851952747a3ca1dd6",
+          "bytes": 291484,
+          "mode": 420,
+          "component": "chinadns-ng",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "binaries/dnsclient/dnsclient_source/.gitignore",
+          "sha256": "7cf89510f604a431b5a9350c6dbfdab5b14fb7081b1a21fae76f953b838c86a3",
+          "bytes": 14,
+          "mode": 420,
+          "component": "dnsclient",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "binaries/dnsclient/dnsclient_source/Makefile",
+          "sha256": "aa779e4c66f63e66bcd9d0625992718af3a3cf0e0e2f507e9894deb24d2f8cce",
+          "bytes": 175,
+          "mode": 420,
+          "component": "dnsclient",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "binaries/dnsclient/dnsclient_source/README",
+          "sha256": "2cdeb63e75c3b5ccb1b72266e89ab149b6fc510105d516c2f75b6bb30bbde03d",
+          "bytes": 1013,
+          "mode": 420,
+          "component": "dnsclient",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "binaries/dnsclient/dnsclient_source/build_7.sh",
+          "sha256": "d6a41265b5a1412d0c838bc02ee3927d2cc62cfb77ebbbdaef7d0c4e771632da",
+          "bytes": 3524,
+          "mode": 493,
+          "component": "dnsclient",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "binaries/dnsclient/dnsclient_source/client.c",
+          "sha256": "bcad794e6e55331cc4bab8a6e7551cd3ecd8fa7a6894423361f0ec3a3d2243da",
+          "bytes": 7268,
+          "mode": 420,
+          "component": "dnsclient",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "binaries/dnsclient/dnsclient_source/dns.h",
+          "sha256": "694ebe8eb48d083e79bc56b202c494d68d939acf820535feb6ada107e47d89e5",
+          "bytes": 1590,
+          "mode": 420,
+          "component": "dnsclient",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "binaries/dnsclient/dnsclient_source/query.c",
+          "sha256": "85384a29d3ae970e76ae6184d7019cf1e9d88ad0cfa57e01d03bc5502aa03eaa",
+          "bytes": 4294,
+          "mode": 420,
+          "component": "dnsclient",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "binaries/dnsclient/dnsclient_source/query.h",
+          "sha256": "d47d19114ed271433fbbd0850d4b0820e3349ec4e9a4108f57ad53ecee9b018a",
+          "bytes": 291,
+          "mode": 420,
+          "component": "dnsclient",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "binaries/dnsclient/dnsclient_source/request.c",
+          "sha256": "ca9c1bb5f4b8d60be11ce2e4ec0165e7757e3062a79c70770bb3a9cd8f5370b2",
+          "bytes": 3844,
+          "mode": 420,
+          "component": "dnsclient",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "binaries/dnsclient/dnsclient_source/request.h",
+          "sha256": "20ea1aa08985ee0900714f1ed5f4072cacd46eac47824a42257573a27aca5f63",
+          "bytes": 260,
+          "mode": 420,
+          "component": "dnsclient",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "binaries/dnsclient/dnsclient_source/response.c",
+          "sha256": "7f8dd978e55193ec9c2c468efe88e47c6ce3ff4332cd0c8f73e70a9babdd68fe",
+          "bytes": 13092,
+          "mode": 420,
+          "component": "dnsclient",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "binaries/dnsclient/dnsclient_source/response.h",
+          "sha256": "8c946826673fbbf59ab9a76f66e2253b748737e31b7d20f4f008dde5c29a666e",
+          "bytes": 275,
+          "mode": 420,
+          "component": "dnsclient",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "binaries/dnsclient/latest.txt",
+          "sha256": "611d1a8976be1ce46841eb4769000168e3b899d66e2c1290f9fa022a2cfcf7eb",
+          "bytes": 17,
+          "mode": 420,
+          "component": "dnsclient",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "binaries/dnsclient/v20260117-325f3f2/md5sum.txt",
+          "sha256": "4ed66dd0842e0f74dec39fda3bf1ea9d6f1024971edc90b5cb5d585ac5dcce43",
+          "bytes": 342,
+          "mode": 420,
+          "component": "dnsclient",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "binaries/geotool/README.md",
+          "sha256": "367df38d8047929d52d66e729ed15e13c611155f63932a4a5036ecd3380c45b7",
+          "bytes": 9907,
+          "mode": 420,
+          "component": "geotool",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "6313740582c5a92354445e5281dfea964b2906fa"
+        },
+        {
+          "path": "binaries/geotool/SHA256SUMS-v1.1",
+          "sha256": "239fcd2fd80559f2eacd0a8f515333e079a96ac730af3b4f66cdd1f809357ec1",
+          "bytes": 463,
+          "mode": 420,
+          "component": "geotool",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "6313740582c5a92354445e5281dfea964b2906fa"
+        },
+        {
+          "path": "binaries/geotool/SHA256SUMS-v1.2",
+          "sha256": "59f5be20690f134bac9194ff9dea60e8912602a1c41e608ce66bda045aa0f181",
+          "bytes": 463,
+          "mode": 420,
+          "component": "geotool",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "6313740582c5a92354445e5281dfea964b2906fa"
+        },
+        {
+          "path": "binaries/geotool/SHA256SUMS-v1.3",
+          "sha256": "8ea04ede3415fa87caa2363d546c960886b719aa886f5cd0c7e30602d8cae6af",
+          "bytes": 463,
+          "mode": 420,
+          "component": "geotool",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "6313740582c5a92354445e5281dfea964b2906fa"
+        },
+        {
+          "path": "binaries/geotool/geotool-v1.3-linux-aarch64",
+          "sha256": "32dcdcd7ad7f8fe8586e82ff1874ab9ccfaffe345f4882cdcd9db03a773cfaa4",
+          "bytes": 40824,
+          "mode": 493,
+          "component": "geotool",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "6313740582c5a92354445e5281dfea964b2906fa"
+        },
+        {
+          "path": "binaries/geotool/geotool-v1.3-linux-armv5te",
+          "sha256": "ba09d1f7c22bbdb4b7a5c9e5adcb42dd110ab5b413268f7cf4fd682839474904",
+          "bytes": 39916,
+          "mode": 493,
+          "component": "geotool",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "6313740582c5a92354445e5281dfea964b2906fa"
+        },
+        {
+          "path": "binaries/geotool/geotool-v1.3-linux-armv7a",
+          "sha256": "b710db14d2567248a9a7435bf0d7d7ac546ae70fe1915d2d0f35d0787e4eaefd",
+          "bytes": 40144,
+          "mode": 493,
+          "component": "geotool",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "6313740582c5a92354445e5281dfea964b2906fa"
+        },
+        {
+          "path": "binaries/geotool/geotool-v1.3-linux-armv7hf",
+          "sha256": "59964095abf0d96e217379f297a4fb85ffd83a92c58b3312fb7d656059cb8021",
+          "bytes": 40564,
+          "mode": 493,
+          "component": "geotool",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "6313740582c5a92354445e5281dfea964b2906fa"
+        },
+        {
+          "path": "binaries/geotool/geotool-v1.3-linux-x86_64",
+          "sha256": "683f7011e4334ecf53fff98802aeccd8cc8ca7da56fac1b50d7700525f59eb9c",
+          "bytes": 41964,
+          "mode": 493,
+          "component": "geotool",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "6313740582c5a92354445e5281dfea964b2906fa"
+        },
+        {
+          "path": "binaries/httping/README.md",
+          "sha256": "fbfa96a9d47ff2ba3c2bcef256c44345f7d7a42395da37800aee1c5f8bdcf401",
+          "bytes": 161,
+          "mode": 420,
+          "component": "httping",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "binaries/hysteria2/get_latest.sh",
+          "sha256": "512437dc92a68e3725541c027b2471180b6d289a5975b39ffb3a5a5614cda804",
+          "bytes": 1134,
+          "mode": 493,
+          "component": "hysteria2",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "binaries/hysteria2/latest.txt",
+          "sha256": "c072f14cdd73a6e3f39a53f4b14d69abe1fe413f83d57f234c1061d7226c7125",
+          "bytes": 6,
+          "mode": 420,
+          "component": "hysteria2",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "binaries/hysteria2/latest_mini2.txt",
+          "sha256": "ac5cf4e2123e95ad36d169f0f96bd47ea433600379d088bae1238c998b494b90",
+          "bytes": 12,
+          "mode": 420,
+          "component": "hysteria2",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "binaries/ipt2socks/get_latest.sh",
+          "sha256": "c0faa71a20ee1e1f034b6ce20e058bc18dfca1c67bba5a98a9f309c2c82706b4",
+          "bytes": 3281,
+          "mode": 493,
+          "component": "ipt2socks",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "binaries/ipt2socks/latest.txt",
+          "sha256": "d8894bc1a771890ce9f97c12d14c2b6cea8044197e25000de1734e590064e933",
+          "bytes": 6,
+          "mode": 420,
+          "component": "ipt2socks",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "binaries/ipt2socks/v1.1.4/ipt2socks_arm64",
+          "sha256": "dbcceb1d5cee74a223b1337efc38807da78353996cd0e921ad8061a54b297eef",
+          "bytes": 53948,
+          "mode": 493,
+          "component": "ipt2socks",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "binaries/ipt2socks/v1.1.4/ipt2socks_armv5",
+          "sha256": "f0e188d992a8bcd8d583ccff10879c54d5d949dfdc251ed451b3d712057a1dfe",
+          "bytes": 51492,
+          "mode": 493,
+          "component": "ipt2socks",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "binaries/ipt2socks/v1.1.4/ipt2socks_armv7",
+          "sha256": "067b0fde8c25718ce725447fc0ad1be914bc9f3a16b962b7a1fc74997016e838",
+          "bytes": 50048,
+          "mode": 493,
+          "component": "ipt2socks",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "binaries/ipt2socks/v1.1.4/md5sum.txt",
+          "sha256": "169defe0ae1668a5df813576d284f943940ccaf30ffb1f219e3738b66c2711be",
+          "bytes": 150,
+          "mode": 420,
+          "component": "ipt2socks",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "binaries/kcptun/get_latest.sh",
+          "sha256": "2eef6dfb0795d3723f50703c1ed5ec81956f57052d0c2b4998c49500e9681b19",
+          "bytes": 447,
+          "mode": 493,
+          "component": "kcptun",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "binaries/kcptun/latest.txt",
+          "sha256": "fa41ebcbab04e76343df3e6792bf58d8b601701f92156b945c3757a1aae8f97c",
+          "bytes": 9,
+          "mode": 420,
+          "component": "kcptun",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "binaries/kcptun/v20210922/md5sum.txt",
+          "sha256": "1b299cd3e7d78cba073c823c5588a1e1e31c70ec7a3637f08fe5114e35bcf672",
+          "bytes": 141,
+          "mode": 420,
+          "component": "kcptun",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "binaries/kcptun/v20230214/md5sum.txt",
+          "sha256": "f9a0ef1b44a625ae7979fa9fcf0ae48f37adc6348fb0304483f4b3322c05c875",
+          "bytes": 141,
+          "mode": 420,
+          "component": "kcptun",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "binaries/kcptun/v20240730/md5sum.txt",
+          "sha256": "990f56fea9cfc9732aeacbedc57bc1172be3f515094f897bf3fc30f207673fd5",
+          "bytes": 141,
+          "mode": 420,
+          "component": "kcptun",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "binaries/kcptun/v20251219/md5sum.txt",
+          "sha256": "4901de27f5a2aa2091ab9dfbec0eee196eefe93fd652170392202520ab67da1c",
+          "bytes": 141,
+          "mode": 420,
+          "component": "kcptun",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "binaries/legacy/ipq64/README.md",
+          "sha256": "c806b6271cd4b62bfea6b8626b2e675ebaa5897148b78e7a006f28e91a1f5d32",
+          "bytes": 11,
+          "mode": 420,
+          "component": "legacy",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "binaries/naive/get_latest.sh",
+          "sha256": "f7384e3c47d3b698cdec2312537976f2379819db6515c5361dfb531434f264e8",
+          "bytes": 1121,
+          "mode": 493,
+          "component": "naive",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "binaries/naive/latest.txt",
+          "sha256": "32022155ac5e849309f3b8f6dd81eeec41415a8f720a31e71d516e7febd7ce66",
+          "bytes": 16,
+          "mode": 420,
+          "component": "naive",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "binaries/naive/v114.0.5735.91-3/md5sum.txt",
+          "sha256": "17728c0b3deffb4f580b62e994cdb45d1dcecfbac98973c6443b062dab6d9d51",
+          "bytes": 138,
+          "mode": 420,
+          "component": "naive",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "binaries/naive/v123.0.6312.40-1/md5sum.txt",
+          "sha256": "30ef5913c9e3c8802a9e0e24d167721eec90f2c79686b61c8190dd0ef608bcbb",
+          "bytes": 138,
+          "mode": 420,
+          "component": "naive",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "binaries/naive/v127.0.6533.64-1/md5sum.txt",
+          "sha256": "5b209ebc53b40d9fdabeed33962983e1f4d69ddab3ac61b710e1530abe8c712e",
+          "bytes": 138,
+          "mode": 420,
+          "component": "naive",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "binaries/naive/v130.0.6723.40-5/md5sum.txt",
+          "sha256": "27dac14eb10b41c8f12fcd1d86f79b4b5ba8c18f09367c04f524db3af4cc500c",
+          "bytes": 138,
+          "mode": 420,
+          "component": "naive",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "binaries/naive/v131.0.6778.86-1/md5sum.txt",
+          "sha256": "f4d0d3a46e770a7d24a8dad89dae045da9192224dd40d080093c60aa8deb1c44",
+          "bytes": 138,
+          "mode": 420,
+          "component": "naive",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "binaries/naive/v143.0.7499.109-2/md5sum.txt",
+          "sha256": "227424310a65c78c757afe99eb6701030959d4394f829a8fb00b233b28d45636",
+          "bytes": 138,
+          "mode": 420,
+          "component": "naive",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "binaries/naive/v148.0.7778.96-2/md5sum.txt",
+          "sha256": "f693ea1f7d7b4edd948e0de4a6c7ed20cacb6458d9284372804ea187c0660887",
+          "bytes": 138,
+          "mode": 420,
+          "component": "naive",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "binaries/naive/v148.0.7778.96-2/naive_arm64",
+          "sha256": "42581277a813c688ce3d29566b7545686b923783437bfbfc62a2acf0dd8e18e4",
+          "bytes": 3268916,
+          "mode": 493,
+          "component": "naive",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "binaries/naive/v148.0.7778.96-2/naive_armv5",
+          "sha256": "6fa5d7d269bfe83e18e939305d779bab428c072cc9bc217e5bb4658c61c526b1",
+          "bytes": 3458468,
+          "mode": 493,
+          "component": "naive",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "binaries/naive/v148.0.7778.96-2/naive_armv7",
+          "sha256": "f44abd0d31f36c6e2333098413f3547e9b10d342bb8b63ec177152e24bd9cc4b",
+          "bytes": 3459428,
+          "mode": 493,
+          "component": "naive",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "binaries/node-tool/README.md",
+          "sha256": "04b3f35324846c194321b121aa5c723e25ebef9ff4c938ebba49089949a24dc1",
+          "bytes": 636,
+          "mode": 420,
+          "component": "node-tool",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "fce4b45b5d86867a14c563125ae48a59772c2310"
+        },
+        {
+          "path": "binaries/node-tool/SHA256SUMS-v0.1.0",
+          "sha256": "078e717df5a910738014159de976b31bf818bcc00d28eb07fc52ed265b335630",
+          "bytes": 387,
+          "mode": 420,
+          "component": "node-tool",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "fce4b45b5d86867a14c563125ae48a59772c2310"
+        },
+        {
+          "path": "binaries/node-tool/SHA256SUMS-v0.1.1",
+          "sha256": "4790c246b5444fa6df92f7a2a1a4d2319b560530c401c5249abefe51e6120b6e",
+          "bytes": 483,
+          "mode": 420,
+          "component": "node-tool",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "fce4b45b5d86867a14c563125ae48a59772c2310"
+        },
+        {
+          "path": "binaries/node-tool/SHA256SUMS-v0.1.11",
+          "sha256": "1102b7ed1dfcd964d8f5b4c2336437a6fccece52e9d0a84b28503bae5506e2fc",
+          "bytes": 488,
+          "mode": 420,
+          "component": "node-tool",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "fce4b45b5d86867a14c563125ae48a59772c2310"
+        },
+        {
+          "path": "binaries/node-tool/SHA256SUMS-v0.1.12",
+          "sha256": "61febb0738794432cffe5ddb49f39a00aeab58dbde108ae2b172eec990a99645",
+          "bytes": 488,
+          "mode": 420,
+          "component": "node-tool",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "fce4b45b5d86867a14c563125ae48a59772c2310"
+        },
+        {
+          "path": "binaries/node-tool/SHA256SUMS-v0.1.13",
+          "sha256": "1020dc6d1b15f039e277b7d4753c37fef2482abb186ada169e83726fd96481cc",
+          "bytes": 488,
+          "mode": 420,
+          "component": "node-tool",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "fce4b45b5d86867a14c563125ae48a59772c2310"
+        },
+        {
+          "path": "binaries/node-tool/SHA256SUMS-v0.1.14",
+          "sha256": "2dc55cecd1e71cc1c6fd1c0eca3664b21124bc989887854c4fba59edd0ce0dce",
+          "bytes": 488,
+          "mode": 420,
+          "component": "node-tool",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "fce4b45b5d86867a14c563125ae48a59772c2310"
+        },
+        {
+          "path": "binaries/node-tool/SHA256SUMS-v0.1.15",
+          "sha256": "e0d9ca78dbc4c562abba44be53c7d5f9c1d12051f7af48bde1c1a7499f00ccf1",
+          "bytes": 488,
+          "mode": 420,
+          "component": "node-tool",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "fce4b45b5d86867a14c563125ae48a59772c2310"
+        },
+        {
+          "path": "binaries/node-tool/SHA256SUMS-v0.1.16",
+          "sha256": "98697daf732ee52057ed2b2a4b5146b8df6ac1d90415e922440aa648cb99f4e7",
+          "bytes": 488,
+          "mode": 420,
+          "component": "node-tool",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "fce4b45b5d86867a14c563125ae48a59772c2310"
+        },
+        {
+          "path": "binaries/node-tool/SHA256SUMS-v0.1.16-native.1",
+          "sha256": "0d390c9cec057a212eaff04b53a61a3eb2a07751267e1d11bf30fb6805ea9a7a",
+          "bytes": 533,
+          "mode": 420,
+          "component": "node-tool",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "fce4b45b5d86867a14c563125ae48a59772c2310"
+        },
+        {
+          "path": "binaries/node-tool/SHA256SUMS-v0.1.2",
+          "sha256": "6fe0cc4ea4b6f1c816a0a8d8ca7611c8488a846abdafe8f7e5f4962679e5815a",
+          "bytes": 483,
+          "mode": 420,
+          "component": "node-tool",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "fce4b45b5d86867a14c563125ae48a59772c2310"
+        },
+        {
+          "path": "binaries/node-tool/SHA256SUMS-v0.1.3",
+          "sha256": "997a4f239b823f84d39da497eba0cae500dfbd8c79499623713c3a5ad48ec6c0",
+          "bytes": 483,
+          "mode": 420,
+          "component": "node-tool",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "fce4b45b5d86867a14c563125ae48a59772c2310"
+        },
+        {
+          "path": "binaries/node-tool/SHA256SUMS-v0.1.4",
+          "sha256": "a307bb1254c3ec6d696fc446154c83876de575c8e991272061b5f664bc7287f3",
+          "bytes": 483,
+          "mode": 420,
+          "component": "node-tool",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "fce4b45b5d86867a14c563125ae48a59772c2310"
+        },
+        {
+          "path": "binaries/node-tool/SHA256SUMS-v0.1.5",
+          "sha256": "bfdb3c9e695990ee5f8ae4374c76233fccaf469785ad0b2cf744e80dd8403c3d",
+          "bytes": 483,
+          "mode": 420,
+          "component": "node-tool",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "fce4b45b5d86867a14c563125ae48a59772c2310"
+        },
+        {
+          "path": "binaries/node-tool/SHA256SUMS-v0.1.6",
+          "sha256": "047ad205255244bfea6d48856782e59bcb68f15be9170dda272590abc2654f8d",
+          "bytes": 483,
+          "mode": 420,
+          "component": "node-tool",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "fce4b45b5d86867a14c563125ae48a59772c2310"
+        },
+        {
+          "path": "binaries/node-tool/SHA256SUMS-v0.1.7",
+          "sha256": "1627e7db1e6e3621586bac1023d489f7e1ec723e87a203551cec45e3fbd62f3c",
+          "bytes": 483,
+          "mode": 420,
+          "component": "node-tool",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "fce4b45b5d86867a14c563125ae48a59772c2310"
+        },
+        {
+          "path": "binaries/node-tool/SHA256SUMS-v0.1.8",
+          "sha256": "cdb99c3f54c83165787ea5afd03b67271087758fa59d2a1c01cf3080aeffc1e1",
+          "bytes": 483,
+          "mode": 420,
+          "component": "node-tool",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "fce4b45b5d86867a14c563125ae48a59772c2310"
+        },
+        {
+          "path": "binaries/node-tool/node-tool-v0.1.16-native.1-linux-aarch64",
+          "sha256": "9556ac592330fb90d590f50e184ad8aa0176559ffbd0784bfe86dfae83914c6d",
+          "bytes": 492504,
+          "mode": 493,
+          "component": "node-tool",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "fce4b45b5d86867a14c563125ae48a59772c2310"
+        },
+        {
+          "path": "binaries/node-tool/node-tool-v0.1.16-native.1-linux-armv5te",
+          "sha256": "1a9c5d827a31e53ce2fff249742ec28ba5b45388ebcd4b478481025810f96c7b",
+          "bytes": 560588,
+          "mode": 493,
+          "component": "node-tool",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "fce4b45b5d86867a14c563125ae48a59772c2310"
+        },
+        {
+          "path": "binaries/node-tool/node-tool-v0.1.16-native.1-linux-armv7a",
+          "sha256": "b47164cb4734aaf39d9d24f983ad88a679b891ce300b368d71208072539da1bd",
+          "bytes": 561124,
+          "mode": 493,
+          "component": "node-tool",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "fce4b45b5d86867a14c563125ae48a59772c2310"
+        },
+        {
+          "path": "binaries/node-tool/node-tool-v0.1.16-native.1-linux-armv7hf",
+          "sha256": "7ce9ab771c83f2bd3e1939b803c8fd29e5c1d5c151ca35128cdb53eb9f5aca5d",
+          "bytes": 553628,
+          "mode": 493,
+          "component": "node-tool",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "fce4b45b5d86867a14c563125ae48a59772c2310"
+        },
+        {
+          "path": "binaries/node-tool/node-tool-v0.1.16-native.1-linux-x86_64",
+          "sha256": "8331f0cd045ff4463f445c49f6207a102bc08c7cbe9a3c8e227c5b14ededae75",
+          "bytes": 578528,
+          "mode": 493,
+          "component": "node-tool",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "fce4b45b5d86867a14c563125ae48a59772c2310"
+        },
+        {
+          "path": "binaries/scripts/update_include.sh",
+          "sha256": "5e9b6a282edb664e33d9150199dc138e481be78ee2322d5fd04d49efda9ae74e",
+          "bytes": 2106,
+          "mode": 420,
+          "component": "scripts",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "binaries/smartdns/get_smartdns.sh",
+          "sha256": "8a8859981a8ed47c34e2d1f22b05fb1e68009ffa13b0c22c1435914f7e49ac0d",
+          "bytes": 2704,
+          "mode": 493,
+          "component": "smartdns",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "binaries/smartdns/v47.1/md5sum.txt",
+          "sha256": "d67208661e714781ad6109d95f2dac23f0136b8508ee118b6483726d17af45a8",
+          "bytes": 147,
+          "mode": 420,
+          "component": "smartdns",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "binaries/ss_rust/README.md",
+          "sha256": "1a34b31a86ed7ca0e879ff5c7e824c473714a7d0db54cd7e67219b0fc1ebbef2",
+          "bytes": 2398,
+          "mode": 420,
+          "component": "ss_rust",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "binaries/ss_rust/get_latest.sh",
+          "sha256": "67dc1d5dde27c2720bef957bf8ed72ccb1bf005b932bfee3344edabbbdcc88b9",
+          "bytes": 603,
+          "mode": 493,
+          "component": "ss_rust",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "binaries/ss_rust/latest.txt",
+          "sha256": "12147ec7a2b4c9cf6c55ce3166c49560cb660494105800d79cb249552a9f16ce",
+          "bytes": 7,
+          "mode": 420,
+          "component": "ss_rust",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "binaries/ss_rust/v1.15.2/md5sum.txt",
+          "sha256": "cddee341f408ade0c2fc978872bc5b8060795b34de2f85fe79377fbbe6b78667",
+          "bytes": 144,
+          "mode": 420,
+          "component": "ss_rust",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "binaries/ss_rust/v1.15.3/md5sum.txt",
+          "sha256": "d0a011e108359ef378384f0689d4f1037da5fed93441acdd7f2451332af2ce57",
+          "bytes": 144,
+          "mode": 420,
+          "component": "ss_rust",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "binaries/ss_rust/v1.18.2/md5sum.txt",
+          "sha256": "eba4abb018b6372d08be1f849dbcf3b32f152123c78cefde2628ffc105555101",
+          "bytes": 144,
+          "mode": 420,
+          "component": "ss_rust",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "binaries/ss_rust/v1.20.3/md5sum.txt",
+          "sha256": "6a8f432af064959f5b26bf8113b6790a8b6347dd030edcfe64290ee37ea06f67",
+          "bytes": 144,
+          "mode": 420,
+          "component": "ss_rust",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "binaries/ss_rust/v1.21.0/md5sum.txt",
+          "sha256": "f885490e8944dbcf9374b01e4d1ef681709463879b521032cc2eeab5049013e7",
+          "bytes": 144,
+          "mode": 420,
+          "component": "ss_rust",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "binaries/ss_rust/v1.21.2/md5sum.txt",
+          "sha256": "61ccd829d2c8671644052b336a84b4e31bedd5f5ff6635b6a2b7a9cf84e0fd12",
+          "bytes": 144,
+          "mode": 420,
+          "component": "ss_rust",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "binaries/ss_rust/v1.22.0/md5sum.txt",
+          "sha256": "4212ef44863bb5f31849c2de8036ca2a7a3b2edccb387570316f1050378bf285",
+          "bytes": 144,
+          "mode": 420,
+          "component": "ss_rust",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "binaries/ss_rust/v1.24.0/md5sum.txt",
+          "sha256": "acf0c6681e248aa7553ba0e667ed523e7c64183fd5a10f8e77f1e00793bc2c6e",
+          "bytes": 144,
+          "mode": 420,
+          "component": "ss_rust",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "binaries/status-tool/README.md",
+          "sha256": "7b42bba96b4b0f7c358be1b119ff802deadee5d1cf63636281bf24875627a828",
+          "bytes": 390,
+          "mode": 420,
+          "component": "status-tool",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "04efc90e4610b98f0b04431931551b1264f2da87"
+        },
+        {
+          "path": "binaries/status-tool/SHA256SUMS-v0.1.0",
+          "sha256": "15bf08e70a56f5fadf97a53afe02d3c7e5498102b6a58d5cc4f91016ac5ad1bd",
+          "bytes": 976,
+          "mode": 420,
+          "component": "status-tool",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "04efc90e4610b98f0b04431931551b1264f2da87"
+        },
+        {
+          "path": "binaries/status-tool/SHA256SUMS-v0.1.1",
+          "sha256": "2b7927b11d194f7a542aec04bcbe7b63dabe75abb20c189a444de25def55cdd2",
+          "bytes": 976,
+          "mode": 420,
+          "component": "status-tool",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "04efc90e4610b98f0b04431931551b1264f2da87"
+        },
+        {
+          "path": "binaries/status-tool/SHA256SUMS-v0.1.2",
+          "sha256": "e994c6c6e92d65ab524e78ccae5f856058985b9d089db99cc17bfb0876d781c7",
+          "bytes": 976,
+          "mode": 420,
+          "component": "status-tool",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "04efc90e4610b98f0b04431931551b1264f2da87"
+        },
+        {
+          "path": "binaries/status-tool/SHA256SUMS-v0.1.3",
+          "sha256": "5bb3adc5df985ab4f608f4e19bfe590e89331d7e18637dd22a268d7fc4cea2f0",
+          "bytes": 976,
+          "mode": 420,
+          "component": "status-tool",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "04efc90e4610b98f0b04431931551b1264f2da87"
+        },
+        {
+          "path": "binaries/status-tool/status-tool-v0.1.3-linux-aarch64",
+          "sha256": "3a4f49c8fbaf0bd4ed85812a735c4ad58541368c0a9856429c01e1a64f34c64c",
+          "bytes": 94400,
+          "mode": 493,
+          "component": "status-tool",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "04efc90e4610b98f0b04431931551b1264f2da87"
+        },
+        {
+          "path": "binaries/status-tool/status-tool-v0.1.3-linux-armv5te",
+          "sha256": "3c5626708f72d20484ae627b399cab3f6c700de912e1942a4f635c43078420c0",
+          "bytes": 90372,
+          "mode": 493,
+          "component": "status-tool",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "04efc90e4610b98f0b04431931551b1264f2da87"
+        },
+        {
+          "path": "binaries/status-tool/status-tool-v0.1.3-linux-armv7a",
+          "sha256": "c770a9da1c9028b7abc5171d9ed3686152e3237c6565b6e1b6a99f5b5996b667",
+          "bytes": 91336,
+          "mode": 493,
+          "component": "status-tool",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "04efc90e4610b98f0b04431931551b1264f2da87"
+        },
+        {
+          "path": "binaries/status-tool/status-tool-v0.1.3-linux-armv7hf",
+          "sha256": "0b343d548170ce9cdd9a9e44f37d6c432892e224e4b8c462c51c423955e110e5",
+          "bytes": 90544,
+          "mode": 493,
+          "component": "status-tool",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "04efc90e4610b98f0b04431931551b1264f2da87"
+        },
+        {
+          "path": "binaries/status-tool/status-tool-v0.1.3-linux-x86_64",
+          "sha256": "d8792dce0cccc451bbdf5974dc515f6b8fb147e4beabccf68f3f1b795507830e",
+          "bytes": 184440,
+          "mode": 493,
+          "component": "status-tool",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "04efc90e4610b98f0b04431931551b1264f2da87"
+        },
+        {
+          "path": "binaries/status-tool/statusctl-v0.1.3-linux-aarch64",
+          "sha256": "2b9a1ef75d9fd15644d27e54d83130a5c4ee48cd4d7acd5dd85d0d8fe3e9ebe0",
+          "bytes": 21864,
+          "mode": 493,
+          "component": "status-tool",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "04efc90e4610b98f0b04431931551b1264f2da87"
+        },
+        {
+          "path": "binaries/status-tool/statusctl-v0.1.3-linux-armv5te",
+          "sha256": "961196b9ab7eb4ab5d0987eee0f1bacbb145352b8ea46c775a80513b1742ef3d",
+          "bytes": 19916,
+          "mode": 493,
+          "component": "status-tool",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "04efc90e4610b98f0b04431931551b1264f2da87"
+        },
+        {
+          "path": "binaries/status-tool/statusctl-v0.1.3-linux-armv7a",
+          "sha256": "ca651cc52c15e19a0d85ef5d90d4a6a771e05945fa3cc448305077eae1bca92f",
+          "bytes": 20880,
+          "mode": 493,
+          "component": "status-tool",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "04efc90e4610b98f0b04431931551b1264f2da87"
+        },
+        {
+          "path": "binaries/status-tool/statusctl-v0.1.3-linux-armv7hf",
+          "sha256": "fe2584dbfa304ac564348cdfc60be159eb1f6bc83baff879271e278ac70bac28",
+          "bytes": 20480,
+          "mode": 493,
+          "component": "status-tool",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "04efc90e4610b98f0b04431931551b1264f2da87"
+        },
+        {
+          "path": "binaries/status-tool/statusctl-v0.1.3-linux-x86_64",
+          "sha256": "6556ac2e047dda4986443e95a4bf83e94dac9dc3efd406f6d25cd0aaa1654d0e",
+          "bytes": 30704,
+          "mode": 493,
+          "component": "status-tool",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "04efc90e4610b98f0b04431931551b1264f2da87"
+        },
+        {
+          "path": "binaries/sub-tool/README.md",
+          "sha256": "ab7a963b3b55d89f449e4c6a5173e320097147a30ff4ca1b76b2ba3c61520f87",
+          "bytes": 715,
+          "mode": 420,
+          "component": "sub-tool",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "eb0d48b9f392db5a5237a343723354020770a6fd"
+        },
+        {
+          "path": "binaries/sub-tool/SHA256SUMS-v0.1.10",
+          "sha256": "f8d417f2a1b9e0d76d02d3717742d0bab9946dae99cd9d4cd84b331e14711233",
+          "bytes": 483,
+          "mode": 420,
+          "component": "sub-tool",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "eb0d48b9f392db5a5237a343723354020770a6fd"
+        },
+        {
+          "path": "binaries/sub-tool/SHA256SUMS-v0.1.11",
+          "sha256": "64c81a8cc989eb608a1edfc5c5c3afc27199419eb475f7d2c00354dc5b940a1e",
+          "bytes": 483,
+          "mode": 420,
+          "component": "sub-tool",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "eb0d48b9f392db5a5237a343723354020770a6fd"
+        },
+        {
+          "path": "binaries/sub-tool/SHA256SUMS-v0.1.15",
+          "sha256": "85da65fced1e5ba65fdebc136105ba5a83a3b48099d6fefb75136b23b764cf5d",
+          "bytes": 483,
+          "mode": 420,
+          "component": "sub-tool",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "eb0d48b9f392db5a5237a343723354020770a6fd"
+        },
+        {
+          "path": "binaries/sub-tool/SHA256SUMS-v0.1.16",
+          "sha256": "ff7dd06c1d9c7211681352e1036f17b69c8783c19c209bc3c1bf9113beb3b4ca",
+          "bytes": 483,
+          "mode": 420,
+          "component": "sub-tool",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "eb0d48b9f392db5a5237a343723354020770a6fd"
+        },
+        {
+          "path": "binaries/sub-tool/SHA256SUMS-v0.1.17",
+          "sha256": "9772d01e1f03e12e7365b8537ec35b83d67d7aa44a054021d2b0d6031038d5c2",
+          "bytes": 483,
+          "mode": 420,
+          "component": "sub-tool",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "eb0d48b9f392db5a5237a343723354020770a6fd"
+        },
+        {
+          "path": "binaries/sub-tool/SHA256SUMS-v0.1.18",
+          "sha256": "7d383fc2b9970140558bd666fa7a2bdc4aba8ae6765da1aab39609244e062664",
+          "bytes": 483,
+          "mode": 420,
+          "component": "sub-tool",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "eb0d48b9f392db5a5237a343723354020770a6fd"
+        },
+        {
+          "path": "binaries/sub-tool/SHA256SUMS-v0.1.7",
+          "sha256": "04a1d27b1d2490c9bd75adb571a7f265781d0b27bce578364fe36b5a8fbce762",
+          "bytes": 478,
+          "mode": 420,
+          "component": "sub-tool",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "eb0d48b9f392db5a5237a343723354020770a6fd"
+        },
+        {
+          "path": "binaries/sub-tool/SHA256SUMS-v0.1.8",
+          "sha256": "53ccd2a04f1a8da870f635b845ac51c58053da228e3afd044fcd917b1a5b5d62",
+          "bytes": 478,
+          "mode": 420,
+          "component": "sub-tool",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "eb0d48b9f392db5a5237a343723354020770a6fd"
+        },
+        {
+          "path": "binaries/sub-tool/SHA256SUMS-v0.1.9",
+          "sha256": "94e3f9386dab2d68f9c5b4b72c5e222dbb2a2a9ef345cd7601188a6774cd9adb",
+          "bytes": 478,
+          "mode": 420,
+          "component": "sub-tool",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "eb0d48b9f392db5a5237a343723354020770a6fd"
+        },
+        {
+          "path": "binaries/sub-tool/sub-tool-v0.1.17-linux-aarch64",
+          "sha256": "d3fc65087b01e76232ee52c9529c5c4886d40f0d513d2b6cf193313515c89a9d",
+          "bytes": 106116,
+          "mode": 493,
+          "component": "sub-tool",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "eb0d48b9f392db5a5237a343723354020770a6fd"
+        },
+        {
+          "path": "binaries/sub-tool/sub-tool-v0.1.17-linux-armv5te",
+          "sha256": "0e5911d27cfc07a5654af47390448bb2e22ccf4ae5e7bf337d275d5319eafdae",
+          "bytes": 106036,
+          "mode": 493,
+          "component": "sub-tool",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "eb0d48b9f392db5a5237a343723354020770a6fd"
+        },
+        {
+          "path": "binaries/sub-tool/sub-tool-v0.1.17-linux-armv7a",
+          "sha256": "db192e45d5fc8e6a1e7b732b4309ef215cd1e2174e3aa13d33c034240ef86ea4",
+          "bytes": 106016,
+          "mode": 493,
+          "component": "sub-tool",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "eb0d48b9f392db5a5237a343723354020770a6fd"
+        },
+        {
+          "path": "binaries/sub-tool/sub-tool-v0.1.17-linux-armv7hf",
+          "sha256": "18e084c70274fd7bdd8d8e6736aba0c19f43c6335216f2a18ee18c81c864dfd3",
+          "bytes": 106204,
+          "mode": 493,
+          "component": "sub-tool",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "eb0d48b9f392db5a5237a343723354020770a6fd"
+        },
+        {
+          "path": "binaries/sub-tool/sub-tool-v0.1.17-linux-x86_64",
+          "sha256": "cda385784dae711e32a8fb1560a7392cdc3ff865ef71d80458965b5da6aba1d4",
+          "bytes": 107272,
+          "mode": 493,
+          "component": "sub-tool",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "eb0d48b9f392db5a5237a343723354020770a6fd"
+        },
+        {
+          "path": "binaries/tuic-client/get_latest.sh",
+          "sha256": "767b8f7ddc4221fae21c1bf45db7d8938305122d1b263b9551e5bbff4326edb4",
+          "bytes": 2745,
+          "mode": 493,
+          "component": "tuic-client",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "binaries/tuic-client/latest.txt",
+          "sha256": "bb521ffde7f66189372608dff592cf5e0755a8d51c960dc6567ed5b42329a1ac",
+          "bytes": 6,
+          "mode": 420,
+          "component": "tuic-client",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "binaries/tuic-client/v1.7.1/md5sum.txt",
+          "sha256": "cf04856e10fc5f75c60c5f3df8d1130a33c7b568f5c36eb720b6b29a47acc5e4",
+          "bytes": 104,
+          "mode": 420,
+          "component": "tuic-client",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "binaries/tuic-client/v1.8.1/md5sum.txt",
+          "sha256": "5a33ea4e3db8fd55571c43032397843896f226d9b4a947608dcb71d418b0295b",
+          "bytes": 104,
+          "mode": 420,
+          "component": "tuic-client",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "binaries/tuic-client/v1.8.1/tuic-client_arm64",
+          "sha256": "d2b0c8a65b9fea9dfbeb838c33bc64a1507377990f049b78540c84b6c4d34ffa",
+          "bytes": 1795208,
+          "mode": 493,
+          "component": "tuic-client",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "binaries/tuic-client/v1.8.1/tuic-client_armv7",
+          "sha256": "3cd411cac1497d5cb2c4a494c95f4cfd65c79aab9bae92d26b2c7d61ebe5a7bc",
+          "bytes": 1160152,
+          "mode": 493,
+          "component": "tuic-client",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "binaries/v2ray-plugin/.gitignore",
+          "sha256": "e6a5ee35038ffe0a5b7f3a71845093e4bcadca9cef4448f63af2b38b7077427c",
+          "bytes": 20,
+          "mode": 420,
+          "component": "v2ray-plugin",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "binaries/v2ray-plugin/latest.txt",
+          "sha256": "0d8e4ca5aef848ab45fed21a427c18bd72caf4e8ba899d2f747c86fbd7ec39ab",
+          "bytes": 8,
+          "mode": 420,
+          "component": "v2ray-plugin",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "binaries/v2ray-plugin/make_latest.sh",
+          "sha256": "cdc2a0a931d4aa072c1518efe5b101118575ddf6b7f97ab3d2bec11d363d2b4f",
+          "bytes": 2424,
+          "mode": 493,
+          "component": "v2ray-plugin",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "binaries/v2ray-plugin/v5.15.1/md5sum.txt",
+          "sha256": "cfb234fb9aa51585a2fd405e86f6f427437b0320ef75eb68409a5587d3340d07",
+          "bytes": 339,
+          "mode": 420,
+          "component": "v2ray-plugin",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "binaries/v2ray-plugin/v5.41.0/md5sum.txt",
+          "sha256": "5efbd7f5d532ac44d2d78c07df0764e745b72703b1dfd51df0ba8ac52841e064",
+          "bytes": 339,
+          "mode": 420,
+          "component": "v2ray-plugin",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "binaries/v2ray-plugin/v5.5.0/md5sum.txt",
+          "sha256": "46eba59d78f4a14281902c23b1ec80774a80e1b216d5317eb2a1843cd52dd4d2",
+          "bytes": 336,
+          "mode": 420,
+          "component": "v2ray-plugin",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "binaries/v2ray/.gitignore",
+          "sha256": "e6a39f875f5ba91eaa3ce3f8740f01b517ec92e7d9f214c9d45db51d2a07055c",
+          "bytes": 13,
+          "mode": 420,
+          "component": "v2ray",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "binaries/v2ray/README.md",
+          "sha256": "598da082f6628280648e58e3e8545a17626edc038e404e5141bbfe5dd868a912",
+          "bytes": 1987,
+          "mode": 420,
+          "component": "v2ray",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "binaries/v2ray/get_latest.sh",
+          "sha256": "4db10860530927b697bc5a3d800861abced79277cac7200d930a862830d60a06",
+          "bytes": 434,
+          "mode": 493,
+          "component": "v2ray",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "binaries/v2ray/latest.txt",
+          "sha256": "c772c7b7f6dc80139aea9f41b7067e2288dafbcf402b9c550e152aada24c6bbf",
+          "bytes": 7,
+          "mode": 420,
+          "component": "v2ray",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "binaries/v2ray/latest_v5.txt",
+          "sha256": "a61bd3cff2664ff7d996f739afde10275a1e4c8b9934040a13bb26209276bf41",
+          "bytes": 8,
+          "mode": 420,
+          "component": "v2ray",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "binaries/v2ray/make_latest.sh",
+          "sha256": "123acbae19c75d39895ffc5cb8488849e98cbf07670ecd77d2d8592555c52a26",
+          "bytes": 59767,
+          "mode": 493,
+          "component": "v2ray",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "binaries/v2ray/v4.22.0/md5sum.txt",
+          "sha256": "9df6e833a5cfc7cd70edc763ba5377a06261734599dc1fa3a988f325da3db9b5",
+          "bytes": 92,
+          "mode": 420,
+          "component": "v2ray",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "binaries/v2ray/v4.22.1/md5sum.txt",
+          "sha256": "b64fe0db56bdf1768987edc32f6ab07fd453f9f3c2f3a25fb6d1c7e739ed5b58",
+          "bytes": 92,
+          "mode": 420,
+          "component": "v2ray",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "binaries/v2ray/v4.44.0/md5sum.txt",
+          "sha256": "a89c3fa3b61593625cef78d4893be8730512b3fdf27505861b36bf41ea47c914",
+          "bytes": 92,
+          "mode": 420,
+          "component": "v2ray",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "binaries/v2ray/v5.15.1/md5sum.txt",
+          "sha256": "5859ad4febb43a40f759e55f16061116cf6e5bb07ae4dee095b2ef3af0ac76c0",
+          "bytes": 138,
+          "mode": 420,
+          "component": "v2ray",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "binaries/v2ray/v5.16.1/md5sum.txt",
+          "sha256": "c5a83da7def182001cc58d1a96710e401cca3594005fe762f59bb7ccf396310b",
+          "bytes": 138,
+          "mode": 420,
+          "component": "v2ray",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "binaries/v2ray/v5.21.0/md5sum.txt",
+          "sha256": "5819a45544eb597bb6d1a42d589223b2adf2b252327b3995bd93ca23c5451b72",
+          "bytes": 138,
+          "mode": 420,
+          "component": "v2ray",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "binaries/v2ray/v5.22.0/md5sum.txt",
+          "sha256": "ab5760a7583992d30a1be4f42264fd835af4861a88a2bf00278cbf79290ef051",
+          "bytes": 138,
+          "mode": 420,
+          "component": "v2ray",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "binaries/v2ray/v5.4.1/md5sum.txt",
+          "sha256": "ce57809563aaff07fbd1c22588fcadbdec66a217506a4986dd008e850e226c5d",
+          "bytes": 138,
+          "mode": 420,
+          "component": "v2ray",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "binaries/v2ray/v5.42.0/md5sum.txt",
+          "sha256": "030bacd0be0da9f102dca23fa472aa2185fdb57f963f487ec9c0ecb8fffa57a4",
+          "bytes": 138,
+          "mode": 420,
+          "component": "v2ray",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "binaries/v2ray/v5.7.0/md5sum.txt",
+          "sha256": "bc7873233494039ec1052f8f453e40b4f5a8a9d17c239971b175e740cf455fba",
+          "bytes": 138,
+          "mode": 420,
+          "component": "v2ray",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "binaries/websocketd/README.md",
+          "sha256": "30e6ff3133f40eaabb9f5d270651c51051e0b759914803a85f3fa504f9c4b808",
+          "bytes": 646,
+          "mode": 420,
+          "component": "websocketd",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "binaries/websocketd/SHA256SUMS-v0.1.0",
+          "sha256": "0eb77331b306e8c6d3b33e88d486206c4f8725bed21b7285c6e860e8cc2d6c6e",
+          "bytes": 488,
+          "mode": 420,
+          "component": "websocketd",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "binaries/websocketd/SHA256SUMS-v0.1.1",
+          "sha256": "358fcec5beef5872a47a8946b39f0a5a814e616d0486cc83e1b517eaabcc2d8a",
+          "bytes": 488,
+          "mode": 420,
+          "component": "websocketd",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "binaries/websocketd/SHA256SUMS-v0.1.2",
+          "sha256": "5826eff3c10cf18180750c7af7606f7ad5d1fabb979444fbd7097960dd1ebcbd",
+          "bytes": 488,
+          "mode": 420,
+          "component": "websocketd",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "binaries/websocketd/websocketd-v0.1.2-linux-aarch64",
+          "sha256": "fefa27adaad2eb8b1dbbd6a219ffe06f9be770264161c35f568a2027179fcdf9",
+          "bytes": 51296,
+          "mode": 493,
+          "component": "websocketd",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "binaries/websocketd/websocketd-v0.1.2-linux-armv5te",
+          "sha256": "f7b5fb023668e4a6e24bb63769c9ccd29b2298cf1db36e18037982c51e8477bf",
+          "bytes": 47392,
+          "mode": 493,
+          "component": "websocketd",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "binaries/websocketd/websocketd-v0.1.2-linux-armv7a",
+          "sha256": "c3c573677163d92fe91a3b02e6eb49d448f47fac7c67c3a37147c81326d4b13f",
+          "bytes": 48356,
+          "mode": 493,
+          "component": "websocketd",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "binaries/websocketd/websocketd-v0.1.2-linux-armv7hf",
+          "sha256": "efb4d5f8ac9254527496d0ddc1dab1b3573af40f9861b97e547c60d7b0d34ca4",
+          "bytes": 48760,
+          "mode": 493,
+          "component": "websocketd",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "binaries/websocketd/websocketd-v0.1.2-linux-x86_64",
+          "sha256": "e92db381b22f16e43b07af6d7b9cfb23de9dbdf370a75b92449b51849fb03aa3",
+          "bytes": 103968,
+          "mode": 493,
+          "component": "websocketd",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "binaries/webtest-tool/SHA256SUMS-v0.1.0",
+          "sha256": "b155655020ff9063949997d28145fee0073845d099b68177502409ad49350e0c",
+          "bytes": 986,
+          "mode": 420,
+          "component": "webtest-tool",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "57c59dd87c47e8807a10440ca6ed73ea4a78a650"
+        },
+        {
+          "path": "binaries/webtest-tool/SHA256SUMS-v0.1.1",
+          "sha256": "49b4cc447b7be6dbe811c87099d70bd47fd17fa6d991ed4b96808bc498f106ec",
+          "bytes": 986,
+          "mode": 420,
+          "component": "webtest-tool",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "57c59dd87c47e8807a10440ca6ed73ea4a78a650"
+        },
+        {
+          "path": "binaries/webtest-tool/webtest-tool-v0.1.1-linux-aarch64",
+          "sha256": "22d0c4bf57a5eec501ef0d4341812e515175c309ebf127dd5d43917cb02ff9c4",
+          "bytes": 78420,
+          "mode": 493,
+          "component": "webtest-tool",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "57c59dd87c47e8807a10440ca6ed73ea4a78a650"
+        },
+        {
+          "path": "binaries/webtest-tool/webtest-tool-v0.1.1-linux-armv5te",
+          "sha256": "96177bfd20445b458bea75efabea1d4639c6de2a7c4106d8a2ce811bd7c2fb71",
+          "bytes": 76244,
+          "mode": 493,
+          "component": "webtest-tool",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "57c59dd87c47e8807a10440ca6ed73ea4a78a650"
+        },
+        {
+          "path": "binaries/webtest-tool/webtest-tool-v0.1.1-linux-armv7a",
+          "sha256": "6a97eb22c0b818ce2ffd633793fb55263c89f628f11f2baba6a9827a2adfa3af",
+          "bytes": 76240,
+          "mode": 493,
+          "component": "webtest-tool",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "57c59dd87c47e8807a10440ca6ed73ea4a78a650"
+        },
+        {
+          "path": "binaries/webtest-tool/webtest-tool-v0.1.1-linux-armv7hf",
+          "sha256": "e4dbcecd1f5a90bfe164ac68a75f8874bbfdcfb836f9a57ef614afa967e6a8a8",
+          "bytes": 75524,
+          "mode": 493,
+          "component": "webtest-tool",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "57c59dd87c47e8807a10440ca6ed73ea4a78a650"
+        },
+        {
+          "path": "binaries/webtest-tool/webtest-tool-v0.1.1-linux-x86_64",
+          "sha256": "7d2f68bd7f0230b6886c8e8ab614b33ed61d71d60eee0bd4c14fbfcd7a995251",
+          "bytes": 159000,
+          "mode": 493,
+          "component": "webtest-tool",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "57c59dd87c47e8807a10440ca6ed73ea4a78a650"
+        },
+        {
+          "path": "binaries/webtest-tool/webtestctl-v0.1.1-linux-aarch64",
+          "sha256": "7854340ceb320b66c0079b0a9c802a715181909e5cfd4e6e98dbb6d896fd4fb7",
+          "bytes": 21992,
+          "mode": 493,
+          "component": "webtest-tool",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "57c59dd87c47e8807a10440ca6ed73ea4a78a650"
+        },
+        {
+          "path": "binaries/webtest-tool/webtestctl-v0.1.1-linux-armv5te",
+          "sha256": "2276afd95d4770d690e2e7f44c9a912006baac9eafbb6af6035d2e1426642ceb",
+          "bytes": 21544,
+          "mode": 493,
+          "component": "webtest-tool",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "57c59dd87c47e8807a10440ca6ed73ea4a78a650"
+        },
+        {
+          "path": "binaries/webtest-tool/webtestctl-v0.1.1-linux-armv7a",
+          "sha256": "98cbe08bde2a1b2cd6fe9719f1eb32bf73a477ff05d01f2cd1bc7b04678fae1d",
+          "bytes": 21536,
+          "mode": 493,
+          "component": "webtest-tool",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "57c59dd87c47e8807a10440ca6ed73ea4a78a650"
+        },
+        {
+          "path": "binaries/webtest-tool/webtestctl-v0.1.1-linux-armv7hf",
+          "sha256": "440a26eda7df30a5c2e1ec6168e2d6a4385297d8b4b6d0b1a3d8a98c31d4a7df",
+          "bytes": 21128,
+          "mode": 493,
+          "component": "webtest-tool",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "57c59dd87c47e8807a10440ca6ed73ea4a78a650"
+        },
+        {
+          "path": "binaries/webtest-tool/webtestctl-v0.1.1-linux-x86_64",
+          "sha256": "5756b9a51567fda6dcad9fb8c50b1d145b20623f132894e49e5a8a6e0e767de5",
+          "bytes": 32976,
+          "mode": 493,
+          "component": "webtest-tool",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "57c59dd87c47e8807a10440ca6ed73ea4a78a650"
+        },
+        {
+          "path": "binaries/xapi-tool/README.md",
+          "sha256": "1063c4c7ad8330be82370cf8885b7e3520e58fda0ed513628973e8b4e0bcd5fd",
+          "bytes": 567,
+          "mode": 420,
+          "component": "xapi-tool",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "5e6d726aae371b370d07da10e4d004f927026916"
+        },
+        {
+          "path": "binaries/xapi-tool/SHA256SUMS-v0.1.0",
+          "sha256": "25867ed04791e5eed5bf8c97dfecd0ee31280c5fde6213dda712d3a5c7317aef",
+          "bytes": 386,
+          "mode": 420,
+          "component": "xapi-tool",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "5e6d726aae371b370d07da10e4d004f927026916"
+        },
+        {
+          "path": "binaries/xapi-tool/SHA256SUMS-v0.2.0",
+          "sha256": "6768fa85b5fc49375b09fc48e2d963266db54244e2af03098a182d124eebda08",
+          "bytes": 386,
+          "mode": 420,
+          "component": "xapi-tool",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "5e6d726aae371b370d07da10e4d004f927026916"
+        },
+        {
+          "path": "binaries/xapi-tool/SHA256SUMS-v0.2.1",
+          "sha256": "de91def52b672e863f22345ca7686e66d772861b8f4ccbdf1ebfe6d8b033deb8",
+          "bytes": 386,
+          "mode": 420,
+          "component": "xapi-tool",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "5e6d726aae371b370d07da10e4d004f927026916"
+        },
+        {
+          "path": "binaries/xapi-tool/xapi-tool-v0.2.1-linux-aarch64",
+          "sha256": "846e0ca938037e51d92218c8fd5e5a581c0e152775c14c33bd5701dd40584a6a",
+          "bytes": 55656,
+          "mode": 493,
+          "component": "xapi-tool",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "5e6d726aae371b370d07da10e4d004f927026916"
+        },
+        {
+          "path": "binaries/xapi-tool/xapi-tool-v0.2.1-linux-armv7a",
+          "sha256": "0983edb385ea41aff10c5bb6260557b0a763bd68a7a8deab21682f54fc6ae316",
+          "bytes": 54152,
+          "mode": 493,
+          "component": "xapi-tool",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "5e6d726aae371b370d07da10e4d004f927026916"
+        },
+        {
+          "path": "binaries/xapi-tool/xapi-tool-v0.2.1-linux-armv7hf",
+          "sha256": "77698fe220f7eb18d67822bbe64845d47c1e00a1b26a4f2e258d13ac2eb289ee",
+          "bytes": 54444,
+          "mode": 493,
+          "component": "xapi-tool",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "5e6d726aae371b370d07da10e4d004f927026916"
+        },
+        {
+          "path": "binaries/xapi-tool/xapi-tool-v0.2.1-linux-x86_64",
+          "sha256": "2d10093690b2991f884a7026de422c7b42c5588e87c0c7d3bb06dacd1eb1a7bf",
+          "bytes": 56832,
+          "mode": 493,
+          "component": "xapi-tool",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "5e6d726aae371b370d07da10e4d004f927026916"
+        },
+        {
+          "path": "binaries/xray/.gitignore",
+          "sha256": "4f9818ee646b0238b79fb3f9b3b8427dd73a78d447c0f1508c4f3e9d95203512",
+          "bytes": 12,
+          "mode": 420,
+          "component": "xray",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "binaries/xray/1.5.5/md5sum.txt",
+          "sha256": "a6db858754c35252fe4420f77f910bf09c22c5b3eed02b15579f7b6b81a3ae6b",
+          "bytes": 90,
+          "mode": 420,
+          "component": "xray",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "binaries/xray/REAMME.md",
+          "sha256": "0f288e781fcc05ac156ecfafd1c5eab4f0ecc9b273540a8a5f02a5bb2b1239bd",
+          "bytes": 2046,
+          "mode": 420,
+          "component": "xray",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "binaries/xray/get_latest.sh",
+          "sha256": "f13f49b02c0df0b44637dc43b87003571d05e785f752084c59e9c758969ce55f",
+          "bytes": 435,
+          "mode": 493,
+          "component": "xray",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "binaries/xray/latest.txt",
+          "sha256": "e54e3d12134590747d8c45262ec2b7f56f527923920c7e067726978350cbbe4c",
+          "bytes": 6,
+          "mode": 420,
+          "component": "xray",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "binaries/xray/latest_2.txt",
+          "sha256": "3bf5681feb7b7574fef814c66df9458044a3c75e2388939602916a92e140638f",
+          "bytes": 15,
+          "mode": 420,
+          "component": "xray",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "binaries/xray/latest_2_main.txt",
+          "sha256": "298c5321b084e7fe4a62e78aabebeed156ae371eb16d18624817236f83251be4",
+          "bytes": 7,
+          "mode": 420,
+          "component": "xray",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "binaries/xray/make_latest.sh",
+          "sha256": "68f86c0ce14d8af3cbd6dfddd69f2744f46a67d3e4c5b0d84d1de6486ffb7896",
+          "bytes": 4543,
+          "mode": 493,
+          "component": "xray",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "binaries/xray/v1.5.5/md5sum.txt",
+          "sha256": "7df802ee7d9c831c7ad7752eb76f7cb77cc11b2c1008f0b23463b4fb2b57a22f",
+          "bytes": 135,
+          "mode": 420,
+          "component": "xray",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "binaries/xray/v1.6.0/md5sum.txt",
+          "sha256": "9ccdae4361b4e34d716b9f4739addddfabfacc8ff41c5da1e7962930cccd5c97",
+          "bytes": 135,
+          "mode": 420,
+          "component": "xray",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "binaries/xray/v1.7.3/md5sum.txt",
+          "sha256": "9852cb2cf2ff4f9f70ba372df2c154ecab4264c4d0c07a31e56f9a238fca7488",
+          "bytes": 135,
+          "mode": 420,
+          "component": "xray",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "binaries/xray/v1.7.5/md5sum.txt",
+          "sha256": "4d1a87f6e509ff39fb15deee0e300dcc2ddea547a825605b95bda30160ad555a",
+          "bytes": 135,
+          "mode": 420,
+          "component": "xray",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "binaries/xray/v1.8.1/md5sum.txt",
+          "sha256": "cc1dc75ed47eecdef32b544f352b625b693f3e87dfb89e0bb18e50f9aa1f8688",
+          "bytes": 135,
+          "mode": 420,
+          "component": "xray",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "binaries/xray/v1.8.10/md5sum.txt",
+          "sha256": "133f5dc3f3e7424de1c332d29e6d4d79ccb9f98ae527380aa74068d060579278",
+          "bytes": 135,
+          "mode": 420,
+          "component": "xray",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "binaries/xray/v1.8.11/md5sum.txt",
+          "sha256": "5cd4d8849507ea678c674b27424b6996f52f350401504b063c1ed77ce8fcd05d",
+          "bytes": 135,
+          "mode": 420,
+          "component": "xray",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "binaries/xray/v1.8.23/md5sum.txt",
+          "sha256": "10c24c08b8a870e8b5ee11a0990511e4abc24d5f06e944f1d743c0bee2a51a25",
+          "bytes": 135,
+          "mode": 420,
+          "component": "xray",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "binaries/xray/v1.8.3/md5sum.txt",
+          "sha256": "7550958f53c15afb821535bdf8e55d10df716b885dcb7c2d3d7e6ec26a2b670a",
+          "bytes": 135,
+          "mode": 420,
+          "component": "xray",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "binaries/xray/v1.8.7/md5sum.txt",
+          "sha256": "191af03f48681da2d8df218c161b936790677f0e4ccc172e72c81b78bd031a69",
+          "bytes": 135,
+          "mode": 420,
+          "component": "xray",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "binaries/xray/v24.11.30/md5sum.txt",
+          "sha256": "c55646f76543c42a5c29cd082a6152b09f47fffe2d3879e8017512a99db78b06",
+          "bytes": 135,
+          "mode": 420,
+          "component": "xray",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "binaries/xray/v24.9.30/md5sum.txt",
+          "sha256": "f5fc887e3a7cac39be8ee6f045c5a7f918718e2e1ffe3d8c5db9b0af3542d43e",
+          "bytes": 135,
+          "mode": 420,
+          "component": "xray",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "binaries/xray/v25.12.8/md5sum.txt",
+          "sha256": "1772cab140b491ca0651cbfd4f2b0ef01d633e529c5be026e4f63ba45a364950",
+          "bytes": 135,
+          "mode": 420,
+          "component": "xray",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "binaries/xray/v26.1.13-a384be0/md5sum.txt",
+          "sha256": "2fbe651706ae634a756046c79ca95e3c3d4e626dae476c4057d3bced74ea661a",
+          "bytes": 135,
+          "mode": 420,
+          "component": "xray",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "binaries/xray/v26.1.13/md5sum.txt",
+          "sha256": "2227b397c94fdf80a5e960653ae058fa448cc24b98584153e61d58b5a38bb254",
+          "bytes": 135,
+          "mode": 420,
+          "component": "xray",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "binaries/xray/v26.1.18-2d2102f/md5sum.txt",
+          "sha256": "3d2a386fa801b5358f331ee5b9348a713d30f8e210b8b2893547dc79d4b039e7",
+          "bytes": 135,
+          "mode": 420,
+          "component": "xray",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "binaries/xray/v26.1.18-7ff06f6/md5sum.txt",
+          "sha256": "6316ca7c691b21644fed893806f2ced7b4729bd771a0a7b2e59069173816c63f",
+          "bytes": 135,
+          "mode": 420,
+          "component": "xray",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "binaries/xray/v26.1.23-f1aee0b/md5sum.txt",
+          "sha256": "07afab682e967ab46827a657b460e0ab6391afbd6edd9139bd2a4455cf5fea47",
+          "bytes": 135,
+          "mode": 420,
+          "component": "xray",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "binaries/xray/v26.1.23/md5sum.txt",
+          "sha256": "5b3a4b0ad2a8ea96a1880d6830cd438321815fc33c6dd0e356306121a88f5889",
+          "bytes": 135,
+          "mode": 420,
+          "component": "xray",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "binaries/xray/v26.2.4/md5sum.txt",
+          "sha256": "ee0f71568de8b05b1b616d1422c58a1475e7ab9328142f309d062bba127c75b9",
+          "bytes": 135,
+          "mode": 420,
+          "component": "xray",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "binaries/xray/v26.2.6/md5sum.txt",
+          "sha256": "e1b28502111063e45b1410ef81f994a4aa570e1cfcc2edb6b1880ad2f780a424",
+          "bytes": 135,
+          "mode": 420,
+          "component": "xray",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "binaries/xray/v26.3.27-d2758a0/md5sum.txt",
+          "sha256": "6c4a1a1a88c5b2d2a6186ffdf413933dce2744890dfa0ac45be15b742a09ee8d",
+          "bytes": 135,
+          "mode": 420,
+          "component": "xray",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "binaries/xray/v26.5.9-1bdb488/md5sum.txt",
+          "sha256": "0ca729cc4e5020024fc5e9142423e226b98373527c1e764403ba5d95baf8bed0",
+          "bytes": 135,
+          "mode": 420,
+          "component": "xray",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "binaries/xray/v26.6.1-94ffd50/md5sum.txt",
+          "sha256": "d9556dd7aae0f9ec6c4adde93bf43de39501e4e1439280affc1d89bf2d602115",
+          "bytes": 135,
+          "mode": 420,
+          "component": "xray",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "binaries/xray/v26.6.1-94ffd50/xray_arm64",
+          "sha256": "4f0ca4b54f721571154f73c63e5b5bda3ac0852e15cb7c23f92dff9dbe35ca7d",
+          "bytes": 7169656,
+          "mode": 493,
+          "component": "xray",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "binaries/xray/v26.6.1-94ffd50/xray_armv5",
+          "sha256": "cb9905345f367bde328dbae54b70f312a19c890228421cc242ffba5989c2cf40",
+          "bytes": 7069420,
+          "mode": 493,
+          "component": "xray",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "binaries/xray/v26.6.1-94ffd50/xray_armv7",
+          "sha256": "7be4bd98500d271a201199dcb7ae139ba3a5b5f439c60a096e3194751fd45382",
+          "bytes": 7056344,
+          "mode": 493,
+          "component": "xray",
+          "platform": "component-specific",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "fancyss/bin-arm/anytls-zig",
+          "sha256": "67dcccb1a6acab6542dd3474f3e7259a15ccdc0d7cc7bebc1291c7a817b18f20",
+          "bytes": 221980,
+          "mode": 493,
+          "component": "anytls-zig",
+          "platform": "arm",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "e491daa9930717f4235e78707b6654ddfdd896e8"
+        },
+        {
+          "path": "fancyss/bin-arm/chinadns-ng",
+          "sha256": "becb403bc4928b3c467d892db65302bded0abfbaef5fceeae4c7ce1bc2cc0bbe",
+          "bytes": 301776,
+          "mode": 493,
+          "component": "chinadns-ng",
+          "platform": "arm",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "fancyss/bin-arm/curl-fancyss",
+          "sha256": "471160a60229cb5e1ec1943df6700d543074a3b37741a3963db50b16ebcc91b3",
+          "bytes": 117966,
+          "mode": 493,
+          "component": "curl-fancyss",
+          "platform": "arm",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "fancyss/bin-arm/dnsclient",
+          "sha256": "d571a1adf41d2665f6284c4d0776889859531815f4427881853d9f2ad36e436b",
+          "bytes": 7968,
+          "mode": 493,
+          "component": "dnsclient",
+          "platform": "arm",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "fancyss/bin-arm/geotool",
+          "sha256": "ba09d1f7c22bbdb4b7a5c9e5adcb42dd110ab5b413268f7cf4fd682839474904",
+          "bytes": 39916,
+          "mode": 493,
+          "component": "geotool",
+          "platform": "arm",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "6313740582c5a92354445e5281dfea964b2906fa"
+        },
+        {
+          "path": "fancyss/bin-arm/haveged",
+          "sha256": "3aeb997ebb7e2e720ad3b3867c837a954425b68156f5e9d81bd3a9eebe7c8e2b",
+          "bytes": 296664,
+          "mode": 493,
+          "component": "haveged",
+          "platform": "arm",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "fancyss/bin-arm/ipt2socks",
+          "sha256": "f0e188d992a8bcd8d583ccff10879c54d5d949dfdc251ed451b3d712057a1dfe",
+          "bytes": 51492,
+          "mode": 493,
+          "component": "ipt2socks",
+          "platform": "arm",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "fancyss/bin-arm/isutf8",
+          "sha256": "22caaa3ae624fad34e5745ad046bcd318ae8e7a78bd074c8ee31c81143947045",
+          "bytes": 8692,
+          "mode": 493,
+          "component": "isutf8",
+          "platform": "arm",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "fancyss/bin-arm/jq",
+          "sha256": "82c8026a287d8772e5e027c9b1839531c0e52679287a222287c50f315f389061",
+          "bytes": 280772,
+          "mode": 493,
+          "component": "jq",
+          "platform": "arm",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "fancyss/bin-arm/naive",
+          "sha256": "6fa5d7d269bfe83e18e939305d779bab428c072cc9bc217e5bb4658c61c526b1",
+          "bytes": 3458468,
+          "mode": 493,
+          "component": "naive",
+          "platform": "arm",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "fancyss/bin-arm/node-tool",
+          "sha256": "7e2e800bd90379c36c5c93f8922807fb9dfaa2876cee58c8a7c9087b25fbb848",
+          "bytes": 192760,
+          "mode": 493,
+          "component": "node-tool",
+          "platform": "arm",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "fce4b45b5d86867a14c563125ae48a59772c2310"
+        },
+        {
+          "path": "fancyss/bin-arm/obfs-local",
+          "sha256": "a97a68686112e11b3d929d4e9703f61de5be8c9501534e400d2d983053214bd3",
+          "bytes": 361192,
+          "mode": 493,
+          "component": "obfs-local",
+          "platform": "arm",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "fancyss/bin-arm/rss-local",
+          "sha256": "91017a03d6ff6680f87cd0a7e434358b9e4473a8b9e5e3c417499ed96fe69c2b",
+          "bytes": 528904,
+          "mode": 493,
+          "component": "rss-local",
+          "platform": "arm",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "fancyss/bin-arm/rss-redir",
+          "sha256": "535de614e2364d4ba444f27d6fad7a57387e5abce31059efc5262857402a4e83",
+          "bytes": 519624,
+          "mode": 493,
+          "component": "rss-redir",
+          "platform": "arm",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "fancyss/bin-arm/smartdns",
+          "sha256": "7cb3b7b90a2c4f3f8224e43a12e71a72f3dbadf09f5db55708ef2a81815d739e",
+          "bytes": 1359352,
+          "mode": 493,
+          "component": "smartdns",
+          "platform": "arm",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "fancyss/bin-arm/sponge",
+          "sha256": "a6433a9ed7a0f63469152ed8bbf829774f937cccc37b830290ecf0d5cdeaeb4a",
+          "bytes": 6356,
+          "mode": 493,
+          "component": "sponge",
+          "platform": "arm",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "fancyss/bin-arm/status-tool",
+          "sha256": "3c5626708f72d20484ae627b399cab3f6c700de912e1942a4f635c43078420c0",
+          "bytes": 90372,
+          "mode": 493,
+          "component": "status-tool",
+          "platform": "arm",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "04efc90e4610b98f0b04431931551b1264f2da87"
+        },
+        {
+          "path": "fancyss/bin-arm/statusctl",
+          "sha256": "961196b9ab7eb4ab5d0987eee0f1bacbb145352b8ea46c775a80513b1742ef3d",
+          "bytes": 19916,
+          "mode": 493,
+          "component": "statusctl",
+          "platform": "arm",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "fancyss/bin-arm/sub-tool",
+          "sha256": "1782e1d092529b2433390414127a92d9d208d6e9f2997bf0c07b78c07e68a178",
+          "bytes": 106916,
+          "mode": 493,
+          "component": "sub-tool",
+          "platform": "arm",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "eb0d48b9f392db5a5237a343723354020770a6fd"
+        },
+        {
+          "path": "fancyss/bin-arm/tuic-client",
+          "sha256": "3cd411cac1497d5cb2c4a494c95f4cfd65c79aab9bae92d26b2c7d61ebe5a7bc",
+          "bytes": 1160152,
+          "mode": 493,
+          "component": "tuic-client",
+          "platform": "arm",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "fancyss/bin-arm/websocketd",
+          "sha256": "f7b5fb023668e4a6e24bb63769c9ccd29b2298cf1db36e18037982c51e8477bf",
+          "bytes": 47392,
+          "mode": 493,
+          "component": "websocketd",
+          "platform": "arm",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "fancyss/bin-arm/webtest-tool",
+          "sha256": "96177bfd20445b458bea75efabea1d4639c6de2a7c4106d8a2ce811bd7c2fb71",
+          "bytes": 76244,
+          "mode": 493,
+          "component": "webtest-tool",
+          "platform": "arm",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "57c59dd87c47e8807a10440ca6ed73ea4a78a650"
+        },
+        {
+          "path": "fancyss/bin-arm/webtestctl",
+          "sha256": "2276afd95d4770d690e2e7f44c9a912006baac9eafbb6af6035d2e1426642ceb",
+          "bytes": 21544,
+          "mode": 493,
+          "component": "webtestctl",
+          "platform": "arm",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "fancyss/bin-arm/xray",
+          "sha256": "cb9905345f367bde328dbae54b70f312a19c890228421cc242ffba5989c2cf40",
+          "bytes": 7069420,
+          "mode": 493,
+          "component": "xray",
+          "platform": "arm",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "fancyss/bin-hnd/anytls-zig",
+          "sha256": "bfd4f71511290eae886f172803e295239a59e8cc5e35f68f527c630f66bfc265",
+          "bytes": 197908,
+          "mode": 493,
+          "component": "anytls-zig",
+          "platform": "hnd",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "e491daa9930717f4235e78707b6654ddfdd896e8"
+        },
+        {
+          "path": "fancyss/bin-hnd/chinadns-ng",
+          "sha256": "2b228c49d971386fb91182d160c6af39516c2ef94bd5631851952747a3ca1dd6",
+          "bytes": 291484,
+          "mode": 493,
+          "component": "chinadns-ng",
+          "platform": "hnd",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "fancyss/bin-hnd/curl-fancyss",
+          "sha256": "07c8f98b3564853470024e824aea8b8807a129af2dd04597b30305cc3b936ba3",
+          "bytes": 286268,
+          "mode": 493,
+          "component": "curl-fancyss",
+          "platform": "hnd",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "fancyss/bin-hnd/dnsclient",
+          "sha256": "4a77ccf591840d286e4550f752e26a6177ee71c389a53d0fc272c12fbbe1ff68",
+          "bytes": 9944,
+          "mode": 493,
+          "component": "dnsclient",
+          "platform": "hnd",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "fancyss/bin-hnd/geotool",
+          "sha256": "59964095abf0d96e217379f297a4fb85ffd83a92c58b3312fb7d656059cb8021",
+          "bytes": 40564,
+          "mode": 493,
+          "component": "geotool",
+          "platform": "hnd",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "6313740582c5a92354445e5281dfea964b2906fa"
+        },
+        {
+          "path": "fancyss/bin-hnd/haveged",
+          "sha256": "379745b128ee93838164ef0c656ec9150f22fc6b072034eeec22fb1baf401e82",
+          "bytes": 285244,
+          "mode": 493,
+          "component": "haveged",
+          "platform": "hnd",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "fancyss/bin-hnd/ipt2socks",
+          "sha256": "067b0fde8c25718ce725447fc0ad1be914bc9f3a16b962b7a1fc74997016e838",
+          "bytes": 50048,
+          "mode": 493,
+          "component": "ipt2socks",
+          "platform": "hnd",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "fancyss/bin-hnd/isutf8",
+          "sha256": "bebf4b78ec130fa1094bd6d07949115ecd9f1365f4f88a611a9483e06dfa8d64",
+          "bytes": 9132,
+          "mode": 493,
+          "component": "isutf8",
+          "platform": "hnd",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "fancyss/bin-hnd/jq",
+          "sha256": "82c8026a287d8772e5e027c9b1839531c0e52679287a222287c50f315f389061",
+          "bytes": 280772,
+          "mode": 493,
+          "component": "jq",
+          "platform": "hnd",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "fancyss/bin-hnd/naive",
+          "sha256": "f44abd0d31f36c6e2333098413f3547e9b10d342bb8b63ec177152e24bd9cc4b",
+          "bytes": 3459428,
+          "mode": 493,
+          "component": "naive",
+          "platform": "hnd",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "fancyss/bin-hnd/node-tool",
+          "sha256": "b47164cb4734aaf39d9d24f983ad88a679b891ce300b368d71208072539da1bd",
+          "bytes": 561124,
+          "mode": 493,
+          "component": "node-tool",
+          "platform": "hnd",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "fce4b45b5d86867a14c563125ae48a59772c2310"
+        },
+        {
+          "path": "fancyss/bin-hnd/obfs-local",
+          "sha256": "f6da5310c2522b6efe608cd5ef7508a7ea0d8a3bc729b43d345cf78ef7f9dab8",
+          "bytes": 41412,
+          "mode": 493,
+          "component": "obfs-local",
+          "platform": "hnd",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "fancyss/bin-hnd/rss-local",
+          "sha256": "da9e639f7d3eab71db9887dead3f6a1eecb7248842a71ff8a442dbe7b67a61d3",
+          "bytes": 220756,
+          "mode": 493,
+          "component": "rss-local",
+          "platform": "hnd",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "fancyss/bin-hnd/rss-redir",
+          "sha256": "27873400edf2c1383e024f02ffd5e1ac54a8620cd0738e2ee8a2292b23f5caa0",
+          "bytes": 214468,
+          "mode": 493,
+          "component": "rss-redir",
+          "platform": "hnd",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "fancyss/bin-hnd/smartdns",
+          "sha256": "9d4500066928fa2845e63e7019b83121a5f0b6076a83f639008d9ff1bea484ee",
+          "bytes": 1360324,
+          "mode": 493,
+          "component": "smartdns",
+          "platform": "hnd",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "fancyss/bin-hnd/sponge",
+          "sha256": "0607b4e1722e6770adce3e01536560851f6ad9c55211b3e715263e8bc1a901c6",
+          "bytes": 7752,
+          "mode": 493,
+          "component": "sponge",
+          "platform": "hnd",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "fancyss/bin-hnd/status-tool",
+          "sha256": "0b343d548170ce9cdd9a9e44f37d6c432892e224e4b8c462c51c423955e110e5",
+          "bytes": 90544,
+          "mode": 493,
+          "component": "status-tool",
+          "platform": "hnd",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "04efc90e4610b98f0b04431931551b1264f2da87"
+        },
+        {
+          "path": "fancyss/bin-hnd/statusctl",
+          "sha256": "fe2584dbfa304ac564348cdfc60be159eb1f6bc83baff879271e278ac70bac28",
+          "bytes": 20480,
+          "mode": 493,
+          "component": "statusctl",
+          "platform": "hnd",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "fancyss/bin-hnd/sub-tool",
+          "sha256": "71261b993ad1893713a3ab82d0c7da5326ad18d68a7a59ba6fb0747295b1969e",
+          "bytes": 106188,
+          "mode": 493,
+          "component": "sub-tool",
+          "platform": "hnd",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "eb0d48b9f392db5a5237a343723354020770a6fd"
+        },
+        {
+          "path": "fancyss/bin-hnd/tuic-client",
+          "sha256": "3cd411cac1497d5cb2c4a494c95f4cfd65c79aab9bae92d26b2c7d61ebe5a7bc",
+          "bytes": 1160152,
+          "mode": 493,
+          "component": "tuic-client",
+          "platform": "hnd",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "fancyss/bin-hnd/websocketd",
+          "sha256": "efb4d5f8ac9254527496d0ddc1dab1b3573af40f9861b97e547c60d7b0d34ca4",
+          "bytes": 48760,
+          "mode": 493,
+          "component": "websocketd",
+          "platform": "hnd",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "fancyss/bin-hnd/webtest-tool",
+          "sha256": "e4dbcecd1f5a90bfe164ac68a75f8874bbfdcfb836f9a57ef614afa967e6a8a8",
+          "bytes": 75524,
+          "mode": 493,
+          "component": "webtest-tool",
+          "platform": "hnd",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "57c59dd87c47e8807a10440ca6ed73ea4a78a650"
+        },
+        {
+          "path": "fancyss/bin-hnd/webtestctl",
+          "sha256": "440a26eda7df30a5c2e1ec6168e2d6a4385297d8b4b6d0b1a3d8a98c31d4a7df",
+          "bytes": 21128,
+          "mode": 493,
+          "component": "webtestctl",
+          "platform": "hnd",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "fancyss/bin-hnd/xapi-tool",
+          "sha256": "77698fe220f7eb18d67822bbe64845d47c1e00a1b26a4f2e258d13ac2eb289ee",
+          "bytes": 54444,
+          "mode": 493,
+          "component": "xapi-tool",
+          "platform": "hnd",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "5e6d726aae371b370d07da10e4d004f927026916"
+        },
+        {
+          "path": "fancyss/bin-hnd/xray",
+          "sha256": "7be4bd98500d271a201199dcb7ae139ba3a5b5f439c60a096e3194751fd45382",
+          "bytes": 7056344,
+          "mode": 493,
+          "component": "xray",
+          "platform": "hnd",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "fancyss/bin-hnd_v8/anytls-zig",
+          "sha256": "7c693b4c9db8b7b42567d662c5e0fd320ad8ae46589aa347304959ceef8b7d2b",
+          "bytes": 169672,
+          "mode": 493,
+          "component": "anytls-zig",
+          "platform": "hnd_v8",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "e491daa9930717f4235e78707b6654ddfdd896e8"
+        },
+        {
+          "path": "fancyss/bin-hnd_v8/chinadns-ng",
+          "sha256": "9bf214cf2a406a2756f7c2e331ff29669a2a8962a299ef4c26e237ab34cc03d0",
+          "bytes": 300504,
+          "mode": 493,
+          "component": "chinadns-ng",
+          "platform": "hnd_v8",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "fancyss/bin-hnd_v8/curl-fancyss",
+          "sha256": "5339ccb35d35db092c44b80db82462d90041cc76066029b3ae732a267053e9e3",
+          "bytes": 1233876,
+          "mode": 493,
+          "component": "curl-fancyss",
+          "platform": "hnd_v8",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "fancyss/bin-hnd_v8/dnsclient",
+          "sha256": "4a77ccf591840d286e4550f752e26a6177ee71c389a53d0fc272c12fbbe1ff68",
+          "bytes": 9944,
+          "mode": 493,
+          "component": "dnsclient",
+          "platform": "hnd_v8",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "fancyss/bin-hnd_v8/geotool",
+          "sha256": "32dcdcd7ad7f8fe8586e82ff1874ab9ccfaffe345f4882cdcd9db03a773cfaa4",
+          "bytes": 40824,
+          "mode": 493,
+          "component": "geotool",
+          "platform": "hnd_v8",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "6313740582c5a92354445e5281dfea964b2906fa"
+        },
+        {
+          "path": "fancyss/bin-hnd_v8/haveged",
+          "sha256": "73e01d22f9f71c86546c956fc0ba16b91da2881e206e010bc88551076f54c642",
+          "bytes": 62632,
+          "mode": 493,
+          "component": "haveged",
+          "platform": "hnd_v8",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "fancyss/bin-hnd_v8/ipt2socks",
+          "sha256": "dbcceb1d5cee74a223b1337efc38807da78353996cd0e921ad8061a54b297eef",
+          "bytes": 53948,
+          "mode": 493,
+          "component": "ipt2socks",
+          "platform": "hnd_v8",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "fancyss/bin-hnd_v8/isutf8",
+          "sha256": "e109f6bb364662ad9f49973b7c42345c9062fde538041088bac26a00814c6fe8",
+          "bytes": 7768,
+          "mode": 493,
+          "component": "isutf8",
+          "platform": "hnd_v8",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "fancyss/bin-hnd_v8/jq",
+          "sha256": "8152e36353833225659f824bf3a158e9fde76e8a88b645c90ff80cd6ab41ec81",
+          "bytes": 242952,
+          "mode": 493,
+          "component": "jq",
+          "platform": "hnd_v8",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "fancyss/bin-hnd_v8/naive",
+          "sha256": "42581277a813c688ce3d29566b7545686b923783437bfbfc62a2acf0dd8e18e4",
+          "bytes": 3268916,
+          "mode": 493,
+          "component": "naive",
+          "platform": "hnd_v8",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "fancyss/bin-hnd_v8/node-tool",
+          "sha256": "dbc114d3ca41058e6ce2fda20cec89eaa667b7903d9a5a8e3e97a9fc2f532a57",
+          "bytes": 193504,
+          "mode": 493,
+          "component": "node-tool",
+          "platform": "hnd_v8",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "fce4b45b5d86867a14c563125ae48a59772c2310"
+        },
+        {
+          "path": "fancyss/bin-hnd_v8/obfs-local",
+          "sha256": "d5470fd8b4f15c8be3f709bba7fb2d958d82aff5fb247dc3bd525564e3a26e4a",
+          "bytes": 90976,
+          "mode": 493,
+          "component": "obfs-local",
+          "platform": "hnd_v8",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "fancyss/bin-hnd_v8/rss-local",
+          "sha256": "fdf025273721e9d82405770e39e64a0144bf9088dd00b8b960d9c840624cc97a",
+          "bytes": 296896,
+          "mode": 493,
+          "component": "rss-local",
+          "platform": "hnd_v8",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "fancyss/bin-hnd_v8/rss-redir",
+          "sha256": "4152dbcebf800ab25eb8023f8bdd4c9c99f33ff98398b0ba5508fa4cc5e3232b",
+          "bytes": 285360,
+          "mode": 493,
+          "component": "rss-redir",
+          "platform": "hnd_v8",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "fancyss/bin-hnd_v8/smartdns",
+          "sha256": "2aa39288fcb5e95518cfcb38904c38483525d0b2d5d6dbab371c63b281d630f9",
+          "bytes": 1444932,
+          "mode": 493,
+          "component": "smartdns",
+          "platform": "hnd_v8",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "fancyss/bin-hnd_v8/sponge",
+          "sha256": "b9fa00f1a6fc5e0cd44086344fcaa0af152167a81d6e4debd7ca6bdbacd67e43",
+          "bytes": 7248,
+          "mode": 493,
+          "component": "sponge",
+          "platform": "hnd_v8",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "fancyss/bin-hnd_v8/status-tool",
+          "sha256": "3a4f49c8fbaf0bd4ed85812a735c4ad58541368c0a9856429c01e1a64f34c64c",
+          "bytes": 94400,
+          "mode": 493,
+          "component": "status-tool",
+          "platform": "hnd_v8",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "04efc90e4610b98f0b04431931551b1264f2da87"
+        },
+        {
+          "path": "fancyss/bin-hnd_v8/statusctl",
+          "sha256": "2b9a1ef75d9fd15644d27e54d83130a5c4ee48cd4d7acd5dd85d0d8fe3e9ebe0",
+          "bytes": 21864,
+          "mode": 493,
+          "component": "statusctl",
+          "platform": "hnd_v8",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "fancyss/bin-hnd_v8/sub-tool",
+          "sha256": "2e406d1cd35b3e5120420cd5f366f7121d293891f048b9a0c5b2cbe233d070db",
+          "bytes": 106856,
+          "mode": 493,
+          "component": "sub-tool",
+          "platform": "hnd_v8",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "eb0d48b9f392db5a5237a343723354020770a6fd"
+        },
+        {
+          "path": "fancyss/bin-hnd_v8/tuic-client",
+          "sha256": "d2b0c8a65b9fea9dfbeb838c33bc64a1507377990f049b78540c84b6c4d34ffa",
+          "bytes": 1795208,
+          "mode": 493,
+          "component": "tuic-client",
+          "platform": "hnd_v8",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "fancyss/bin-hnd_v8/websocketd",
+          "sha256": "fefa27adaad2eb8b1dbbd6a219ffe06f9be770264161c35f568a2027179fcdf9",
+          "bytes": 51296,
+          "mode": 493,
+          "component": "websocketd",
+          "platform": "hnd_v8",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "fancyss/bin-hnd_v8/webtest-tool",
+          "sha256": "22d0c4bf57a5eec501ef0d4341812e515175c309ebf127dd5d43917cb02ff9c4",
+          "bytes": 78420,
+          "mode": 493,
+          "component": "webtest-tool",
+          "platform": "hnd_v8",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "57c59dd87c47e8807a10440ca6ed73ea4a78a650"
+        },
+        {
+          "path": "fancyss/bin-hnd_v8/webtestctl",
+          "sha256": "7854340ceb320b66c0079b0a9c802a715181909e5cfd4e6e98dbb6d896fd4fb7",
+          "bytes": 21992,
+          "mode": 493,
+          "component": "webtestctl",
+          "platform": "hnd_v8",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "fancyss/bin-hnd_v8/xapi-tool",
+          "sha256": "846e0ca938037e51d92218c8fd5e5a581c0e152775c14c33bd5701dd40584a6a",
+          "bytes": 55656,
+          "mode": 493,
+          "component": "xapi-tool",
+          "platform": "hnd_v8",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "5e6d726aae371b370d07da10e4d004f927026916"
+        },
+        {
+          "path": "fancyss/bin-hnd_v8/xray",
+          "sha256": "4f0ca4b54f721571154f73c63e5b5bda3ac0852e15cb7c23f92dff9dbe35ca7d",
+          "bytes": 7169656,
+          "mode": 493,
+          "component": "xray",
+          "platform": "hnd_v8",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "fancyss/bin-ipq32/README.md",
+          "sha256": "fed571d0952badc2f7dd7b3d3d63da4f0d93cea30d3e43a43310e2f2cb87df25",
+          "bytes": 4389,
+          "mode": 493,
+          "component": "README.md",
+          "platform": "ipq32",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "fancyss/bin-ipq32/anytls-zig",
+          "sha256": "32eb3b3d9009b4105655e5800449fb463a5d0000fc6265ca9a511dcb9d63907a",
+          "bytes": 222944,
+          "mode": 493,
+          "component": "anytls-zig",
+          "platform": "ipq32",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "e491daa9930717f4235e78707b6654ddfdd896e8"
+        },
+        {
+          "path": "fancyss/bin-ipq32/chinadns-ng",
+          "sha256": "2b228c49d971386fb91182d160c6af39516c2ef94bd5631851952747a3ca1dd6",
+          "bytes": 291484,
+          "mode": 493,
+          "component": "chinadns-ng",
+          "platform": "ipq32",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "fancyss/bin-ipq32/curl-fancyss",
+          "sha256": "332956e9775013e49400ebfa3562c20d798a6d69079d29552fa4875c0ede2efa",
+          "bytes": 1246592,
+          "mode": 493,
+          "component": "curl-fancyss",
+          "platform": "ipq32",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "fancyss/bin-ipq32/dnsclient",
+          "sha256": "7c2c9b7c5494355be5877b35cbbdaa0776d82dc59ec57b009b2f63d47840b452",
+          "bytes": 13692,
+          "mode": 493,
+          "component": "dnsclient",
+          "platform": "ipq32",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "fancyss/bin-ipq32/geotool",
+          "sha256": "b710db14d2567248a9a7435bf0d7d7ac546ae70fe1915d2d0f35d0787e4eaefd",
+          "bytes": 40144,
+          "mode": 493,
+          "component": "geotool",
+          "platform": "ipq32",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "6313740582c5a92354445e5281dfea964b2906fa"
+        },
+        {
+          "path": "fancyss/bin-ipq32/haveged",
+          "sha256": "3144b4ed543b6e767c2d597df84327028e02737fab283902d4a9f6bfa2ffae52",
+          "bytes": 25428,
+          "mode": 493,
+          "component": "haveged",
+          "platform": "ipq32",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "fancyss/bin-ipq32/ipt2socks",
+          "sha256": "067b0fde8c25718ce725447fc0ad1be914bc9f3a16b962b7a1fc74997016e838",
+          "bytes": 50048,
+          "mode": 493,
+          "component": "ipt2socks",
+          "platform": "ipq32",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "fancyss/bin-ipq32/isutf8",
+          "sha256": "fde5f84b1cae6901f7e76283ae2bc2736195c4b712bd2bd45c5017e3aea2077d",
+          "bytes": 9556,
+          "mode": 493,
+          "component": "isutf8",
+          "platform": "ipq32",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "fancyss/bin-ipq32/jq",
+          "sha256": "82c8026a287d8772e5e027c9b1839531c0e52679287a222287c50f315f389061",
+          "bytes": 280772,
+          "mode": 493,
+          "component": "jq",
+          "platform": "ipq32",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "fancyss/bin-ipq32/naive",
+          "sha256": "f44abd0d31f36c6e2333098413f3547e9b10d342bb8b63ec177152e24bd9cc4b",
+          "bytes": 3459428,
+          "mode": 493,
+          "component": "naive",
+          "platform": "ipq32",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "fancyss/bin-ipq32/node-tool",
+          "sha256": "bb46ab9dde338e47bac0ea31b842a53a65deebf2448e2c5ac94ce4d31f4cc90a",
+          "bytes": 191980,
+          "mode": 493,
+          "component": "node-tool",
+          "platform": "ipq32",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "fce4b45b5d86867a14c563125ae48a59772c2310"
+        },
+        {
+          "path": "fancyss/bin-ipq32/obfs-local",
+          "sha256": "a97a68686112e11b3d929d4e9703f61de5be8c9501534e400d2d983053214bd3",
+          "bytes": 361192,
+          "mode": 493,
+          "component": "obfs-local",
+          "platform": "ipq32",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "fancyss/bin-ipq32/rss-local",
+          "sha256": "91017a03d6ff6680f87cd0a7e434358b9e4473a8b9e5e3c417499ed96fe69c2b",
+          "bytes": 528904,
+          "mode": 493,
+          "component": "rss-local",
+          "platform": "ipq32",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "fancyss/bin-ipq32/rss-redir",
+          "sha256": "535de614e2364d4ba444f27d6fad7a57387e5abce31059efc5262857402a4e83",
+          "bytes": 519624,
+          "mode": 493,
+          "component": "rss-redir",
+          "platform": "ipq32",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "fancyss/bin-ipq32/smartdns",
+          "sha256": "9d4500066928fa2845e63e7019b83121a5f0b6076a83f639008d9ff1bea484ee",
+          "bytes": 1360324,
+          "mode": 493,
+          "component": "smartdns",
+          "platform": "ipq32",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "fancyss/bin-ipq32/sponge",
+          "sha256": "0d11e0261ddf1a5f6ceb700e5e5db6304fbe03271d587fd3401f1d726bf6164e",
+          "bytes": 9640,
+          "mode": 493,
+          "component": "sponge",
+          "platform": "ipq32",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "fancyss/bin-ipq32/status-tool",
+          "sha256": "c770a9da1c9028b7abc5171d9ed3686152e3237c6565b6e1b6a99f5b5996b667",
+          "bytes": 91336,
+          "mode": 493,
+          "component": "status-tool",
+          "platform": "ipq32",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "04efc90e4610b98f0b04431931551b1264f2da87"
+        },
+        {
+          "path": "fancyss/bin-ipq32/statusctl",
+          "sha256": "ca651cc52c15e19a0d85ef5d90d4a6a771e05945fa3cc448305077eae1bca92f",
+          "bytes": 20880,
+          "mode": 493,
+          "component": "statusctl",
+          "platform": "ipq32",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "fancyss/bin-ipq32/sub-tool",
+          "sha256": "6d98493806985c1dda155bf4502dd4bb7a5e0d954ddcc1feae1b347321e277b5",
+          "bytes": 106304,
+          "mode": 493,
+          "component": "sub-tool",
+          "platform": "ipq32",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "eb0d48b9f392db5a5237a343723354020770a6fd"
+        },
+        {
+          "path": "fancyss/bin-ipq32/tuic-client",
+          "sha256": "3cd411cac1497d5cb2c4a494c95f4cfd65c79aab9bae92d26b2c7d61ebe5a7bc",
+          "bytes": 1160152,
+          "mode": 493,
+          "component": "tuic-client",
+          "platform": "ipq32",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "fancyss/bin-ipq32/websocketd",
+          "sha256": "c3c573677163d92fe91a3b02e6eb49d448f47fac7c67c3a37147c81326d4b13f",
+          "bytes": 48356,
+          "mode": 493,
+          "component": "websocketd",
+          "platform": "ipq32",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "fancyss/bin-ipq32/webtest-tool",
+          "sha256": "6a97eb22c0b818ce2ffd633793fb55263c89f628f11f2baba6a9827a2adfa3af",
+          "bytes": 76240,
+          "mode": 493,
+          "component": "webtest-tool",
+          "platform": "ipq32",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "57c59dd87c47e8807a10440ca6ed73ea4a78a650"
+        },
+        {
+          "path": "fancyss/bin-ipq32/webtestctl",
+          "sha256": "98cbe08bde2a1b2cd6fe9719f1eb32bf73a477ff05d01f2cd1bc7b04678fae1d",
+          "bytes": 21536,
+          "mode": 493,
+          "component": "webtestctl",
+          "platform": "ipq32",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "fancyss/bin-ipq32/xapi-tool",
+          "sha256": "0983edb385ea41aff10c5bb6260557b0a763bd68a7a8deab21682f54fc6ae316",
+          "bytes": 54152,
+          "mode": 493,
+          "component": "xapi-tool",
+          "platform": "ipq32",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "5e6d726aae371b370d07da10e4d004f927026916"
+        },
+        {
+          "path": "fancyss/bin-ipq32/xray",
+          "sha256": "7be4bd98500d271a201199dcb7ae139ba3a5b5f439c60a096e3194751fd45382",
+          "bytes": 7056344,
+          "mode": 493,
+          "component": "xray",
+          "platform": "ipq32",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "fancyss/bin-ipq64/README.md",
+          "sha256": "9b3586181b5d8bcf37c9b2816ea5b430a030cfb3af1af2a301452a8567f96bb1",
+          "bytes": 561,
+          "mode": 493,
+          "component": "README.md",
+          "platform": "ipq64",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "fancyss/bin-ipq64/anytls-zig",
+          "sha256": "7c693b4c9db8b7b42567d662c5e0fd320ad8ae46589aa347304959ceef8b7d2b",
+          "bytes": 169672,
+          "mode": 493,
+          "component": "anytls-zig",
+          "platform": "ipq64",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "e491daa9930717f4235e78707b6654ddfdd896e8"
+        },
+        {
+          "path": "fancyss/bin-ipq64/geotool",
+          "sha256": "32dcdcd7ad7f8fe8586e82ff1874ab9ccfaffe345f4882cdcd9db03a773cfaa4",
+          "bytes": 40824,
+          "mode": 493,
+          "component": "geotool",
+          "platform": "ipq64",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "6313740582c5a92354445e5281dfea964b2906fa"
+        },
+        {
+          "path": "fancyss/bin-ipq64/node-tool",
+          "sha256": "dbc114d3ca41058e6ce2fda20cec89eaa667b7903d9a5a8e3e97a9fc2f532a57",
+          "bytes": 193504,
+          "mode": 493,
+          "component": "node-tool",
+          "platform": "ipq64",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "fce4b45b5d86867a14c563125ae48a59772c2310"
+        },
+        {
+          "path": "fancyss/bin-ipq64/status-tool",
+          "sha256": "3a4f49c8fbaf0bd4ed85812a735c4ad58541368c0a9856429c01e1a64f34c64c",
+          "bytes": 94400,
+          "mode": 493,
+          "component": "status-tool",
+          "platform": "ipq64",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "04efc90e4610b98f0b04431931551b1264f2da87"
+        },
+        {
+          "path": "fancyss/bin-ipq64/statusctl",
+          "sha256": "2b9a1ef75d9fd15644d27e54d83130a5c4ee48cd4d7acd5dd85d0d8fe3e9ebe0",
+          "bytes": 21864,
+          "mode": 493,
+          "component": "statusctl",
+          "platform": "ipq64",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "fancyss/bin-ipq64/sub-tool",
+          "sha256": "2e406d1cd35b3e5120420cd5f366f7121d293891f048b9a0c5b2cbe233d070db",
+          "bytes": 106856,
+          "mode": 493,
+          "component": "sub-tool",
+          "platform": "ipq64",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "eb0d48b9f392db5a5237a343723354020770a6fd"
+        },
+        {
+          "path": "fancyss/bin-ipq64/websocketd",
+          "sha256": "fefa27adaad2eb8b1dbbd6a219ffe06f9be770264161c35f568a2027179fcdf9",
+          "bytes": 51296,
+          "mode": 493,
+          "component": "websocketd",
+          "platform": "ipq64",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "fancyss/bin-ipq64/webtest-tool",
+          "sha256": "22d0c4bf57a5eec501ef0d4341812e515175c309ebf127dd5d43917cb02ff9c4",
+          "bytes": 78420,
+          "mode": 493,
+          "component": "webtest-tool",
+          "platform": "ipq64",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "57c59dd87c47e8807a10440ca6ed73ea4a78a650"
+        },
+        {
+          "path": "fancyss/bin-ipq64/webtestctl",
+          "sha256": "7854340ceb320b66c0079b0a9c802a715181909e5cfd4e6e98dbb6d896fd4fb7",
+          "bytes": 21992,
+          "mode": 493,
+          "component": "webtestctl",
+          "platform": "ipq64",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "fancyss/bin-ipq64/xapi-tool",
+          "sha256": "846e0ca938037e51d92218c8fd5e5a581c0e152775c14c33bd5701dd40584a6a",
+          "bytes": 55656,
+          "mode": 493,
+          "component": "xapi-tool",
+          "platform": "ipq64",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "5e6d726aae371b370d07da10e4d004f927026916"
+        },
+        {
+          "path": "fancyss/bin-mtk/README.md",
+          "sha256": "fed571d0952badc2f7dd7b3d3d63da4f0d93cea30d3e43a43310e2f2cb87df25",
+          "bytes": 4389,
+          "mode": 493,
+          "component": "README.md",
+          "platform": "mtk",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "fancyss/bin-mtk/anytls-zig",
+          "sha256": "7c693b4c9db8b7b42567d662c5e0fd320ad8ae46589aa347304959ceef8b7d2b",
+          "bytes": 169672,
+          "mode": 493,
+          "component": "anytls-zig",
+          "platform": "mtk",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "e491daa9930717f4235e78707b6654ddfdd896e8"
+        },
+        {
+          "path": "fancyss/bin-mtk/chinadns-ng",
+          "sha256": "9bf214cf2a406a2756f7c2e331ff29669a2a8962a299ef4c26e237ab34cc03d0",
+          "bytes": 300504,
+          "mode": 493,
+          "component": "chinadns-ng",
+          "platform": "mtk",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "fancyss/bin-mtk/curl-fancyss",
+          "sha256": "5339ccb35d35db092c44b80db82462d90041cc76066029b3ae732a267053e9e3",
+          "bytes": 1233876,
+          "mode": 493,
+          "component": "curl-fancyss",
+          "platform": "mtk",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "fancyss/bin-mtk/dnsclient",
+          "sha256": "c8911141b950b3d24425c4f8d0920ff1991a073c1e37b8f6944c2c8d34c413b6",
+          "bytes": 9820,
+          "mode": 493,
+          "component": "dnsclient",
+          "platform": "mtk",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "fancyss/bin-mtk/geotool",
+          "sha256": "32dcdcd7ad7f8fe8586e82ff1874ab9ccfaffe345f4882cdcd9db03a773cfaa4",
+          "bytes": 40824,
+          "mode": 493,
+          "component": "geotool",
+          "platform": "mtk",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "6313740582c5a92354445e5281dfea964b2906fa"
+        },
+        {
+          "path": "fancyss/bin-mtk/haveged",
+          "sha256": "bc7be1e521898fb6be914c2cf406ac3f67e8463a565d17da571dbb614c08f6d6",
+          "bytes": 31216,
+          "mode": 493,
+          "component": "haveged",
+          "platform": "mtk",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "fancyss/bin-mtk/ipt2socks",
+          "sha256": "dbcceb1d5cee74a223b1337efc38807da78353996cd0e921ad8061a54b297eef",
+          "bytes": 53948,
+          "mode": 493,
+          "component": "ipt2socks",
+          "platform": "mtk",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "fancyss/bin-mtk/isutf8",
+          "sha256": "6995fe7fbfd36ae2e01abd702849d52ed00fdeab9c48b2b7db945db8f3c060cf",
+          "bytes": 14424,
+          "mode": 493,
+          "component": "isutf8",
+          "platform": "mtk",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "fancyss/bin-mtk/jq",
+          "sha256": "8152e36353833225659f824bf3a158e9fde76e8a88b645c90ff80cd6ab41ec81",
+          "bytes": 242952,
+          "mode": 493,
+          "component": "jq",
+          "platform": "mtk",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "fancyss/bin-mtk/naive",
+          "sha256": "42581277a813c688ce3d29566b7545686b923783437bfbfc62a2acf0dd8e18e4",
+          "bytes": 3268916,
+          "mode": 493,
+          "component": "naive",
+          "platform": "mtk",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "fancyss/bin-mtk/node-tool",
+          "sha256": "dbc114d3ca41058e6ce2fda20cec89eaa667b7903d9a5a8e3e97a9fc2f532a57",
+          "bytes": 193504,
+          "mode": 493,
+          "component": "node-tool",
+          "platform": "mtk",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "fce4b45b5d86867a14c563125ae48a59772c2310"
+        },
+        {
+          "path": "fancyss/bin-mtk/obfs-local",
+          "sha256": "1d64fc18ccfaf10c9229846fae6692b222df8d48fca455768cb8a27bcadb340e",
+          "bytes": 32168,
+          "mode": 493,
+          "component": "obfs-local",
+          "platform": "mtk",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "fancyss/bin-mtk/rss-local",
+          "sha256": "f420fb1b8dfad7956d8103a1cae184be2d7fc4fb4b10193f39bfa0c513328123",
+          "bytes": 254656,
+          "mode": 493,
+          "component": "rss-local",
+          "platform": "mtk",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "fancyss/bin-mtk/rss-redir",
+          "sha256": "f67f227ccca9a3aa4d64725eab70c507af0b30fddc594547b3afd776c0c96a86",
+          "bytes": 243920,
+          "mode": 493,
+          "component": "rss-redir",
+          "platform": "mtk",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "fancyss/bin-mtk/smartdns",
+          "sha256": "2aa39288fcb5e95518cfcb38904c38483525d0b2d5d6dbab371c63b281d630f9",
+          "bytes": 1444932,
+          "mode": 493,
+          "component": "smartdns",
+          "platform": "mtk",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "fancyss/bin-mtk/sponge",
+          "sha256": "1f46e7fd57328f96615223e39ac8a864085dddf113035c90cd26dc8bf0f55c5b",
+          "bytes": 7408,
+          "mode": 493,
+          "component": "sponge",
+          "platform": "mtk",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "fancyss/bin-mtk/status-tool",
+          "sha256": "3a4f49c8fbaf0bd4ed85812a735c4ad58541368c0a9856429c01e1a64f34c64c",
+          "bytes": 94400,
+          "mode": 493,
+          "component": "status-tool",
+          "platform": "mtk",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "04efc90e4610b98f0b04431931551b1264f2da87"
+        },
+        {
+          "path": "fancyss/bin-mtk/statusctl",
+          "sha256": "2b9a1ef75d9fd15644d27e54d83130a5c4ee48cd4d7acd5dd85d0d8fe3e9ebe0",
+          "bytes": 21864,
+          "mode": 493,
+          "component": "statusctl",
+          "platform": "mtk",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "fancyss/bin-mtk/sub-tool",
+          "sha256": "2e406d1cd35b3e5120420cd5f366f7121d293891f048b9a0c5b2cbe233d070db",
+          "bytes": 106856,
+          "mode": 493,
+          "component": "sub-tool",
+          "platform": "mtk",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "eb0d48b9f392db5a5237a343723354020770a6fd"
+        },
+        {
+          "path": "fancyss/bin-mtk/tuic-client",
+          "sha256": "d2b0c8a65b9fea9dfbeb838c33bc64a1507377990f049b78540c84b6c4d34ffa",
+          "bytes": 1795208,
+          "mode": 493,
+          "component": "tuic-client",
+          "platform": "mtk",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "fancyss/bin-mtk/websocketd",
+          "sha256": "fefa27adaad2eb8b1dbbd6a219ffe06f9be770264161c35f568a2027179fcdf9",
+          "bytes": 51296,
+          "mode": 493,
+          "component": "websocketd",
+          "platform": "mtk",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "fancyss/bin-mtk/webtest-tool",
+          "sha256": "22d0c4bf57a5eec501ef0d4341812e515175c309ebf127dd5d43917cb02ff9c4",
+          "bytes": 78420,
+          "mode": 493,
+          "component": "webtest-tool",
+          "platform": "mtk",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "57c59dd87c47e8807a10440ca6ed73ea4a78a650"
+        },
+        {
+          "path": "fancyss/bin-mtk/webtestctl",
+          "sha256": "7854340ceb320b66c0079b0a9c802a715181909e5cfd4e6e98dbb6d896fd4fb7",
+          "bytes": 21992,
+          "mode": 493,
+          "component": "webtestctl",
+          "platform": "mtk",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "fancyss/bin-mtk/xapi-tool",
+          "sha256": "846e0ca938037e51d92218c8fd5e5a581c0e152775c14c33bd5701dd40584a6a",
+          "bytes": 55656,
+          "mode": 493,
+          "component": "xapi-tool",
+          "platform": "mtk",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "5e6d726aae371b370d07da10e4d004f927026916"
+        },
+        {
+          "path": "fancyss/bin-mtk/xray",
+          "sha256": "4f0ca4b54f721571154f73c63e5b5bda3ac0852e15cb7c23f92dff9dbe35ca7d",
+          "bytes": 7169656,
+          "mode": 493,
+          "component": "xray",
+          "platform": "mtk",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "fancyss/bin-qca/anytls-zig",
+          "sha256": "32eb3b3d9009b4105655e5800449fb463a5d0000fc6265ca9a511dcb9d63907a",
+          "bytes": 222944,
+          "mode": 493,
+          "component": "anytls-zig",
+          "platform": "qca",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "e491daa9930717f4235e78707b6654ddfdd896e8"
+        },
+        {
+          "path": "fancyss/bin-qca/chinadns-ng",
+          "sha256": "2b228c49d971386fb91182d160c6af39516c2ef94bd5631851952747a3ca1dd6",
+          "bytes": 291484,
+          "mode": 493,
+          "component": "chinadns-ng",
+          "platform": "qca",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "fancyss/bin-qca/curl-fancyss",
+          "sha256": "332956e9775013e49400ebfa3562c20d798a6d69079d29552fa4875c0ede2efa",
+          "bytes": 1246592,
+          "mode": 493,
+          "component": "curl-fancyss",
+          "platform": "qca",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "fancyss/bin-qca/dnsclient",
+          "sha256": "53542e364d81e7a534ccb0fabbeb982861a235ba2a2a4feea910c14105eb1d66",
+          "bytes": 10019,
+          "mode": 493,
+          "component": "dnsclient",
+          "platform": "qca",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "fancyss/bin-qca/geotool",
+          "sha256": "b710db14d2567248a9a7435bf0d7d7ac546ae70fe1915d2d0f35d0787e4eaefd",
+          "bytes": 40144,
+          "mode": 493,
+          "component": "geotool",
+          "platform": "qca",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "6313740582c5a92354445e5281dfea964b2906fa"
+        },
+        {
+          "path": "fancyss/bin-qca/haveged",
+          "sha256": "3144b4ed543b6e767c2d597df84327028e02737fab283902d4a9f6bfa2ffae52",
+          "bytes": 25428,
+          "mode": 493,
+          "component": "haveged",
+          "platform": "qca",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "fancyss/bin-qca/ipt2socks",
+          "sha256": "067b0fde8c25718ce725447fc0ad1be914bc9f3a16b962b7a1fc74997016e838",
+          "bytes": 50048,
+          "mode": 493,
+          "component": "ipt2socks",
+          "platform": "qca",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "fancyss/bin-qca/isutf8",
+          "sha256": "22caaa3ae624fad34e5745ad046bcd318ae8e7a78bd074c8ee31c81143947045",
+          "bytes": 8692,
+          "mode": 493,
+          "component": "isutf8",
+          "platform": "qca",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "fancyss/bin-qca/jq",
+          "sha256": "82c8026a287d8772e5e027c9b1839531c0e52679287a222287c50f315f389061",
+          "bytes": 280772,
+          "mode": 493,
+          "component": "jq",
+          "platform": "qca",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "fancyss/bin-qca/naive",
+          "sha256": "f44abd0d31f36c6e2333098413f3547e9b10d342bb8b63ec177152e24bd9cc4b",
+          "bytes": 3459428,
+          "mode": 493,
+          "component": "naive",
+          "platform": "qca",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "fancyss/bin-qca/node-tool",
+          "sha256": "bb46ab9dde338e47bac0ea31b842a53a65deebf2448e2c5ac94ce4d31f4cc90a",
+          "bytes": 191980,
+          "mode": 493,
+          "component": "node-tool",
+          "platform": "qca",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "fce4b45b5d86867a14c563125ae48a59772c2310"
+        },
+        {
+          "path": "fancyss/bin-qca/obfs-local",
+          "sha256": "a97a68686112e11b3d929d4e9703f61de5be8c9501534e400d2d983053214bd3",
+          "bytes": 361192,
+          "mode": 493,
+          "component": "obfs-local",
+          "platform": "qca",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "fancyss/bin-qca/rss-local",
+          "sha256": "91017a03d6ff6680f87cd0a7e434358b9e4473a8b9e5e3c417499ed96fe69c2b",
+          "bytes": 528904,
+          "mode": 493,
+          "component": "rss-local",
+          "platform": "qca",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "fancyss/bin-qca/rss-redir",
+          "sha256": "535de614e2364d4ba444f27d6fad7a57387e5abce31059efc5262857402a4e83",
+          "bytes": 519624,
+          "mode": 493,
+          "component": "rss-redir",
+          "platform": "qca",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "fancyss/bin-qca/smartdns",
+          "sha256": "9d4500066928fa2845e63e7019b83121a5f0b6076a83f639008d9ff1bea484ee",
+          "bytes": 1360324,
+          "mode": 493,
+          "component": "smartdns",
+          "platform": "qca",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "fancyss/bin-qca/sponge",
+          "sha256": "a6433a9ed7a0f63469152ed8bbf829774f937cccc37b830290ecf0d5cdeaeb4a",
+          "bytes": 6356,
+          "mode": 493,
+          "component": "sponge",
+          "platform": "qca",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "fancyss/bin-qca/sslocal",
+          "sha256": "7f26d7f6ed4b80af98f7e5622be5e4a6cd2bd1ef34a76b10094c20e241961c7e",
+          "bytes": 1052612,
+          "mode": 493,
+          "component": "sslocal",
+          "platform": "qca",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "fancyss/bin-qca/status-tool",
+          "sha256": "c770a9da1c9028b7abc5171d9ed3686152e3237c6565b6e1b6a99f5b5996b667",
+          "bytes": 91336,
+          "mode": 493,
+          "component": "status-tool",
+          "platform": "qca",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "04efc90e4610b98f0b04431931551b1264f2da87"
+        },
+        {
+          "path": "fancyss/bin-qca/statusctl",
+          "sha256": "ca651cc52c15e19a0d85ef5d90d4a6a771e05945fa3cc448305077eae1bca92f",
+          "bytes": 20880,
+          "mode": 493,
+          "component": "statusctl",
+          "platform": "qca",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "fancyss/bin-qca/sub-tool",
+          "sha256": "6d98493806985c1dda155bf4502dd4bb7a5e0d954ddcc1feae1b347321e277b5",
+          "bytes": 106304,
+          "mode": 493,
+          "component": "sub-tool",
+          "platform": "qca",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "eb0d48b9f392db5a5237a343723354020770a6fd"
+        },
+        {
+          "path": "fancyss/bin-qca/tuic-client",
+          "sha256": "3cd411cac1497d5cb2c4a494c95f4cfd65c79aab9bae92d26b2c7d61ebe5a7bc",
+          "bytes": 1160152,
+          "mode": 493,
+          "component": "tuic-client",
+          "platform": "qca",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "fancyss/bin-qca/websocketd",
+          "sha256": "c3c573677163d92fe91a3b02e6eb49d448f47fac7c67c3a37147c81326d4b13f",
+          "bytes": 48356,
+          "mode": 493,
+          "component": "websocketd",
+          "platform": "qca",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "fancyss/bin-qca/webtest-tool",
+          "sha256": "6a97eb22c0b818ce2ffd633793fb55263c89f628f11f2baba6a9827a2adfa3af",
+          "bytes": 76240,
+          "mode": 493,
+          "component": "webtest-tool",
+          "platform": "qca",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "57c59dd87c47e8807a10440ca6ed73ea4a78a650"
+        },
+        {
+          "path": "fancyss/bin-qca/webtestctl",
+          "sha256": "98cbe08bde2a1b2cd6fe9719f1eb32bf73a477ff05d01f2cd1bc7b04678fae1d",
+          "bytes": 21536,
+          "mode": 493,
+          "component": "webtestctl",
+          "platform": "qca",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": "fancyss/bin-qca/xapi-tool",
+          "sha256": "0983edb385ea41aff10c5bb6260557b0a763bd68a7a8deab21682f54fc6ae316",
+          "bytes": 54152,
+          "mode": 493,
+          "component": "xapi-tool",
+          "platform": "qca",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "5e6d726aae371b370d07da10e4d004f927026916"
+        },
+        {
+          "path": "fancyss/bin-qca/xray",
+          "sha256": "7be4bd98500d271a201199dcb7ae139ba3a5b5f439c60a096e3194751fd45382",
+          "bytes": 7056344,
+          "mode": 493,
+          "component": "xray",
+          "platform": "qca",
+          "version": "snapshot-01eda722ea40",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        }
+      ]
+    },
+    {
+      "name": "build-tools-linux-arm64.tar.gz",
+      "host": "linux-arm64",
+      "url": "https://github.com/dowdah/fancyss/releases/download/build-inputs-20261105.1/build-tools-linux-arm64.tar.gz",
+      "sha256": "b20180735f3c42cdfbe107f03ef806207bd1026243edca39e25d200364aa342a",
+      "bytes": 700795,
+      "upstream_url": "https://github.com/upx/upx/releases/download/v5.3.0/upx-5.3.0-arm64_linux.tar.xz",
+      "upstream_sha256": "2a4afa860ac7aa6968f88df7841823746e5d00ba56affdf9342c2f5254fb776f",
+      "files": [
+        {
+          "path": ".build-tools/upx",
+          "sha256": "ab77a91605acf6a341997ec5b728f4e431c9e2904f802be5c40f09d62c240465",
+          "bytes": 658684,
+          "mode": 493,
+          "component": "upx",
+          "platform": "linux-arm64",
+          "version": "5.3.0",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": ".build-tools/upx-docs/COPYING",
+          "sha256": "8177f97513213526df2cf6184d8ff986c675afb514d4e68a404010521b880643",
+          "bytes": 18092,
+          "mode": 420,
+          "component": "upx-docs",
+          "platform": "linux-arm64",
+          "version": "5.3.0",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": ".build-tools/upx-docs/LICENSE",
+          "sha256": "905d4a66d5324e154d976bbf88829d4d9263815a2b97cc40954f06d4a23c28eb",
+          "bytes": 5448,
+          "mode": 420,
+          "component": "upx-docs",
+          "platform": "linux-arm64",
+          "version": "5.3.0",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": ".build-tools/upx-docs/NEWS",
+          "sha256": "34f7a1beaeb36d163f60df34dedd6fa73b83693ee58073c1fe7545af0c008e51",
+          "bytes": 26509,
+          "mode": 420,
+          "component": "upx-docs",
+          "platform": "linux-arm64",
+          "version": "5.3.0",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": ".build-tools/upx-docs/README",
+          "sha256": "23954720e37619e8a6c6646c9cd87bcccd409886b2b43dca2128ccbf0d975ff0",
+          "bytes": 3718,
+          "mode": 420,
+          "component": "upx-docs",
+          "platform": "linux-arm64",
+          "version": "5.3.0",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": ".build-tools/upx-docs/THANKS.txt",
+          "sha256": "afe689c0785893d88623deb73fb7d30670a1d0760a13d81a831873703648ed84",
+          "bytes": 2566,
+          "mode": 420,
+          "component": "upx-docs",
+          "platform": "linux-arm64",
+          "version": "5.3.0",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": ".build-tools/upx-docs/upx-doc.html",
+          "sha256": "1a792d32b91617b8dcced17a1eec667534d683d7b17d5e0030b1dac1619ace13",
+          "bytes": 40839,
+          "mode": 420,
+          "component": "upx-docs",
+          "platform": "linux-arm64",
+          "version": "5.3.0",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": ".build-tools/upx-docs/upx-doc.txt",
+          "sha256": "9b980dcab21e1220e9d6e4bb41a36c2b25392891934a998af4fe71cd750d3c35",
+          "bytes": 39224,
+          "mode": 420,
+          "component": "upx-docs",
+          "platform": "linux-arm64",
+          "version": "5.3.0",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": ".build-tools/upx-docs/upx.1",
+          "sha256": "ae0da47341ef725c67966c3c147b078508e14d4509e278273d2dad60b80b9897",
+          "bytes": 42280,
+          "mode": 420,
+          "component": "upx-docs",
+          "platform": "linux-arm64",
+          "version": "5.3.0",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        }
+      ]
+    },
+    {
+      "name": "build-tools-linux-amd64.tar.gz",
+      "host": "linux-amd64",
+      "url": "https://github.com/dowdah/fancyss/releases/download/build-inputs-20261105.1/build-tools-linux-amd64.tar.gz",
+      "sha256": "841becdf308d224c266233ea110ed6a5a3d07dcd172e042e9f4df96521bd5303",
+      "bytes": 691470,
+      "upstream_url": "https://github.com/upx/upx/releases/download/v5.3.0/upx-5.3.0-amd64_linux.tar.xz",
+      "upstream_sha256": "79cea8a50b6fa102d10c7b79a419cd77dead3cc2d78661de2dc5e5815dc505c1",
+      "files": [
+        {
+          "path": ".build-tools/upx",
+          "sha256": "39bbf81cb4c56ce3e2e13a1755a31ec4970e33f061db8e214e9fac59354fc9aa",
+          "bytes": 645240,
+          "mode": 493,
+          "component": "upx",
+          "platform": "linux-amd64",
+          "version": "5.3.0",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": ".build-tools/upx-docs/COPYING",
+          "sha256": "8177f97513213526df2cf6184d8ff986c675afb514d4e68a404010521b880643",
+          "bytes": 18092,
+          "mode": 420,
+          "component": "upx-docs",
+          "platform": "linux-amd64",
+          "version": "5.3.0",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": ".build-tools/upx-docs/LICENSE",
+          "sha256": "905d4a66d5324e154d976bbf88829d4d9263815a2b97cc40954f06d4a23c28eb",
+          "bytes": 5448,
+          "mode": 420,
+          "component": "upx-docs",
+          "platform": "linux-amd64",
+          "version": "5.3.0",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": ".build-tools/upx-docs/NEWS",
+          "sha256": "34f7a1beaeb36d163f60df34dedd6fa73b83693ee58073c1fe7545af0c008e51",
+          "bytes": 26509,
+          "mode": 420,
+          "component": "upx-docs",
+          "platform": "linux-amd64",
+          "version": "5.3.0",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": ".build-tools/upx-docs/README",
+          "sha256": "23954720e37619e8a6c6646c9cd87bcccd409886b2b43dca2128ccbf0d975ff0",
+          "bytes": 3718,
+          "mode": 420,
+          "component": "upx-docs",
+          "platform": "linux-amd64",
+          "version": "5.3.0",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": ".build-tools/upx-docs/THANKS.txt",
+          "sha256": "afe689c0785893d88623deb73fb7d30670a1d0760a13d81a831873703648ed84",
+          "bytes": 2566,
+          "mode": 420,
+          "component": "upx-docs",
+          "platform": "linux-amd64",
+          "version": "5.3.0",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": ".build-tools/upx-docs/upx-doc.html",
+          "sha256": "1a792d32b91617b8dcced17a1eec667534d683d7b17d5e0030b1dac1619ace13",
+          "bytes": 40839,
+          "mode": 420,
+          "component": "upx-docs",
+          "platform": "linux-amd64",
+          "version": "5.3.0",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": ".build-tools/upx-docs/upx-doc.txt",
+          "sha256": "9b980dcab21e1220e9d6e4bb41a36c2b25392891934a998af4fe71cd750d3c35",
+          "bytes": 39224,
+          "mode": 420,
+          "component": "upx-docs",
+          "platform": "linux-amd64",
+          "version": "5.3.0",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        },
+        {
+          "path": ".build-tools/upx-docs/upx.1",
+          "sha256": "ae0da47341ef725c67966c3c147b078508e14d4509e278273d2dad60b80b9897",
+          "bytes": 42280,
+          "mode": 420,
+          "component": "upx-docs",
+          "platform": "linux-amd64",
+          "version": "5.3.0",
+          "source_commit": "01eda722ea406750338e3cec2aa395dd36d9da13"
+        }
+      ]
+    }
+  ],
+  "toolchain": {
+    "go": "1.25.6",
+    "upx": "5.3.0"
+  },
+  "compressed_rules": [
+    "rules_ng/adslist.gz",
+    "rules_ng/chnlist.gz",
+    "rules_ng/gfwlist.gz"
+  ],
+  "rule_compilers": {
+    "domain-list-community": "a4da81130dcd0a92d4fbe99c0c4046e51e50c9e1",
+    "geoip": "7a6498ae1cacdc6ec3356ad29d9566d7f0242f56"
+  }
+}

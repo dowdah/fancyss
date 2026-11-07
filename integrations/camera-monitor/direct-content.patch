@@ -1,0 +1,362 @@
+--- a/camera_monitor/graph.py
++++ b/camera_monitor/graph.py
+@@ -13,7 +13,7 @@
+ from contextlib import contextmanager, nullcontext
+ from pathlib import Path
+ from typing import Any, Callable
+-from urllib.parse import quote
++from urllib.parse import quote, urlsplit
+ 
+ import msal
+ import requests
+@@ -130,6 +130,29 @@
+     return {'category': 'TLS_ERROR'} if transport_failure_kind(error) == 'TLS' else {}
+ 
+ 
++class DirectContentRouteError(GraphError):
++    """A body request must wait for an approved direct destination."""
++
++
++DIRECT_CONTENT_HOSTS = frozenset({"my.microsoftpersonalcontent.com"})
++DIRECT_CONTENT_SUFFIXES = ("up.1drv.com", "files.1drv.com", "livefilestore.com", "mediap.svc.ms")
++
++
++def require_direct_content_url(url: str) -> str:
++    """Reject unknown body destinations without ever serializing signed URLs."""
++    try:
++        parsed = urlsplit(url)
++        host = (parsed.hostname or "").lower()
++        allowed = host in DIRECT_CONTENT_HOSTS or any(
++            host == suffix or host.endswith("." + suffix) for suffix in DIRECT_CONTENT_SUFFIXES
++        )
++        if not allowed or parsed.scheme != "https" or parsed.port not in (None, 443) or parsed.username is not None or parsed.password is not None or parsed.fragment:
++            raise ValueError
++    except (ValueError, TypeError):
++        raise DirectContentRouteError("WAITING_FOR_DIRECT_ROUTE: unapproved content destination", plane="DATA", failure_kind="DIRECT_ROUTE_REQUIRED") from None
++    return url
++
++
+ class GraphAuthRequired(GraphError):
+     """A delegated credential needs user reauthorization, not retries."""
+ 
+@@ -142,11 +165,33 @@
+     """Token acquisition failed transiently; it requires backpressure, not reauth."""
+ 
+ 
++class IPv4ControlAdapter(requests.adapters.HTTPAdapter):
++    """Keep auth/Graph on the router's IPv4 transparent proxy policy.
++
++    Binding the source address also prevents alternate IPv6 DNS answers from
++    bypassing that policy. The independent body session keeps dual-stack access.
++    """
++    def init_poolmanager(self, connections, maxsize, block=False, **kwargs):
++        kwargs["source_address"] = ("0.0.0.0", 0)
++        return super().init_poolmanager(connections, maxsize, block=block, **kwargs)
++
++    def proxy_manager_for(self, proxy, **kwargs):
++        kwargs["source_address"] = ("0.0.0.0", 0)
++        return super().proxy_manager_for(proxy, **kwargs)
++
++
++def control_session() -> requests.Session:
++    session = requests.Session()
++    session.mount("https://", IPv4ControlAdapter())
++    session.mount("http://", IPv4ControlAdapter())
++    return session
++
++
+ class TimeoutSession:
+     """Requests session that also bounds MSAL authority calls."""
+ 
+     def __init__(self, timeout: tuple[float, float]):
+-        self.session = requests.Session()
++        self.session = control_session()
+         self.default_timeout = timeout
+ 
+     def request(self, *args: Any, **kwargs: Any) -> requests.Response:
+@@ -195,7 +240,10 @@
+         self.auth_deadline_seconds = auth_deadline_seconds
+         self.request_retries = request_retries
+         self.sleep = sleep
+-        self.session = requests.Session()
++        self.session = control_session()
++        self.data_session = requests.Session()
++        self.data_session.trust_env = False
++        self.data_session.max_redirects = 0
+         self.msal_http_client = TimeoutSession(self.auth_timeout)
+         self._app: Any | None = None
+         self._token_cache: Any | None = None
+@@ -765,9 +813,18 @@
+             data=payload,
+         ).json()
+ 
++    def _data_request(self, method: str, url: str, **kwargs: Any) -> requests.Response:
++        require_direct_content_url(url)
++        kwargs["allow_redirects"] = False
++        response = self.data_session.request(method, url, **kwargs)
++        if 300 <= response.status_code < 400:
++            response.close()
++            raise DirectContentRouteError("WAITING_FOR_DIRECT_ROUTE: content redirect refused", plane="DATA", failure_kind="DIRECT_ROUTE_REQUIRED")
++        return response
++
+     def upload_status(self, upload_url: str) -> dict[str, Any] | None:
+         try:
+-            response = self.session.get(upload_url, timeout=self.timeout)
++            response = self._data_request("GET", upload_url, timeout=self.timeout)
+         except requests.RequestException as exc:
+             # upload_url is a short-lived preauthenticated URL.  Requests may
+             # include it in its exception text, which must never reach logs or
+@@ -794,7 +851,7 @@
+         }
+         for attempt in range(self.request_retries + 1):
+             try:
+-                return self.session.put(upload_url, headers=headers, data=payload, timeout=self.timeout)
++                return self._data_request("PUT", upload_url, headers=headers, data=payload, timeout=self.timeout)
+             except requests.RequestException as exc:
+                 if attempt >= self.request_retries:
+                     # See upload_status: do not serialize the preauthenticated URL.
+@@ -856,7 +913,7 @@
+         location = response.headers.get("Location", "")
+         if not location.startswith("https://"):
+             raise GraphError("Graph download response did not contain a secure redirect")
+-        return location
++        return require_direct_content_url(location)
+ 
+     def download_file(self, item_id: str, destination: Path) -> None:
+         """Download a cloud file for disaster recovery without buffering it in RAM."""
+@@ -864,7 +921,11 @@
+             f"{self._drive_base_url()}"
+             f"/items/{quote(item_id, safe='')}/content"
+         )
+-        response = self.request("GET", url, stream=True)
++        location = self.download_url(item_id)
++        response = self._data_request("GET", location, stream=True, timeout=self.timeout)
++        if response.status_code != 200:
++            response.close()
++            raise GraphError("content download failed", response.status_code, plane="DATA")
+         destination.parent.mkdir(parents=True, exist_ok=True)
+         try:
+             with destination.open("wb") as handle:
+@@ -892,7 +953,11 @@
+                     raise GraphError("INVALID_REMOTE_SHA256")
+                 return local_hash.hex() == remote_hash.lower()
+         url = self._drive_base_url() + "/items/" + quote(item_id, safe="") + "/content"
+-        response = self.request("GET", url, stream=True)
++        location = self.download_url(item_id)
++        response = self._data_request("GET", location, stream=True, timeout=self.timeout)
++        if response.status_code != 200:
++            response.close()
++            raise GraphError("content download failed", response.status_code, plane="DATA")
+         digest = hashlib.sha256()
+         count = 0
+         try:
+@@ -929,19 +994,30 @@
+         for attempt in range(4):
+             response: requests.Response | None = None
+             try:
+-                response = self.request(
++                location = self.download_url(item_id)
++                response = self._data_request(
+                     "GET",
+-                    url,
+-                    expected=(200, 206),
+-                    retries=0,
++                    location,
+                     headers={"Range": f"bytes={start}-{end}"},
+                     stream=True,
+                     timeout=timeout,
+                 )
+-                payload = response.content
++                if response.status_code != 206:
++                    raise GraphError("content server did not honor the byte range", response.status_code, plane="DATA")
++                import re
++                content_range = response.headers.get("Content-Range", "")
++                if not re.fullmatch(rf"bytes {start}-{end}/[0-9]+", content_range):
++                    raise GraphError("content range header did not match the requested range", plane="DATA")
++                payload = bytearray()
++                for chunk in response.iter_content(chunk_size=min(65536, length)):
++                    if len(payload) + len(chunk) > length:
++                        raise GraphError("source range exceeded the requested length", plane="DATA")
++                    payload.extend(chunk)
++                    if len(payload) == length:
++                        break
+                 if len(payload) != length:
+-                    raise GraphError("source range length did not match the requested range")
+-                return payload
++                    raise GraphError("source range length did not match the requested range", plane="DATA")
++                return bytes(payload)
+             except requests.RequestException as exc:
+                 if attempt >= 3:
+                     raise GraphError("source range read network error") from exc
+--- a/camera_monitor/uploader.py
++++ b/camera_monitor/uploader.py
+@@ -13,7 +13,7 @@
+ 
+ from .config import AppConfig, load_config
+ from .db import Database, is_database_busy, utcnow
+-from .graph import GraphAuthNetworkError, GraphAuthRequired, GraphClient, GraphError
++from .graph import DirectContentRouteError, GraphAuthNetworkError, GraphAuthRequired, GraphClient, GraphError
+ from .media_lock import media_lock
+ from .power_recovery_guard import RUNTIME_MARKER
+ from .util import compact_error, configure_logging, iso_utc, parse_recording_start, probe_media
+@@ -173,14 +173,14 @@
+         self.db.mutate("verified", {"id": row["id"], "drive_id": drive_id, "item_id": item.get("id"), "remote_size": remote_size, "now": now, "message": f"Verified remote upload: {row['relative_path']}"}, priority="emergency" if self.kind_filter == "emergency" else "normal")
+ 
+     def _direct_upload_required(self, row: dict[str, Any]) -> bool:
+-        return self.kind_filter == "emergency" or row.get("kind") == "emergency"
++        return True  # Every recording body requires an approved DIRECT route.
+ 
+     def _check_direct_upload_url(self, row: dict[str, Any], upload_url: str) -> None:
+         if self._direct_upload_required(row):
+             _require_direct_upload_host(upload_url)
+             # A preauthenticated PUT must never follow a redirect to an
+             # unapproved host. Graph metadata does not require redirects.
+-            self.graph.session.max_redirects = 0
++            self.graph.data_session.max_redirects = 0
+ 
+     def _direct_route_waiting(self) -> bool:
+         state = self.db.get_state(self.state_key)
+@@ -486,7 +486,7 @@
+         if not self.graph.configured:
+             self.db.set_state("graph", {"status": "WAITING_FOR_CREDENTIALS"})
+             return False
+-        if self.kind_filter == "emergency" and self._direct_route_waiting():
++        if self._direct_route_waiting():
+             return False
+         if getattr(self.graph, "personal_delegated", False) is True:
+             try:
+@@ -518,7 +518,7 @@
+             heartbeat.stop()
+             self.db.set_state(self.state_key,{'status':'WINDOW_CLOSED','reason':str(exc),'updated_at':utcnow()},priority=self.state_priority)
+             return False
+-        except DirectUploadRouteError as exc:
++        except (DirectUploadRouteError, DirectContentRouteError) as exc:
+             heartbeat.stop()
+             retry_at = (datetime.now(UTC) + timedelta(seconds=DIRECT_ROUTE_RECHECK_SECONDS)).isoformat(timespec="seconds")
+             error = compact_error(exc)
+@@ -532,7 +532,7 @@
+                 {"status": "WAITING_FOR_DIRECT_ROUTE", "error": error, "retry_at": retry_at, "updated_at": utcnow()},
+                 priority=self.state_priority,
+             )
+-            LOG.error("emergency upload paused: unapproved data-plane host; local backlog and TF capacity require attention")
++            LOG.error("recording upload paused: unapproved data-plane host; local backlog and TF capacity require attention")
+             return False
+         except GraphAuthRequired as exc:
+             heartbeat.stop()
+--- a/tests/test_direct_emergency_upload.py
++++ b/tests/test_direct_emergency_upload.py
+@@ -15,7 +15,7 @@
+ 
+ def uploader_for(path: Path, graph: mock.Mock | None = None) -> tuple[Uploader, mock.Mock]:
+     graph = graph or mock.Mock(configured=True, personal_delegated=False)
+-    graph.session.max_redirects = 30
++    graph.data_session.max_redirects = 30
+     config = SimpleNamespace(
+         recording=SimpleNamespace(settle_seconds=0),
+         upload=SimpleNamespace(chunk_size_bytes=5 * 1024 * 1024, max_backoff_seconds=3600),
+@@ -43,7 +43,7 @@
+             graph.upload_small.assert_not_called()
+             graph.create_upload_session.assert_called_once_with("emergency/clip.mp4")
+             graph.upload_chunk.assert_called_once_with(DIRECT_URL, b"clip-content", 0, path.stat().st_size)
+-            self.assertEqual(graph.session.max_redirects, 0)
++            self.assertEqual(graph.data_session.max_redirects, 0)
+             self.assertEqual(uploader.db.mutate.call_args_list[0].args[0], "recording_patch")
+             self.assertEqual(uploader.db.mutate.call_args_list[0].args[1]["fields"]["upload_url"], DIRECT_URL)
+             uploader._mark_verified.assert_called_once()
+--- a/tests/test_cloud_graph.py
++++ b/tests/test_cloud_graph.py
+@@ -122,7 +122,10 @@
+         with tempfile.TemporaryDirectory() as tmp:
+             path=Path(tmp)/'x.mp4';path.write_bytes(b'video')
+             response=mock.Mock();response.iter_content.return_value=iter([b'other'])
+-            self.graph.request=mock.Mock(return_value=response)
++            self.graph.download_url=mock.Mock(return_value="https://my.microsoftpersonalcontent.com/synthetic")
++            self.graph.data_session=mock.Mock()
++            response.status_code=200
++            self.graph.data_session.request.return_value=response
+             self.assertFalse(self.graph.content_matches_file('item',path,5))
+             response.close.assert_called_once()
+             response.iter_content.return_value=iter([b'vid',b'eo'])
+@@ -132,7 +135,10 @@
+         with tempfile.TemporaryDirectory() as tmp:
+             path=Path(tmp)/'x.mp4';path.write_bytes(b'video')
+             response=mock.Mock();response.iter_content.return_value=iter([b'video-extra'])
+-            self.graph.request=mock.Mock(return_value=response)
++            self.graph.download_url=mock.Mock(return_value="https://my.microsoftpersonalcontent.com/synthetic")
++            self.graph.data_session=mock.Mock()
++            response.status_code=200
++            self.graph.data_session.request.return_value=response
+             self.assertFalse(self.graph.content_matches_file('item',path,5))
+ 
+     def test_sha256_reconciliation_needs_no_media_download(self):
+--- /dev/null
++++ b/tests/test_direct_content.py
+@@ -0,0 +1,68 @@
++from dataclasses import replace
++from pathlib import Path
++import unittest
++from unittest import mock
++import requests
++from camera_monitor.config import load_config
++from camera_monitor.graph import GraphClient, GraphError, require_direct_content_url
++from tests.test_direct_emergency_upload import uploader_for
++import tempfile
++
++DIRECT='https://my.microsoftpersonalcontent.com/synthetic'
++class DirectContentTests(unittest.TestCase):
++    def client(self):
++        cfg=load_config(Path(__file__).resolve().parents[1]/'deploy/config.toml.example')
++        return GraphClient(cfg,sleep=lambda _:None,request_retries=0)
++    def test_only_control_sessions_bind_ipv4(self):
++        g=self.client()
++        for session in [g.session,g.msal_http_client.session]:
++            adapter=session.get_adapter('https://graph.microsoft.com')
++            self.assertEqual(adapter.poolmanager.connection_pool_kw['source_address'],('0.0.0.0',0))
++        self.assertNotIn('source_address',g.data_session.get_adapter(DIRECT).poolmanager.connection_pool_kw)
++
++    def test_unknown_and_deceptive_hosts_send_no_body(self):
++        g=self.client();g.data_session=mock.Mock();g.session=mock.Mock()
++        for url in ['https://example.com/signed','https://files.1drv.com.evil.invalid/x','https://files.1drv.com@evil.invalid/x','http://files.1drv.com/x','https://files.1drv.com:444/x']:
++            with self.subTest(url=url),self.assertRaises(GraphError):g.upload_chunk(url,b'recording',0,9)
++        g.data_session.request.assert_not_called();g.session.request.assert_not_called()
++    def test_body_redirect_refused_and_never_retried_via_control(self):
++        g=self.client();g.session=mock.Mock();g.data_session=mock.Mock()
++        response=mock.Mock(status_code=307,headers={'Location':'https://example.com/private'})
++        g.data_session.request.return_value=response
++        with self.assertRaises(GraphError):g.upload_chunk(DIRECT,b'x',0,1)
++        self.assertEqual(g.data_session.request.call_count,1)
++        self.assertFalse(g.data_session.request.call_args.kwargs['allow_redirects'])
++        g.session.request.assert_not_called();response.close.assert_called_once()
++    def test_connection_failure_has_no_proxy_fallback(self):
++        g=self.client();self.assertFalse(g.data_session.trust_env)
++        g.session=mock.Mock();g.data_session.request=mock.Mock(side_effect=requests.ConnectionError())
++        with self.assertRaises(GraphError):g.upload_chunk(DIRECT,b'x',0,1)
++        g.session.request.assert_not_called()
++    def test_range_separates_graph_redirect_from_body_request(self):
++        g=self.client();g.download_url=mock.Mock(return_value=DIRECT);g.data_session=mock.Mock()
++        g.data_session.request.return_value=mock.Mock(status_code=206,headers={'Content-Range':'bytes 10-12/20'})
++        g.data_session.request.return_value.iter_content.return_value=iter([b'abc'])
++        self.assertEqual(g.download_range('id',10,3),b'abc')
++        call=g.data_session.request.call_args
++        self.assertEqual(call.args,('GET',DIRECT));self.assertEqual(call.kwargs['headers'],{'Range':'bytes=10-12'})
++        self.assertFalse(call.kwargs['allow_redirects'])
++    def test_viewing_small_recording_uses_validated_upload_session(self):
++        with tempfile.TemporaryDirectory() as d:
++            path=Path(d)/'clip.mp4';path.write_bytes(b'clip')
++            u,g=uploader_for(path);u.kind_filter='viewing'
++            g.create_upload_session.return_value={'uploadUrl':DIRECT}
++            g.upload_chunk.return_value=mock.Mock(status_code=201)
++            g.upload_chunk.return_value.json.return_value={'id':'r','size':4}
++            u.upload_one({'id':1,'kind':'viewing','state':'QUEUED','relative_path':'clip.mp4','local_path':str(path),'size_bytes':4})
++            g.upload_small.assert_not_called();g.upload_chunk.assert_called_once()
++    def test_download_redirect_is_validated_before_body(self):
++        g=self.client();g.request=mock.Mock(return_value=mock.Mock(headers={'Location':'https://example.com/signed'}));g.data_session=mock.Mock()
++        with self.assertRaises(GraphError):g.download_url('id')
++        g.data_session.request.assert_not_called()
++
++    def test_range_ignoring_server_is_rejected_before_body_read(self):
++        g=self.client();g.download_url=mock.Mock(return_value=DIRECT);g.data_session=mock.Mock()
++        response=mock.Mock(status_code=200)
++        g.data_session.request.return_value=response
++        with self.assertRaises(GraphError):g.download_range('id',0,3)
++        response.iter_content.assert_not_called();response.close.assert_called_once()

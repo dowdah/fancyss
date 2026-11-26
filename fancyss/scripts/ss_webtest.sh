@@ -937,6 +937,26 @@ wt_register_webtest_runner() {
 	exec 6>&-
 }
 
+wt_launch_webtest_runner() {
+	local pid registered attempts=0
+	# Merlin can expose a different executable as sh earlier in PATH.
+	FSS_WEBTEST_MANUAL="${FSS_WEBTEST_MANUAL:-0}" FSS_WEBTEST_INHERITED_LOCK=1 \
+		/bin/sh "${KSROOT}/scripts/ss_webtest.sh" "$@" >/dev/null 2>&1 &
+	pid="$!"
+	while [ "${attempts}" -lt 30 ]; do
+		if [ -s "${WT_WEBTEST_PID_FILE}" ] &&
+			read -r registered _ 2>/dev/null < "${WT_WEBTEST_PID_FILE}" && [ "${registered}" = "${pid}" ]; then
+			return 0
+		fi
+		kill -0 "${pid}" 2>/dev/null || return 1
+		usleep 100000
+		attempts=$((attempts + 1))
+	done
+	kill -9 "${pid}" 2>/dev/null
+	wait "${pid}" 2>/dev/null
+	return 1
+}
+
 wt_stop_webtest_runner() {
 	local pid birth kind current
 	WT_STOPPED_RUNNER_KIND=batch
@@ -4756,8 +4776,8 @@ manual_webtest)
 	clean_webtest || { wt_http_response cleanup_failed; exit 1; }
 	rm -f "${WT_WEBTEST_BACKUP}"
 	dbus remove ss_basic_webtest_ts
+	FSS_WEBTEST_MANUAL=1 wt_launch_webtest_runner run_batch || { wt_http_response startup_failed; exit 1; }
 	wt_http_response $1
-	FSS_WEBTEST_MANUAL=1 FSS_WEBTEST_INHERITED_LOCK=1 sh /koolshare/scripts/ss_webtest.sh run_batch >/dev/null 2>&1 &
 	;;
 close_latency_test)
 	disable_latency_feature || { wt_http_response cleanup_failed; exit 1; }
@@ -4778,7 +4798,7 @@ ws_start_batch)
 	clean_webtest || exit 1
 	rm -f "${WT_WEBTEST_BACKUP}"
 	dbus remove ss_basic_webtest_ts
-	FSS_WEBTEST_MANUAL=1 FSS_WEBTEST_INHERITED_LOCK=1 sh /koolshare/scripts/ss_webtest.sh run_batch >/dev/null 2>&1 &
+	FSS_WEBTEST_MANUAL=1 wt_launch_webtest_runner run_batch || exit 1
 	echo XU6J03M6
 	;;
 ws_stop_batch)
@@ -4805,8 +4825,8 @@ ws_single_test)
 	if [ -f "/tmp/webtest.lock" ];then
 		echo busy
 	else
-		if wt_prepare_single_test_state "${WEBTEST_ACTION_ARG}" >/dev/null 2>&1; then
-			FSS_WEBTEST_INHERITED_LOCK=1 sh /koolshare/scripts/ss_webtest.sh run_single "${WEBTEST_ACTION_ARG}" >/dev/null 2>&1 &
+		if wt_prepare_single_test_state "${WEBTEST_ACTION_ARG}" >/dev/null 2>&1 &&
+			wt_launch_webtest_runner run_single "${WEBTEST_ACTION_ARG}"; then
 			echo XU6J03M6
 		else
 			echo busy

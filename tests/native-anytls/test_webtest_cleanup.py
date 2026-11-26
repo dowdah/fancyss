@@ -39,13 +39,16 @@ class WebtestCleanupTests(unittest.TestCase):
             program = POLICY.read_text().replace("/tmp/upload", "$TMP2")
             program += shell_functions(
                 "wt_webtest_result_state", "wt_replay_batch_results", "wt_get_batch_state",
-                "wt_mark_unfinished_batch_nodes", "wt_abort_batch_run", "wt_finish_batch_run", "wt_request_stop_batch",
+                "wt_mark_unfinished_batch_nodes", "wt_abort_batch_run", "wt_finish_batch_run",
+                "wt_release_webtest_runner", "wt_request_stop_batch",
             ).replace("/tmp/webtest.lock", "$TMP2/webtest.lock")
             program += r'''
 WT_WEBTEST_STOP_FLAG="$TMP2/stop"
 WT_WEBTEST_STATE_LOCK="$TMP2/state.lock"
 WT_WEBTEST_PID_FILE="$TMP2/batch.pid"
+touch "$TMP2/webtest.lock"
 ps() { :; }
+wt_stop_webtest_runner() { WT_STOPPED_RUNNER_KIND=batch; }
 wt_pick_jq() { echo jq; }
 wt_runtime_cleanup() {
     cat > "$TMP2/webtest_tool_09.stream.jsonl" <<'EVENTS'
@@ -204,7 +207,7 @@ esac
 
     def test_failed_cleanup_replays_results_without_finalizing_and_can_retry(self):
         program = shell_functions(
-            "wt_runtime_cleanup", "wt_abort_batch_run", "wt_finish_batch_run",
+            "wt_runtime_cleanup", "wt_abort_batch_run", "wt_finish_batch_run", "wt_release_webtest_runner",
         ).replace("/tmp/webtest.lock", "$TMP2/webtest.lock")
         program += r'''
 WT_WEBTEST_PID_FILE="$TMP2/runner.pid"
@@ -275,6 +278,7 @@ WT_WEBTEST_STREAM="$TMP2/latency.stream"
 WT_WEBTEST_STOP_FLAG="$TMP2/stop"
 WT_WEBTEST_PID_FILE="$TMP2/runner.pid"
 ps() { :; }
+wt_stop_webtest_runner() { :; }
 wt_runtime_cleanup() { return "$failure"; }
 touch "$TMP2/anytls-webtest.json" "$TMP2/webtest.lock"
 failure=1
@@ -288,6 +292,75 @@ clean_webtest || exit 5
             subprocess.run(
                 ["/bin/sh", "-c", program], env={**os.environ, "TMP2": directory}, check=True,
             )
+
+    @unittest.skipUnless(Path("/proc/self/stat").is_file(), "requires Linux process ownership checks")
+    def test_controls_wait_for_runner_handoff_and_stop_only_owned_pid(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            flock = root / "flock"
+            flock.write_text("#!/usr/bin/env python3\nimport fcntl, sys\n"
+                             "fcntl.flock(int(sys.argv[-1]), fcntl.LOCK_EX | fcntl.LOCK_NB)\n")
+            flock.chmod(0o700)
+            program = shell_functions(
+                "wt_lock_webtest_control", "wt_register_webtest_runner", "wt_stop_webtest_runner",
+                "wt_webtest_process_birth", "wt_wait_pid_with_timeout",
+            ).replace("/tmp/webtest.lock", "$TMP2/webtest.lock") + r'''
+WT_WEBTEST_CONTROL_LOCK="$TMP2/control"
+WT_WEBTEST_PID_FILE="$TMP2/runner.pid"
+WT_WEBTEST_STOP_FLAG="$TMP2/stop"
+case "$1" in
+    launch)
+        wt_lock_webtest_control || exit 1
+        /bin/sh "$0" runner &
+        wait "$!"
+        ;;
+    runner)
+        touch "$TMP2/before-registration"
+        while [ ! -e "$TMP2/permit-registration" ]; do sleep 0.01; done
+        wt_register_webtest_runner batch || exit 1
+        touch "$TMP2/registered"
+        while :; do sleep 1; done
+        ;;
+    stop)
+        wt_lock_webtest_control 2>/dev/null || exit 7
+        wt_stop_webtest_runner
+        ;;
+esac
+'''
+            fixture = root / "test.sh"
+            fixture.write_text(program)
+            env = {**os.environ, "TMP2": str(root), "PATH": f"{root}:{os.environ['PATH']}"}
+            launcher = subprocess.Popen(["/bin/sh", str(fixture), "launch"], env=env)
+            observer = subprocess.Popen(["sleep", "20"])
+            try:
+                for marker in ("before-registration", "registered"):
+                    deadline = time.monotonic() + 3
+                    while not (root / marker).exists() and time.monotonic() < deadline:
+                        time.sleep(0.01)
+                    self.assertTrue((root / marker).exists(), marker)
+                    if marker == "before-registration":
+                        self.assertEqual(subprocess.run(
+                            ["/bin/sh", str(fixture), "stop"], env=env,
+                        ).returncode, 7)
+                        (root / "permit-registration").touch()
+                        # The controller exits after handing off the lock on the real route.
+                        launcher.kill()
+                        launcher.wait(timeout=3)
+                self.assertEqual(subprocess.run(
+                    ["/bin/sh", str(fixture), "stop"], env=env,
+                ).returncode, 0)
+                self.assertIsNone(observer.poll())
+                self.assertEqual(subprocess.run(
+                    ["/bin/sh", str(fixture), "stop"], env=env,
+                ).returncode, 0)
+            finally:
+                (root / "permit-registration").touch()
+                subprocess.run(["/bin/sh", str(fixture), "stop"], env=env)
+                if launcher.poll() is None:
+                    launcher.kill()
+                    launcher.wait(timeout=3)
+                observer.terminate()
+                observer.wait(timeout=3)
 
     @unittest.skipUnless(Path("/proc/self/stat").is_file(), "requires Linux process ownership checks")
     def test_restart_waits_for_pid_registration_and_client_exit(self):
@@ -366,15 +439,28 @@ fi
         functions = source[
             source.index("var anytlsWebtestProgressAt"):source.index("function is_latency_transient_state")
         ]
+        functions += source[source.index("function update_latency_finish_time"):source.index("function finish_latency_batch")]
+        functions += source[source.index("function load_latency_cache()"):source.index("function parse_webtest_complete")]
         run = r'''
 const assert = require("node:assert/strict");
 let text = "";
+let timestamp = "";
+let batchLatencyPollSeq = 1;
+let webtestFileWsCache = {};
+let webtestFileWsPending = {};
+let cachedResponse;
 const requests = [];
+function stop_node_latency_live_runtime() { batchLatencyPollSeq++; }
+function is_latency_feature_enabled() { return true; }
+function should_run_node_latency_live() { return true; }
+function read_webtest_file_ws(path, callback) { cachedResponse = callback; }
+function parse_webtest_complete() { assert.fail("stale latency list was replayed"); }
 function $() {
-    return {length: 1, text(value) { text = value; }, empty() { text = ""; }};
+    return {length: 1, text(value) { text = value; }, empty() { text = ""; },
+            html(value) { timestamp = value; }, width() {}};
 }
-$.ajax = function() {
-    const callbacks = {};
+$.ajax = function(options) {
+    const callbacks = {success: options.success};
     requests.push(callbacks);
     return {
         done(fn) { callbacks.done = fn; return this; },
@@ -387,11 +473,16 @@ refresh_anytls_webtest_progress(true);
 requests[0].done(old);
 assert.match(text, /超时 1/);
 refresh_anytls_webtest_progress(true);
-clear_anytls_webtest_progress();
+update_latency_finish_time();
+load_latency_cache();
+invalidate_latency_requests();
 requests[1].done(old);
+requests[2].success({result: [{ss_basic_webtest_ts: "old timestamp"}]});
+cachedResponse("1>10\nstop>stop");
 assert.equal(text, "");
+assert.equal(timestamp, "");
 refresh_anytls_webtest_progress(true);
-requests[2].done({...old, concurrency: 3, completed: 8});
+requests[3].done({...old, concurrency: 3, completed: 8});
 requests[1].fail();
 assert.match(text, /3 并发档/);
 '''

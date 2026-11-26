@@ -4,8 +4,10 @@ import json
 import os
 from pathlib import Path
 import re
+import shutil
 import subprocess
 import tempfile
+import time
 import unittest
 
 
@@ -17,8 +19,9 @@ def shell_functions(*names):
     source = SCRIPT.read_text()
     result = []
     for name in names:
-        start = re.search(rf"(?m)^{name}\(\)\s*\{{", source).start()
-        end = source.index("\n}", start) + 2
+        match = re.search(rf"(?m)^{name}\(\)\s*([{{(])", source)
+        start = match.start()
+        end = source.index("\n" + ("}" if match[1] == "{" else ")"), start) + 2
         result.append(source[start:end])
     return "\n".join(result) + "\n"
 
@@ -36,7 +39,7 @@ class WebtestCleanupTests(unittest.TestCase):
             program = POLICY.read_text().replace("/tmp/upload", "$TMP2")
             program += shell_functions(
                 "wt_webtest_result_state", "wt_replay_batch_results", "wt_get_batch_state",
-                "wt_mark_unfinished_batch_nodes", "wt_request_stop_batch",
+                "wt_mark_unfinished_batch_nodes", "wt_abort_batch_run", "wt_finish_batch_run", "wt_request_stop_batch",
             ).replace("/tmp/webtest.lock", "$TMP2/webtest.lock")
             program += r'''
 WT_WEBTEST_STOP_FLAG="$TMP2/stop"
@@ -53,6 +56,7 @@ wt_runtime_cleanup() {
 {"id":"5","state":"failed"}
 {"id":"4","state":
 EVENTS
+    [ "$1" = replay ] && wt_replay_batch_results
 }
 wt_set_batch_state() {
     awk -F '>' -v id="$1" -v state="$2" '$1==id {$0=id ">" state} 1' "$WT_WEBTEST_STATE_FILE" > "$TMP2/state.next"
@@ -119,7 +123,7 @@ test_nodes
             self.assertEqual(result.strip(), "xray-ran")
 
     def test_anytls_run_skips_a_bad_first_node_and_guards_only_capable_clients(self):
-        program = shell_functions("wt_wait_anytls_batch_ready", "test_13_at") + r'''
+        program = shell_functions("wt_start_anytls_batch", "wt_wait_anytls_batch_ready", "test_13_at") + r'''
 dbus() { echo auto; }
 wt_pick_webtest_tool() { echo /bin/sh; }
 wt_pick_jq() { echo jq; }
@@ -147,7 +151,9 @@ wt_append_protocol_target_row() {
 fss_require_base_dns() { :; }
 fss_airport_bootstrap_sync() { :; }
 wt_stop_anytls_batch() { :; }
+flock() { :; }
 usleep() { sleep 0.01; }
+fss_anytls_batch_finish() { :; }
 fss_anytls_batch_begin() {
     printf 'auto-guard\n'
     ! grep -q 'example-password' "$3" || exit 9
@@ -166,6 +172,7 @@ wt_try_webtest_tool_targets_batch() {
     echo valid-node-ran
 }
 WT_SINGLE=0 WT_ANYTLS_THREADS=1
+WT_WEBTEST_STOP_FLAG="$TMP2/stop"
 test_13_at "$TMP2/nodes" 09
 '''
         with tempfile.TemporaryDirectory() as directory:
@@ -194,6 +201,201 @@ esac
                 self.assertEqual(result.splitlines(), [
                     ["legacy-ran"], ["auto-guard", "valid-node-ran"],
                 ][index])
+
+    def test_failed_cleanup_replays_results_without_finalizing_and_can_retry(self):
+        program = shell_functions(
+            "wt_runtime_cleanup", "wt_abort_batch_run", "wt_finish_batch_run",
+        ).replace("/tmp/webtest.lock", "$TMP2/webtest.lock")
+        program += r'''
+WT_WEBTEST_PID_FILE="$TMP2/runner.pid"
+WT_WEBTEST_STATE_LOCK="$TMP2/state.lock"
+WT_WEBTEST_STOP_FLAG="$TMP2/stop"
+WT_BATCH_FINALIZED=0
+touch "$TMP2/webtest.lock" "$WT_WEBTEST_PID_FILE" "$WT_WEBTEST_STATE_LOCK"
+echo memory_pressure > "$WT_WEBTEST_STOP_FLAG"
+writers=1
+helpers=1
+ps() { :; }
+killall() { :; }
+find() { :; }
+wt_stop_batch_result_writers() { return "$writers"; }
+wt_stop_anytls_batch() { return "$helpers"; }
+wt_replay_batch_results() { echo replay; }
+wt_mark_unfinished_batch_nodes() { echo "mark=$1"; }
+wt_finalize_batch_output() { echo finalize; }
+still_retryable() {
+    [ -f "$TMP2/webtest.lock" ] && [ -f "$WT_WEBTEST_PID_FILE" ] &&
+        [ -f "$WT_WEBTEST_STATE_LOCK" ] && [ -f "$WT_WEBTEST_STOP_FLAG" ] &&
+        [ "$WT_BATCH_FINALIZED" = 0 ]
+}
+if wt_abort_batch_run memory_pressure; then exit 3; fi
+still_retryable || exit 4
+writers=0
+if wt_abort_batch_run memory_pressure; then exit 5; fi
+still_retryable || exit 6
+echo retry
+helpers=0
+wt_abort_batch_run memory_pressure || exit 7
+[ ! -e "$TMP2/webtest.lock" ] && [ ! -e "$WT_WEBTEST_STOP_FLAG" ] && [ "$WT_BATCH_FINALIZED" = 1 ]
+'''
+        with tempfile.TemporaryDirectory() as directory:
+            output = subprocess.check_output(
+                ["/bin/sh", "-c", program], env={**os.environ, "TMP2": directory}, text=True,
+            )
+        self.assertEqual(output.splitlines(), ["replay", "retry", "replay", "mark=canceled", "finalize"])
+
+    def test_anytls_group_failure_reaches_batch_runner(self):
+        program = shell_functions("test_nodes") + r'''
+dbus() { echo 20; }
+fss_get_current_node_id() { echo 1; }
+detect_perf() { :; }
+test_13_at() { return 9; }
+test_xray_group() { echo should-not-run; }
+WT_GROUP_ORDER_PREPARED=1 WT_PREVIEW_READY=1
+WT_WEBTEST_STOP_FLAG="$TMP2/stop"
+test_nodes
+'''
+        with tempfile.TemporaryDirectory() as directory:
+            runtime = Path(directory)
+            (runtime / "nodes_file_name.txt").write_text("wt_test_09.txt\nwt_test_05.txt\n")
+            (runtime / "wt_xray_group.txt").write_text("1\n")
+            result = subprocess.run(
+                ["/bin/sh", "-c", program], env={**os.environ, "TMP2": directory},
+                capture_output=True, text=True,
+            )
+        self.assertEqual(result.returncode, 9)
+        self.assertEqual(result.stdout, "")
+
+    def test_clear_removes_progress_only_after_successful_cleanup(self):
+        program = shell_functions("clean_webtest").replace("/tmp/webtest.lock", "$TMP2/webtest.lock")
+        program = program.replace("/tmp/upload", "$TMP2")
+        program += r'''
+WT_WEBTEST_FILE="$TMP2/latency.txt"
+WT_WEBTEST_STREAM="$TMP2/latency.stream"
+WT_WEBTEST_STOP_FLAG="$TMP2/stop"
+WT_WEBTEST_PID_FILE="$TMP2/runner.pid"
+ps() { :; }
+wt_runtime_cleanup() { return "$failure"; }
+touch "$TMP2/anytls-webtest.json" "$TMP2/webtest.lock"
+failure=1
+if clean_webtest; then exit 3; fi
+[ -f "$TMP2/anytls-webtest.json" ] && [ -f "$TMP2/webtest.lock" ] || exit 4
+failure=0
+clean_webtest || exit 5
+[ ! -e "$TMP2/anytls-webtest.json" ] && [ ! -e "$TMP2/webtest.lock" ]
+'''
+        with tempfile.TemporaryDirectory() as directory:
+            subprocess.run(
+                ["/bin/sh", "-c", program], env={**os.environ, "TMP2": directory}, check=True,
+            )
+
+    @unittest.skipUnless(Path("/proc/self/stat").is_file(), "requires Linux process ownership checks")
+    def test_restart_waits_for_pid_registration_and_client_exit(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            hooks = root / "hooks_09"
+            hooks.mkdir()
+            (hooks / "manifest.json").touch()
+            programs = {
+                "flock": "#!/usr/bin/env python3\nimport fcntl, sys\n"
+                         "fcntl.flock(int(sys.argv[-1]), fcntl.LOCK_EX)\n",
+                "mv": r'''#!/bin/sh
+: > "$TMP2/registration-paused"
+while [ ! -e "$TMP2/resume-registration" ]; do sleep 0.01; done
+exec /bin/mv "$@"
+''',
+                "client": r'''#!/bin/sh
+[ -e "$TMP2/hooks_09/.stopped" ] || exit 3
+: > "$TMP2/client-saw-stop"
+while [ ! -e "$TMP2/finish-client" ]; do sleep 0.01; done
+''',
+            }
+            for name, contents in programs.items():
+                path = root / name
+                path.write_text(contents)
+                path.chmod(0o700)
+            program = shell_functions(
+                "wt_start_anytls_batch", "wt_stop_anytls_batch", "wt_wait_pid_with_timeout",
+            ) + r'''
+WT_WEBTEST_STOP_FLAG="$TMP2/stop"
+if [ "$1" = launch ]; then
+    wt_start_anytls_batch "$TMP2/hooks_09" "$TMP2/client" "$TMP2/hooks_09/manifest.json" || exit 1
+    wait "$batch_pid"
+else
+    wt_stop_anytls_batch && rm -rf "$TMP2/hooks_09"
+fi
+'''
+            env = {**os.environ, "TMP2": str(root), "PATH": f"{root}:{os.environ['PATH']}"}
+
+            def until_exists(path):
+                deadline = time.monotonic() + 3
+                while not path.exists() and time.monotonic() < deadline:
+                    time.sleep(0.01)
+                self.assertTrue(path.exists(), path.name)
+
+            launcher = subprocess.Popen(["/bin/sh", "-c", program, "fixture", "launch"], env=env)
+            cleaner = None
+            try:
+                until_exists(root / "registration-paused")
+                self.assertFalse((hooks / "batch.pid").exists())
+                launcher.kill()
+                launcher.wait(timeout=3)
+                cleaner = subprocess.Popen(["/bin/sh", "-c", program, "fixture", "clean"], env=env)
+                until_exists(hooks / ".stopped")
+                self.assertIsNone(cleaner.poll())
+                (root / "resume-registration").touch()
+                until_exists(root / "client-saw-stop")
+                self.assertRegex((hooks / "batch.pid").read_text().strip(), r"^[1-9][0-9]*$")
+                self.assertTrue((hooks / ".stopped").is_file())
+                self.assertIsNone(cleaner.poll())
+                (root / "finish-client").touch()
+                self.assertEqual(cleaner.wait(timeout=7), 0)
+                self.assertFalse(hooks.exists())
+            finally:
+                (root / "resume-registration").touch()
+                (root / "finish-client").touch()
+                if launcher.poll() is None:
+                    launcher.wait(timeout=3)
+                if cleaner is not None and cleaner.poll() is None:
+                    cleaner.wait(timeout=7)
+
+    @unittest.skipUnless(shutil.which("node"), "requires Node.js")
+    def test_stale_progress_responses_do_not_repopulate_cleared_ui(self):
+        page = SCRIPT.parent.parent / "webs/Module_shadowsocks.asp"
+        source = page.read_text()
+        functions = source[
+            source.index("var anytlsWebtestProgressAt"):source.index("function is_latency_transient_state")
+        ]
+        run = r'''
+const assert = require("node:assert/strict");
+let text = "";
+const requests = [];
+function $() {
+    return {length: 1, text(value) { text = value; }, empty() { text = ""; }};
+}
+$.ajax = function() {
+    const callbacks = {};
+    requests.push(callbacks);
+    return {
+        done(fn) { callbacks.done = fn; return this; },
+        fail(fn) { callbacks.fail = fn; return this; }
+    };
+};
+''' + functions + r'''
+const old = {concurrency: 2, phase: "complete", completed: 10, total: 10, timeouts: 1};
+refresh_anytls_webtest_progress(true);
+requests[0].done(old);
+assert.match(text, /超时 1/);
+refresh_anytls_webtest_progress(true);
+clear_anytls_webtest_progress();
+requests[1].done(old);
+assert.equal(text, "");
+refresh_anytls_webtest_progress(true);
+requests[2].done({...old, concurrency: 3, completed: 8});
+requests[1].fail();
+assert.match(text, /3 并发档/);
+'''
+        subprocess.run(["node"], input=run, text=True, check=True)
 
     def test_cleanup_uses_owned_stop_hooks_and_reports_failure(self):
         source = SCRIPT.read_text()

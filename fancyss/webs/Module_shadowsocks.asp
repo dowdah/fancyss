@@ -4412,6 +4412,7 @@ function invalidate_schema2_webtest_results() {
 	close_latency_ws(false);
 	close_latency_flag = 0;
 	$(".latency .latency_val").html("");
+	clear_anytls_webtest_progress();
 	update_shunt_latency_chips();
 	id = parseInt(Math.random() * 100000000);
 	$.ajax({
@@ -12638,18 +12639,29 @@ function finish_latency_batch() {
 	refresh_anytls_webtest_progress(true);
 }
 var anytlsWebtestProgressAt = 0;
+var anytlsWebtestProgressRequest = 0;
+function clear_anytls_webtest_progress() {
+	anytlsWebtestProgressRequest += 1;
+	anytlsWebtestProgressAt = 0;
+	$("#anytls_webtest_progress").empty();
+}
 function refresh_anytls_webtest_progress(force) {
 	if (!$("#anytls_webtest_progress").length || (!force && Date.now() - anytlsWebtestProgressAt < 1000)) return;
 	anytlsWebtestProgressAt = Date.now();
+	var request = ++anytlsWebtestProgressRequest;
 	$.ajax({url: "/_temp/anytls-webtest.json", dataType: "json", cache: false}).done(function(state) {
+		if (request !== anytlsWebtestProgressRequest) return;
 		var reason = {trial: "试高一档", low_headroom: "可用内存低于 64 MiB，沿用已验证档位",
 			shunt_busy: "分流正在应用，沿用已验证档位", memory_pressure: "可用内存低于 48 MiB",
-			trial_rejected: "试档未达标，24 小时内沿用原档", user_stopped: "已手动中止"};
+			trial_rejected: "试档未达标，24 小时内沿用原档", user_stopped: "已手动中止",
+			cleanup_failed: "清理待重试", canceled: "测速已取消"};
 		$("#anytls_webtest_progress").text(
 			"AnyTLS " + Number(state.concurrency) + " 并发档 · 正在测 " + (state.phase === "running" ? Number(state.running) : 0) + " · 已测 " + Number(state.completed) + "/" +
 			Number(state.total) + " · 超时 " + Number(state.timeouts) +
 			(reason[state.reason] ? " · " + reason[state.reason] : ""));
-	}).fail(function() { $("#anytls_webtest_progress").empty(); });
+	}).fail(function() {
+		if (request === anytlsWebtestProgressRequest) $("#anytls_webtest_progress").empty();
+	});
 }
 function is_latency_transient_state(value){
 	value = String(value || "");
@@ -13029,6 +13041,7 @@ function stop_latency_batch() {
 		send_webtest_ws_command("sh /koolshare/scripts/ss_webtest.sh ws_stop_batch", function() {}, null, function() {
 			batch_stop_pending = false;
 			update_latency_action_links();
+			$("#ss_wts_show").html("<em>【停止未完成，请重试】</em>");
 		});
 		return;
 	}
@@ -13047,27 +13060,33 @@ function stop_latency_batch() {
 			if(response.result != id){
 				batch_stop_pending = false;
 				update_latency_action_links();
+				$("#ss_wts_show").html("<em>【停止未完成，请重试】</em>");
 			}
 		},
 		error: function() {
 			batch_stop_pending = false;
 			update_latency_action_links();
+			$("#ss_wts_show").html("<em>【停止未完成，请重试】</em>");
 		}
 	});
 }
+function apply_latency_cache_cleared() {
+	close_latency_ws();
+	close_single_latency_ws();
+	batch_test_running = false;
+	batch_stop_pending = false;
+	$(".latency .latency_val").html("");
+	$("#ss_wts_show").html("");
+	$("#dropdown").width(150);
+	clear_anytls_webtest_progress();
+	update_latency_action_links();
+}
 function clear_latency_cache() {
 	if(is_ws_available()){
-		send_webtest_ws_command("sh /koolshare/scripts/ss_webtest.sh ws_clear_cache", function() {
-			close_latency_ws();
-			close_single_latency_ws();
-			batch_test_running = false;
-			batch_stop_pending = false;
-			$(".latency .latency_val").html("");
-			$("#ss_wts_show").html("");
-			$("#dropdown").width(150);
-			update_latency_action_links();
-		}, function() {
+		send_webtest_ws_command("sh /koolshare/scripts/ss_webtest.sh ws_clear_cache", apply_latency_cache_cleared, function() {
 			layer.msg("正在测速，请稍后重试");
+		}, function() {
+			layer.msg("清空未完成，请重试");
 		});
 		return;
 	}
@@ -13085,13 +13104,9 @@ function clear_latency_cache() {
 				return;
 			}
 			if (response.result == id){
-				close_latency_ws();
-				batch_test_running = false;
-				batch_stop_pending = false;
-				$(".latency .latency_val").html("");
-				$("#ss_wts_show").html("");
-				$("#dropdown").width(150);
-				update_latency_action_links();
+				apply_latency_cache_cleared();
+			} else {
+				layer.msg("清空未完成，请重试");
 			}
 		}
 	});

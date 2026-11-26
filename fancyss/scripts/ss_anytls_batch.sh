@@ -101,7 +101,8 @@ fss_anytls_batch_wait() {
 
 fss_anytls_batch_finish() (
 	umask 077
-	local events="$1" outcome="$2" now end seconds result done_count timeouts ok profile phase=complete
+	local events="$1" outcome="$2" cleanup_status="${3:-0}" now end seconds result done_count timeouts ok profile phase=complete
+	[ "${cleanup_status}" = 0 ] || outcome=1
 	[ -f "${events}" ] || events=/dev/null
 	result="$(jq -Rn -r '
 		reduce (inputs | fromjson? | objects | select(.id != null and (.state=="ok" or .state=="timeout" or .state=="failed"))) as $e ({}; .[$e.id|tostring]=$e.state)
@@ -112,7 +113,7 @@ fss_anytls_batch_finish() (
 	[ "${outcome}" = 0 ] || phase=failed
 	[ "${WT_ANYTLS_AUTO_REASON}" != memory_pressure ] || phase=canceled
 	now="$(date +%s)"
-	end="$(fss_anytls_uptime)"
+	end="${WT_ANYTLS_AUTO_END:-$(fss_anytls_uptime)}"
 	seconds="$(awk -v end="${end}" -v start="${WT_ANYTLS_AUTO_START}" 'BEGIN{printf "%.3f",end-start}')"
 	profile="$(printf '%s' "${WT_ANYTLS_AUTO_PREVIOUS}" | jq -c \
 		--arg reason "${WT_ANYTLS_AUTO_REASON}" --argjson now "${now}" --argjson n "${WT_ANYTLS_AUTO_LIMIT}" \
@@ -136,19 +137,30 @@ fss_anytls_batch_finish() (
 		elif $n==.level and .samples<2 and complete then
 			.samples+=1 | .sum+=$elapsed | .timeouts=([.timeouts,$timeouts]|max)
 		else . end
-	')" || { fss_anytls_batch_state "${phase}" "${WT_ANYTLS_AUTO_REASON}" "${events}"; return 1; }
+	')" || profile=""
 	if [ "${WT_ANYTLS_AUTO_REASON}" = trial ] &&
 		printf '%s' "${profile}" | jq -e --argjson now "${now}" '.cooldown>$now' >/dev/null; then
 		WT_ANYTLS_AUTO_REASON=trial_rejected
 	fi
+	if [ "${cleanup_status}" != 0 ]; then
+		phase=cleanup_pending
+		WT_ANYTLS_AUTO_REASON=cleanup_failed
+	fi
 	fss_anytls_batch_state "${phase}" "${WT_ANYTLS_AUTO_REASON}" "${events}"
+	[ -n "${profile}" ] || return 1
 	[ "${profile}" != "${WT_ANYTLS_AUTO_PREVIOUS}" ] || return 0
 	printf '%s\n' "${profile}" > "${WT_ANYTLS_AUTO_PROFILE}.$$" && mv -f "${WT_ANYTLS_AUTO_PROFILE}.$$" "${WT_ANYTLS_AUTO_PROFILE}"
 )
 
 fss_anytls_batch_mark_stopped() {
 	local json=/tmp/upload/anytls-webtest.json
-	WT_ANYTLS_AUTO_LIMIT="$(jq -er 'select(.phase=="running")|.concurrency' "${json}" 2>/dev/null)" || return 0
+	local reason
+	case "${2:-stopped}" in
+	memory_pressure) reason=memory_pressure ;;
+	stopped) reason=user_stopped ;;
+	*) reason=canceled ;;
+	esac
+	WT_ANYTLS_AUTO_LIMIT="$(jq -er 'select(.phase=="running" or .phase=="cleanup_pending")|.concurrency' "${json}" 2>/dev/null)" || return 0
 	WT_ANYTLS_AUTO_COUNT="$(jq -er '.total' "${json}" 2>/dev/null)" || return 0
-	fss_anytls_batch_state canceled user_stopped "$1"
+	fss_anytls_batch_state canceled "${reason}" "$1"
 }

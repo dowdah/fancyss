@@ -72,6 +72,35 @@ fss_anytls_batch_finish "$3" 0
         result = self.run_trial(self.baseline, reason="memory_pressure", minimum=47)
         self.assertEqual(result["level"], 2)
 
+    def test_memory_cancellation_keeps_pending_progress_until_cleanup_succeeds(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "events").write_text('{"id":"1","state":"ok","latency_ms":10}\n')
+            (root / "profile").write_text(json.dumps(self.baseline))
+            program = SCRIPT.read_text().replace("/tmp/upload", "$FIXTURE_ROOT") + r'''
+WT_ANYTLS_AUTO_PROFILE="$FIXTURE_ROOT/profile"
+WT_ANYTLS_AUTO_PREVIOUS="$(cat "$WT_ANYTLS_AUTO_PROFILE")"
+WT_ANYTLS_AUTO_REASON=memory_pressure
+WT_ANYTLS_AUTO_MIN=47
+WT_ANYTLS_AUTO_COUNT=4
+WT_ANYTLS_AUTO_LIMIT=2
+WT_ANYTLS_AUTO_START=10
+WT_ANYTLS_AUTO_END=14
+fss_anytls_batch_finish "$FIXTURE_ROOT/events" 2 1 || exit 1
+jq -c . "$FIXTURE_ROOT/anytls-webtest.json"
+fss_anytls_batch_mark_stopped "$FIXTURE_ROOT/events" memory_pressure
+jq -c . "$FIXTURE_ROOT/anytls-webtest.json"
+'''
+            output = subprocess.check_output(
+                ["/bin/sh", "-c", 'FIXTURE_ROOT="$1"\n' + program, "fixture", str(root)], text=True,
+            )
+            before, after = map(json.loads, output.splitlines())
+            self.assertEqual((before["phase"], before["reason"], before["completed"]),
+                             ("cleanup_pending", "cleanup_failed", 1))
+            self.assertEqual((after["phase"], after["reason"], after["completed"]),
+                             ("canceled", "memory_pressure", 1))
+            self.assertEqual(json.loads((root / "profile").read_text())["level"], 1)
+
     def test_manual_batch_only_tries_higher_with_headroom_and_no_shunt_update(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

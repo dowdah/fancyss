@@ -55,15 +55,19 @@ func parseConfig(args []string) (config, bool, error) {
 		return c, false, errors.New("conflicting TLS flags")
 	}
 	c.Verify = !insecure
+	return c, false, validateConfig(c)
+}
+
+func validateConfig(c config) error {
 	host, port, err := net.SplitHostPort(c.Listen)
-	if err != nil || !validPort(port) || net.ParseIP(host) == nil || !net.ParseIP(host).IsLoopback() || port == "0" {
-		return c, false, errors.New("listen address must be loopback")
+	if err != nil || !validPort(port) || !net.ParseIP(host).IsLoopback() {
+		return errors.New("listen address must be loopback")
 	}
 	serverHost, serverPort, serverErr := net.SplitHostPort(c.Server)
 	if serverErr != nil || serverHost == "" || !validPort(serverPort) || c.PasswordFile == "" || strings.ContainsAny(c.SNI, "\r\n\x00 ") {
-		return c, false, errors.New("invalid node configuration")
+		return errors.New("invalid node configuration")
 	}
-	return c, false, nil
+	return nil
 }
 
 func validPort(port string) bool {
@@ -111,21 +115,26 @@ func tlsConfig(c config) (*tls.Config, error) {
 	return t, nil
 }
 
-func run(ctx context.Context, c config) error {
+func newDialer(routerEgress bool) (*net.Dialer, error) {
+	dialer := &net.Dialer{Timeout: 5 * time.Second, KeepAlive: 30 * time.Second}
+	if routerEgress {
+		control, err := routerDialControl()
+		if err != nil {
+			return nil, err
+		}
+		dialer.Control = control
+	}
+	return dialer, nil
+}
+
+func newAnyTLSClient(ctx context.Context, c config, dialer *net.Dialer) (*anytls.Client, error) {
 	password, err := readPassword(c.PasswordFile)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	t, err := tlsConfig(c)
 	if err != nil {
-		return err
-	}
-	dialer := &net.Dialer{Timeout: 5 * time.Second, KeepAlive: 30 * time.Second}
-	if c.RouterEgress {
-		dialer.Control, err = routerDialControl()
-		if err != nil {
-			return err
-		}
+		return nil, err
 	}
 	client, err := anytls.NewClient(ctx, anytls.ClientConfig{
 		Password: password, Logger: logger.NOP(),
@@ -146,7 +155,19 @@ func run(ctx context.Context, c config) error {
 		},
 	})
 	if err != nil {
-		return errors.New("AnyTLS initialization failed")
+		return nil, errors.New("AnyTLS initialization failed")
+	}
+	return client, nil
+}
+
+func run(ctx context.Context, c config) error {
+	dialer, err := newDialer(c.RouterEgress)
+	if err != nil {
+		return err
+	}
+	client, err := newAnyTLSClient(ctx, c, dialer)
+	if err != nil {
+		return err
 	}
 	defer client.Close()
 	ln, err := net.Listen("tcp", c.Listen)
@@ -158,26 +179,38 @@ func run(ctx context.Context, c config) error {
 }
 
 func main() {
-	if len(os.Args) == 2 && os.Args[1] == "--check-router-egress" {
-		if _, err := routerDialControl(); err != nil {
-			fmt.Fprintln(os.Stderr, "fss-anytls-client:", err)
-			os.Exit(1)
-		}
-		return
-	}
-	c, showVersion, err := parseConfig(os.Args[1:])
-	if showVersion {
-		fmt.Println(version)
-		return
-	}
-	if err == nil {
-		ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
-		defer cancel()
-		err = run(ctx, c)
-	}
-	if err != nil {
+	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer cancel()
+	if err := runCommand(ctx, os.Args[1:]); err != nil {
 		// Initialization errors contain no node credentials or request destinations.
 		fmt.Fprintln(os.Stderr, "fss-anytls-client:", err)
 		os.Exit(1)
 	}
+}
+
+func runCommand(ctx context.Context, args []string) error {
+	if len(args) == 1 && args[0] == "--capabilities" {
+		fmt.Println("webtest-manifest webtest-ready-file")
+		return nil
+	}
+	if len(args) == 1 && args[0] == "--check-router-egress" {
+		_, err := routerDialControl()
+		return err
+	}
+	if len(args) == 2 && args[0] == "--webtest-manifest" {
+		manifest, err := readWebtestManifest(args[1])
+		if err != nil {
+			return err
+		}
+		return runWebtest(ctx, manifest)
+	}
+	c, showVersion, err := parseConfig(args)
+	if showVersion {
+		fmt.Println(version)
+		return nil
+	}
+	if err != nil {
+		return err
+	}
+	return run(ctx, c)
 }

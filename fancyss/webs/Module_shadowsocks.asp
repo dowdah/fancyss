@@ -4409,7 +4409,7 @@ function invalidate_schema2_webtest_results() {
 	if (get_node_storage_schema() != 2) {
 		return;
 	}
-	close_latency_ws(false);
+	invalidate_latency_requests();
 	close_latency_flag = 0;
 	$(".latency .latency_val").html("");
 	update_shunt_latency_chips();
@@ -11127,6 +11127,7 @@ function render_node_list_footer_html() {
 	}
 	html += '<input id="reset_select" style="margin-left:10px; display:none" class="button_gen" onClick="select_default_node(1)" type="button" value="取消"/>';
 	html += '</div>';
+	html += '<div id="anytls_webtest_progress" role="status" aria-live="polite"></div>';
 	return html;
 }
 function render_node_cards_html(nodeH, noserver, hasLatency) {
@@ -12474,6 +12475,7 @@ function send_webtest_ws_command(command, onDone, onBusy, onError) {
 				finished = true;
 				try { ctl.close(); } catch (e) {}
 				if (typeof onBusy === "function") onBusy();
+				else if (typeof onError === "function") onError();
 			}
 			return;
 		}
@@ -12503,9 +12505,10 @@ function read_webtest_file_ws(path, onSuccess, onError) {
 		if (typeof onError === "function") onError();
 		return false;
 	}
-	webtestFileWsPending[path] = [{success: onSuccess, error: onError}];
+	var pending = [{success: onSuccess, error: onError}];
+	webtestFileWsPending[path] = pending;
 	var flush_pending = function(ok, data) {
-		var pending = webtestFileWsPending[path] || [];
+		if (webtestFileWsPending[path] !== pending) return;
 		delete webtestFileWsPending[path];
 		if (ok) {
 			webtestFileWsCache[path] = {ts: Date.now(), data: data};
@@ -12616,11 +12619,13 @@ function update_latency_finish_time() {
 	if (!is_latency_feature_enabled()) {
 		return;
 	}
+	var seq = batchLatencyPollSeq;
 	$.ajax({
 		type: "GET",
 		url: "/_api/ss_basic_webtest_ts",
 		dataType: "json",
 		success: function(data) {
+			if (seq !== batchLatencyPollSeq) return;
 			db_get = data.result[0];
 			if(db_get["ss_basic_webtest_ts"]){
 				$("#ss_wts_show").html("<em>【上次完成时间: " + db_get["ss_basic_webtest_ts"] + "】</em>");
@@ -12634,6 +12639,38 @@ function finish_latency_batch() {
 	batch_stop_pending = false;
 	update_latency_action_links();
 	update_latency_finish_time();
+	refresh_anytls_webtest_progress(true);
+}
+var anytlsWebtestProgressAt = 0;
+var anytlsWebtestProgressRequest = 0;
+function clear_anytls_webtest_progress() {
+	anytlsWebtestProgressRequest += 1;
+	anytlsWebtestProgressAt = 0;
+	$("#anytls_webtest_progress").empty();
+}
+function invalidate_latency_requests() {
+	stop_node_latency_live_runtime();
+	webtestFileWsCache = {};
+	webtestFileWsPending = {};
+	clear_anytls_webtest_progress();
+}
+function refresh_anytls_webtest_progress(force) {
+	if (!$("#anytls_webtest_progress").length || (!force && Date.now() - anytlsWebtestProgressAt < 1000)) return;
+	anytlsWebtestProgressAt = Date.now();
+	var request = ++anytlsWebtestProgressRequest;
+	$.ajax({url: "/_temp/anytls-webtest.json", dataType: "json", cache: false}).done(function(state) {
+		if (request !== anytlsWebtestProgressRequest) return;
+		var reason = {trial: "试高一档", low_headroom: "可用内存低于 64 MiB，沿用已验证档位",
+			shunt_busy: "分流正在应用，沿用已验证档位", memory_pressure: "可用内存低于 48 MiB",
+			trial_rejected: "试档未达标，24 小时内沿用原档", user_stopped: "已手动中止",
+			cleanup_failed: "清理待重试", canceled: "测速已取消"};
+		$("#anytls_webtest_progress").text(
+			"AnyTLS " + Number(state.concurrency) + " 并发档 · 正在测 " + (state.phase === "running" ? Number(state.running) : 0) + " · 已测 " + Number(state.completed) + "/" +
+			Number(state.total) + " · 超时 " + Number(state.timeouts) +
+			(reason[state.reason] ? " · " + reason[state.reason] : ""));
+	}).fail(function() {
+		if (request === anytlsWebtestProgressRequest) $("#anytls_webtest_progress").empty();
+	});
 }
 function is_latency_transient_state(value){
 	value = String(value || "");
@@ -12641,7 +12678,7 @@ function is_latency_transient_state(value){
 }
 function is_latency_terminal_state(value){
 	value = String(value || "");
-	return $.isNumeric(value) || value == "failed" || value == "timeout" || value == "ns" || value == "stopped" || value == "canceled";
+	return $.isNumeric(value) || /^(failed|configuration_failed|tls_failed|connection_failed|dns_failed|timeout|ns|stopped|canceled)$/.test(value);
 }
 function update_latency_action_links() {
 	if (!is_latency_feature_enabled()) {
@@ -12737,6 +12774,7 @@ function handle_latency_ws_payload(payload) {
 		return;
 	}
 	write_webtest(array);
+	refresh_anytls_webtest_progress(false);
 	batch_ws_last_message_at = Date.now();
 	var hasStop = array.some(function(item) {
 		return item[0] == "stop";
@@ -12910,12 +12948,14 @@ function start_single_latency_ws(node) {
 	return true;
 }
 	function apply_latency_feature_enabled_ui() {
-		close_latency_ws();
+		invalidate_latency_requests();
 		close_latency_flag = 0;
 		db_ss["ss_basic_latency_val"] = "2";
 		batch_test_running = true;
 		batch_stop_pending = false;
+		var seq = batchLatencyPollSeq;
 		var startFollow = function() {
+			if (seq !== batchLatencyPollSeq || !batch_test_running) return;
 			$(".latency .latency_val").html("waiting");
 			$("#ss_wts_show").html("<em>【测速中...】</em>");
 			$("#dropdown").width(240);
@@ -12933,8 +12973,7 @@ function start_single_latency_ws(node) {
 		}
 	}
 	function apply_latency_feature_disabled_ui() {
-		close_latency_ws();
-		close_single_latency_ws();
+		invalidate_latency_requests();
 		db_ss["ss_basic_latency_val"] = "0";
 		close_latency_flag = 1;
 		batch_test_running = false;
@@ -12973,6 +13012,8 @@ function start_single_latency_ws(node) {
 					}else if(test_flag == 2){
 						apply_latency_feature_enabled_ui();
 					}
+				}else{
+					layer.msg("另一项测速操作未完成，请稍后重试");
 				}
 			}
 		});
@@ -12984,7 +13025,9 @@ function start_single_latency_ws(node) {
 		if(is_ws_available() && test_flag == 2){
 			send_webtest_ws_command("sh /koolshare/scripts/ss_webtest.sh ws_start_batch", function() {
 				apply_latency_feature_enabled_ui();
-			}, null, function() {
+			}, function() {
+				layer.msg("另一项测速操作未完成，请稍后重试");
+			}, function() {
 				layer.msg("测速启动失败，已回退到HTTP方式");
 				post_latency_test_http(test_flag);
 			});
@@ -13005,14 +13048,18 @@ function stop_latency_batch() {
 	if(!batch_test_running || batch_stop_pending){
 		return;
 	}
+	var seq = batchLatencyPollSeq;
+	var retry = function() {
+		if (seq !== batchLatencyPollSeq || !batch_test_running) return;
+		batch_stop_pending = false;
+		update_latency_action_links();
+		$("#ss_wts_show").html("<em>【停止未完成，请重试】</em>");
+	};
 	if(is_ws_available()){
 		batch_stop_pending = true;
 		update_latency_action_links();
 		$("#ss_wts_show").html("<em>【停止中...】</em>");
-		send_webtest_ws_command("sh /koolshare/scripts/ss_webtest.sh ws_stop_batch", function() {}, null, function() {
-			batch_stop_pending = false;
-			update_latency_action_links();
-		});
+		send_webtest_ws_command("sh /koolshare/scripts/ss_webtest.sh ws_stop_batch", function() {}, retry, retry);
 		return;
 	}
 	var id = parseInt(Math.random() * 100000000);
@@ -13028,29 +13075,33 @@ function stop_latency_batch() {
 		dataType: "json",
 		success: function(response) {
 			if(response.result != id){
-				batch_stop_pending = false;
-				update_latency_action_links();
+				retry();
 			}
 		},
-		error: function() {
-			batch_stop_pending = false;
-			update_latency_action_links();
-		}
+		error: retry
 	});
 }
+function apply_latency_cache_cleared() {
+	invalidate_latency_requests();
+	batch_test_running = false;
+	batch_stop_pending = false;
+	single_test_running = false;
+	single_test_node = null;
+	$(".latency .latency_val").html("");
+	$("#ss_wts_show").html("");
+	$("#dropdown").width(150);
+	update_latency_action_links();
+}
 function clear_latency_cache() {
+	var seq = batchLatencyPollSeq;
+	var clearCurrent = function() {
+		if (seq === batchLatencyPollSeq) apply_latency_cache_cleared();
+	};
 	if(is_ws_available()){
-		send_webtest_ws_command("sh /koolshare/scripts/ss_webtest.sh ws_clear_cache", function() {
-			close_latency_ws();
-			close_single_latency_ws();
-			batch_test_running = false;
-			batch_stop_pending = false;
-			$(".latency .latency_val").html("");
-			$("#ss_wts_show").html("");
-			$("#dropdown").width(150);
-			update_latency_action_links();
-		}, function() {
+		send_webtest_ws_command("sh /koolshare/scripts/ss_webtest.sh ws_clear_cache", clearCurrent, function() {
 			layer.msg("正在测速，请稍后重试");
+		}, function() {
+			layer.msg("清空未完成，请重试");
 		});
 		return;
 	}
@@ -13068,13 +13119,9 @@ function clear_latency_cache() {
 				return;
 			}
 			if (response.result == id){
-				close_latency_ws();
-				batch_test_running = false;
-				batch_stop_pending = false;
-				$(".latency .latency_val").html("");
-				$("#ss_wts_show").html("");
-				$("#dropdown").width(150);
-				update_latency_action_links();
+				clearCurrent();
+			} else {
+				layer.msg("清空未完成，请重试");
 			}
 		}
 	});
@@ -13369,6 +13416,7 @@ function get_latency_data(action, pollSeq){
 				}
 			const array = parse_webtest_lines(res);
 			write_webtest(array);
+				refresh_anytls_webtest_progress(false);
 			const hasStop = array.some(function(item) {
 				return item[0] == "stop";
 			});
@@ -13391,7 +13439,9 @@ function load_latency_cache(){
 	if (!should_run_node_latency_live() || !is_latency_feature_enabled()) {
 		return false;
 	}
+	var seq = batchLatencyPollSeq;
 	var handle_cache = function(res) {
+		if (seq !== batchLatencyPollSeq) return;
 		const data = parse_webtest_complete(res || "");
 		const usable = count_usable_webtest(data.list);
 		const threshold = Math.max(1, Math.floor(node_nu * 0.5));
@@ -13407,6 +13457,7 @@ function load_latency_cache(){
 		load_latency_backup(usable);
 	};
 	var fallback_http = function() {
+		if (seq !== batchLatencyPollSeq) return;
 		$.ajax({
 			url: '/_temp/webtest.txt',
 			type: 'GET',
@@ -13414,14 +13465,16 @@ function load_latency_cache(){
 			dataType: 'text',
 			success: handle_cache,
 			error: function() {
-				load_latency_backup(0);
+				if (seq === batchLatencyPollSeq) load_latency_backup(0);
 			}
 		});
 	};
 	read_webtest_file_ws('/tmp/upload/webtest.txt', handle_cache, fallback_http);
 }
 function load_latency_backup(minCount){
+	var seq = batchLatencyPollSeq;
 	var handle_backup = function(res) {
+		if (seq !== batchLatencyPollSeq) return;
 		const data = parse_webtest_complete(res || "");
 		const usable = count_usable_webtest(data.list);
 		if(usable >= Math.max(1, minCount || 0)){
@@ -13431,6 +13484,7 @@ function load_latency_backup(minCount){
 		}
 	};
 	var fallback_http = function() {
+		if (seq !== batchLatencyPollSeq) return;
 		$.ajax({
 			url: '/_temp/webtest_bakcup.txt',
 			type: 'GET',
@@ -13538,9 +13592,17 @@ function write_webtest(ps){
 			}
 		}else{
 			if(lag == "failed"){
-				test_result = '<font color="#FF0000">failed!</font>';
+				test_result = '<font color="#FF0000">失败</font>';
+			}else if(lag == "configuration_failed"){
+				test_result = '<font color="#FF0000">节点配置无效</font>';
+			}else if(lag == "tls_failed"){
+				test_result = '<font color="#FF0000">TLS 校验失败</font>';
+			}else if(lag == "connection_failed"){
+				test_result = '<font color="#FF0000">连接失败</font>';
+			}else if(lag == "dns_failed"){
+				test_result = '<font color="#FF0000">DNS 失败</font>';
 			}else if(lag == "timeout"){
-				test_result = '<font color="#FF0000">timeout!</font>';
+				test_result = '<font color="#FF0000">超时</font>';
 			}else if(lag == "ns"){
 				test_result = '<font color="#FF0000">不支持!</font>';
 			}else if(lag == "waiting"){
@@ -13556,7 +13618,7 @@ function write_webtest(ps){
 			}else if(lag == "warming"){
 				test_result = '<font color="#00FFCC">warming</font>';
 			}else if(lag == "stopped"){
-				test_result = '<font color="#999999">stopped</font>';
+				test_result = '<font color="#999999">已停止</font>';
 			}else if(lag == "canceled"){
 				test_result = '<font color="#CC5500">canceled</font>';
 			}else{

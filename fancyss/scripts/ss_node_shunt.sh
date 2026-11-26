@@ -481,7 +481,9 @@ fss_shunt_custom_domain_to_tokens() {
 			if (prefix == "keyword") {
 				if (value !~ /^[a-z0-9._-]+$/) return ""
 			} else {
-				if (value !~ /^[a-z0-9._-]+(\.[a-z0-9._-]+)+$/) return ""
+				# Explicit suffix rules can target a top-level domain such as .goog.
+				if (value !~ /^[a-z0-9._-]+(\.[a-z0-9._-]+)+$/ &&
+				    !(lower ~ /^(domain:|domain-suffix,)/ && value ~ /^[a-z0-9]+(-+[a-z0-9]+)*$/)) return ""
 			}
 			return prefix ":" value
 		}
@@ -2114,12 +2116,14 @@ fss_shunt_prune_runtime_targets_by_cache() {
 		echo "${node_id}" >> "${tmp_targets}"
 		keep_any=1
 	done < "${FSS_SHUNT_RUNTIME_TARGET_FILE}"
+	# These actions do not require a node artifact.
+	awk -F '|' 'FILENAME==ARGV[1] {keep[$1]=1; next} $2=="DIRECT" || $2=="REJECT" || keep[$2]' \
+		"${tmp_targets}" "${FSS_SHUNT_RUNTIME_ACTIVE_FILE}" > "${tmp_active}" || return 1
+	mv -f "${tmp_active}" "${FSS_SHUNT_RUNTIME_ACTIVE_FILE}" || return 1
 	if [ "${keep_any}" = "1" ]; then
-		mv -f "${tmp_targets}" "${FSS_SHUNT_RUNTIME_TARGET_FILE}"
-		awk -F '|' 'NR==FNR {keep[$1]=1; next} keep[$2]' "${FSS_SHUNT_RUNTIME_TARGET_FILE}" "${FSS_SHUNT_RUNTIME_ACTIVE_FILE}" > "${tmp_active}"
-		mv -f "${tmp_active}" "${FSS_SHUNT_RUNTIME_ACTIVE_FILE}"
+		mv -f "${tmp_targets}" "${FSS_SHUNT_RUNTIME_TARGET_FILE}" || return 1
 	else
-		rm -f "${tmp_targets}" "${FSS_SHUNT_RUNTIME_TARGET_FILE}" "${tmp_active}" "${FSS_SHUNT_RUNTIME_ACTIVE_FILE}" >/dev/null 2>&1
+		rm -f "${tmp_targets}" "${FSS_SHUNT_RUNTIME_TARGET_FILE}" || return 1
 	fi
 }
 

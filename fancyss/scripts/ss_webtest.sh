@@ -4,6 +4,7 @@
 
 source /koolshare/scripts/ss_base.sh
 source /koolshare/scripts/ss_webtest_gen.sh
+[ ! -f /koolshare/scripts/ss_anytls_batch.sh ] || . /koolshare/scripts/ss_anytls_batch.sh
 LOGTIME1=⌚$(TZ=UTC-8 date -R "+%H:%M:%S")
 TMP2=/tmp/fancyss_webtest
 WT_WEBTEST_FILE=/tmp/upload/webtest.txt
@@ -12,6 +13,7 @@ WT_WEBTEST_BACKUP=/tmp/upload/webtest_bakcup.txt
 WT_WEBTEST_HISTORY=/tmp/upload/webtest_history.txt
 WT_WEBTEST_STOP_FLAG=/tmp/webtest.stop
 WT_WEBTEST_PID_FILE=/tmp/webtest.pid
+WT_WEBTEST_CONTROL_LOCK=/var/lock/fss-webtest-control.lock
 WT_WEBTEST_STATE_LOCK=/tmp/webtest.state.lock
 WT_SERVER_RESOLV_MODE="1"
 WT_NODE_CACHE_DIR=""
@@ -423,12 +425,23 @@ wt_webtest_tool_build_job() {
 	return 0
 }
 
+wt_webtest_result_state() {
+	local id="$1" state="$2" detail
+	case "${id}" in ''|*[!0-9]*) return 1 ;; esac
+	if [ "${state}" = failed ] || [ "${state}" = timeout ]; then
+		detail="$(cat "${TMP2}/hooks_09/${id}.status" 2>/dev/null)"
+		case "${detail}" in configuration|tls|connection|dns) state="${detail}_failed" ;; esac
+	fi
+	printf '%s\n' "${state}"
+}
+
 wt_webtest_tool_import_results() {
 	local output_json="$1"
 	local jq_bin=""
 	local parsed_file="${TMP2}/webtest_tool_import.$$.txt"
 	local line=""
 	local nu=""
+	local state=""
 
 	jq_bin="$(wt_pick_jq 2>/dev/null)" || return 1
 	[ -f "${output_json}" ] || return 1
@@ -450,8 +463,8 @@ wt_webtest_tool_import_results() {
 	while IFS= read -r line
 	do
 		nu="${line%%>*}"
-		[ -n "${nu}" ] || continue
-		printf '%s\n' "${line}" > "${TMP2}/results/${nu}.txt"
+		state="$(wt_webtest_result_state "${nu}" "${line#*>}")" || continue
+		printf '%s>%s\n' "${nu}" "${state}" > "${TMP2}/results/${nu}.txt"
 		wt_append_webtest_file "${TMP2}/results/${nu}.txt"
 	done < "${parsed_file}"
 	rm -f "${parsed_file}"
@@ -467,6 +480,10 @@ wt_wait_pid_with_timeout() {
 	[ -n "${timeout_secs}" ] || timeout_secs=30
 	while kill -0 "${pid}" >/dev/null 2>&1
 	do
+		# An exited child can still appear in kill -0 until its parent reaps it.
+		case "$(sed -n 's/^.*) \([ZX]\) .*$/\1/p' "/proc/${pid}/stat" 2>/dev/null)" in
+		Z|X) return 0 ;;
+		esac
 		[ "${elapsed}" -ge "${timeout_secs}" ] && return 1
 		sleep 1
 		elapsed=$((elapsed + 1))
@@ -539,7 +556,7 @@ wt_try_webtest_tool_batch() {
 			current_lines=\$(wc -l < "${live_stream_file}" 2>/dev/null)
 			[ -n "\${current_lines}" ] || current_lines=0
 			if [ "\${current_lines}" -gt "\${last_lines}" ]; then
-				sed -n "$((last_lines + 1)),\${current_lines}p" "${live_stream_file}" 2>/dev/null | while IFS= read -r line
+				sed -n "\$((last_lines + 1)),\${current_lines}p" "${live_stream_file}" 2>/dev/null | while IFS= read -r line
 				do
 					[ -n "\${line}" ] || continue
 					[ "\${line}" = "__FSS_WEBTEST_FOLLOWER_STOP__" ] && continue
@@ -580,6 +597,7 @@ wt_try_webtest_tool_batch() {
 	daemon_pid="$!"
 	if ! wt_wait_pid_with_timeout "${daemon_pid}" "${timeout_secs}"; then
 		kill -9 "${daemon_pid}" >/dev/null 2>&1 || true
+		wait "${daemon_pid}" 2>/dev/null || true
 		: > "${follower_stop}"
 		printf '%s\n' "__FSS_WEBTEST_FOLLOWER_STOP__" >> "${live_stream_file}"
 		sleep 1
@@ -657,9 +675,12 @@ wt_webtest_tool_build_targets_job() {
 				[ -n "${wait_timeout_ms}" ] || wait_timeout_ms="5000"
 				printf ',"wait_port":%s,"wait_timeout_ms":%s' "${wait_port}" "${wait_timeout_ms}"
 			fi
-			previous_latency="$(wt_get_previous_webtest_latency "${node_id}" 2>/dev/null || true)"
-			if [ -n "${previous_latency}" ]; then
-				printf ',"previous_latency_ms":%s' "${previous_latency}"
+			# History can reduce the engine's attempt count. Keep auto calibration comparable.
+			if [ "${batch_tag}:${WT_ANYTLS_AUTO_ACTIVE:-0}" != 09:1 ]; then
+				previous_latency="$(wt_get_previous_webtest_latency "${node_id}" 2>/dev/null || true)"
+				if [ -n "${previous_latency}" ]; then
+					printf ',"previous_latency_ms":%s' "${previous_latency}"
+				fi
 			fi
 			printf '}'
 		done < "${targets_file}"
@@ -712,6 +733,7 @@ wt_try_webtest_tool_targets_batch() {
 	local nodes_file="${TMP2}/webtest_tool_${batch_tag}.nodes"
 	local target_count=0
 	local timeout_secs=0
+	local wait_rc=0 engine_rc=0
 
 	webtest_tool="$(wt_pick_webtest_tool 2>/dev/null)" || return 1
 	[ -f "${targets_file}" ] || return 1
@@ -736,7 +758,7 @@ wt_try_webtest_tool_targets_batch() {
 			current_lines=\$(wc -l < "${live_stream_file}" 2>/dev/null)
 			[ -n "\${current_lines}" ] || current_lines=0
 			if [ "\${current_lines}" -gt "\${last_lines}" ]; then
-				sed -n "$((last_lines + 1)),\${current_lines}p" "${live_stream_file}" 2>/dev/null | while IFS= read -r line
+				sed -n "\$((last_lines + 1)),\${current_lines}p" "${live_stream_file}" 2>/dev/null | while IFS= read -r line
 				do
 					[ -n "\${line}" ] || continue
 					[ "\${line}" = "__FSS_WEBTEST_FOLLOWER_STOP__" ] && continue
@@ -775,19 +797,33 @@ wt_try_webtest_tool_targets_batch() {
 	follower_pid="$!"
 	"${webtest_tool}" run --config "${job_file}" >/dev/null 2>&1 &
 	daemon_pid="$!"
-	if ! wt_wait_pid_with_timeout "${daemon_pid}" "${timeout_secs}"; then
+	if [ "${batch_tag}" = 09 ] && [ "${WT_ANYTLS_AUTO_ACTIVE:-0}" = 1 ]; then
+		fss_anytls_batch_wait "${daemon_pid}" "${timeout_secs}" "${output_stream}" || wait_rc=$?
+	else
+		wt_wait_pid_with_timeout "${daemon_pid}" "${timeout_secs}" || wait_rc=$?
+	fi
+	if [ "${wait_rc}" -ne 0 ]; then
 		kill -9 "${daemon_pid}" >/dev/null 2>&1 || true
+		wait "${daemon_pid}" 2>/dev/null || true
 		: > "${follower_stop}"
 		printf '%s\n' "__FSS_WEBTEST_FOLLOWER_STOP__" >> "${live_stream_file}"
 		sleep 1
 		[ -n "${follower_pid}" ] && kill "${follower_pid}" >/dev/null 2>&1 || true
-		return 1
+		if [ "${batch_tag}" = 09 ] && [ "${WT_ANYTLS_AUTO_ACTIVE:-0}" = 1 ]; then
+			WT_ANYTLS_AUTO_OUTCOME="${wait_rc}"
+			WT_ANYTLS_AUTO_END="$(fss_anytls_uptime)"
+		fi
+		return "${wait_rc}"
 	fi
-	wait "${daemon_pid}" >/dev/null 2>&1 || true
+	wait "${daemon_pid}" >/dev/null 2>&1 || engine_rc=$?
 	: > "${follower_stop}"
 	printf '%s\n' "__FSS_WEBTEST_FOLLOWER_STOP__" >> "${live_stream_file}"
 	sleep 1
 	[ -n "${follower_pid}" ] && kill "${follower_pid}" >/dev/null 2>&1 || true
+	if [ "${batch_tag}" = 09 ] && [ "${WT_ANYTLS_AUTO_ACTIVE:-0}" = 1 ]; then
+		WT_ANYTLS_AUTO_OUTCOME="${engine_rc}"
+		WT_ANYTLS_AUTO_END="$(fss_anytls_uptime)"
+	fi
 	[ -f "${output_json}" ] || return 1
 	if [ "${WT_SINGLE}" = "1" ]; then
 		wt_webtest_tool_import_results "${output_json}" || return 1
@@ -878,22 +914,47 @@ wt_has_active_test_runner() {
 	'
 }
 
-wt_kill_stale_batch_runners() {
-	local self_pid="${1:-$$}"
-	local pid=""
+wt_lock_webtest_control() {
+	exec 6>"${WT_WEBTEST_CONTROL_LOCK}" || return 1
+	flock "${1:--n}" 6 || { exec 6>&-; return 1; }
+}
 
-	ps w 2>/dev/null | awk -v self="${self_pid}" '
-		/ss_webtest\.sh/ && !/grep/ {
-			pid = $1
-			if (pid == self) next
-			if ($0 ~ /schedule_warm/ || $0 ~ /schedule_node_direct_refresh/ || $0 ~ /warm_cache/ || $0 ~ /node_direct_refresh/) next
-			print pid
-		}
-	' | while read -r pid
-	do
-		[ -n "${pid}" ] || continue
-		kill -9 "${pid}" >/dev/null 2>&1 || true
-	done
+wt_webtest_process_birth() {
+	sed -n 's/^.*) //p' "/proc/$1/stat" 2>/dev/null |
+		awk '$1!="Z" && $1!="X" {print $20}'
+}
+
+wt_register_webtest_runner() {
+	local kind="$1" birth
+	[ ! -e /tmp/webtest.lock ] || return 1
+	birth="$(wt_webtest_process_birth "$$")"
+	[ -n "${birth}" ] || return 1
+	rm -f "${WT_WEBTEST_STOP_FLAG}" || return 1
+	printf '%s %s %s\n' "$$" "${birth}" "${kind}" > "${WT_WEBTEST_PID_FILE}.tmp" &&
+		mv -f "${WT_WEBTEST_PID_FILE}.tmp" "${WT_WEBTEST_PID_FILE}" &&
+		: > /tmp/webtest.lock || return 1
+	WT_STOPPED_RUNNER_KIND="${kind}"
+	exec 6>&-
+}
+
+wt_stop_webtest_runner() {
+	local pid birth kind current
+	WT_STOPPED_RUNNER_KIND=batch
+	[ -f "${WT_WEBTEST_PID_FILE}" ] || return 0
+	read -r pid birth kind < "${WT_WEBTEST_PID_FILE}" || return 1
+	case "${pid}" in ''|0|1|*[!0-9]*) return 1 ;; esac
+	[ "${kind}" != single ] || WT_STOPPED_RUNNER_KIND=single
+	current="$(wt_webtest_process_birth "${pid}")"
+	[ -n "${current}" ] && [ "${pid}" != "$$" ] || return 0
+	if [ -n "${birth}" ]; then
+		[ "${current}" = "${birth}" ] || return 0
+	else
+		# Earlier versions registered only the PID.
+		tr '\000' '\n' 2>/dev/null < "/proc/${pid}/cmdline" |
+			grep -Fxq "${KSROOT}/scripts/ss_webtest.sh" || return 0
+	fi
+	kill -9 "${pid}" 2>/dev/null || [ -z "$(wt_webtest_process_birth "${pid}")" ] || return 1
+	wt_wait_pid_with_timeout "${pid}" 3
 }
 
 wt_ensure_webtest_dir() {
@@ -1382,7 +1443,69 @@ wt_record_batch_result_file() {
 	done < "${src}"
 }
 
+wt_stop_anytls_batch() (
+	local hooks_dir="${TMP2}/hooks_09"
+	local stop_script=""
+	local node_id=""
+	local batch_pid=""
+	local status=0
+
+	[ -d "${hooks_dir}" ] || return 0
+	# Reject new starts and let any start hook already holding the lock finish.
+	: > "${hooks_dir}/.stopped" || return 1
+	exec 9>"${hooks_dir}/.start.lock" || return 1
+	flock -x 9 || return 1
+	if [ -f "${hooks_dir}/batch.pid" ]; then
+		read -r batch_pid < "${hooks_dir}/batch.pid"
+		case "${batch_pid}" in ''|0|*[!0-9]*) return 1;; esac
+		# Wait only for the process using this batch's manifest.
+		if [ -r "/proc/${batch_pid}/cmdline" ] &&
+			tr '\000' '\n' < "/proc/${batch_pid}/cmdline" | grep -Fxq "${hooks_dir}/manifest.json"; then
+			wt_wait_pid_with_timeout "${batch_pid}" 5 || return 1
+		fi
+		rm -f "${hooks_dir}/batch.pid"
+	fi
+	for stop_script in "${hooks_dir}"/*.stop.sh
+	do
+		[ -f "${stop_script}" ] || continue
+		node_id="${stop_script##*/}"
+		node_id="${node_id%.stop.sh}"
+		[ -f "${TMP2}/pids/anytls_${node_id}.pid" ] || continue
+		if ! /bin/sh "${stop_script}" 9>&-; then
+			echo_date "AnyTLS 测速进程清理失败：节点 ${node_id}" >&2
+			status=1
+		fi
+	done
+	return "${status}"
+)
+
+wt_is_batch_result_writer() {
+	tr '\000' '\n' 2>/dev/null < "/proc/$1/cmdline" |
+		awk -v prefix="${TMP2}/webtest_tool_" '
+			index($0, prefix)==1 && /\.(job\.json|follow\.sh)$/ { found=1 }
+			END { exit !found }
+		'
+}
+
+wt_stop_batch_result_writers() {
+	local pid active attempts=0
+	while [ "${attempts}" -lt 20 ]; do
+		active=0
+		for pid in $(ps w | awk -v prefix="${TMP2}/webtest_tool_" 'index($0, prefix) && $1 ~ /^[0-9]+$/ {print $1}'); do
+			wt_is_batch_result_writer "${pid}" || continue
+			active=1
+			kill -9 "${pid}" 2>/dev/null
+		done
+		[ "${active}" = 0 ] && return 0
+		usleep 100000
+		attempts=$((attempts + 1))
+	done
+	return 1
+}
+
 wt_runtime_cleanup() {
+	local writers_status=0 helpers_status=0
+	wt_stop_batch_result_writers || writers_status=1
 	find "${FSS_WEBTEST_CACHE_NODE_DIR}" "${TMP2}" -name '*_anytls.pid' -type f 2>/dev/null | while read -r pid_file
 	do
 		[ -s "${pid_file}" ] || {
@@ -1403,13 +1526,17 @@ wt_runtime_cleanup() {
 	killall wt-naive >/dev/null 2>&1
 	killall wt-tuic >/dev/null 2>&1
 	killall wt-hy2 >/dev/null 2>&1
-	killall webtest-tool >/dev/null 2>&1
-	killall curl-fancyss >/dev/null 2>&1
 	ps w 2>/dev/null | grep -F '/tmp/fancyss_webtest/webtest_tool_' | grep -E 'follow\.sh|tail -n \+1 -f' | grep -v grep | awk '{print $1}' | while read -r pid
 	do
 		[ -n "${pid}" ] || continue
 		kill -9 "${pid}" >/dev/null 2>&1
 	done
+	wt_stop_anytls_batch || helpers_status=$?
+	[ "${writers_status}" = 0 ] || return 1
+	if [ "${1:-}" = replay ]; then
+		wt_replay_batch_results
+	fi
+	return "${helpers_status}"
 }
 
 wt_finalize_batch_output() {
@@ -1422,23 +1549,37 @@ wt_finalize_batch_output() {
 	cp -f "${WT_WEBTEST_FILE}" "${WT_WEBTEST_BACKUP}"
 }
 
-wt_abort_batch_run() {
-	local reason="$1"
-	local old_state=""
-	local new_state=""
+wt_replay_batch_results() {
+	local stream records id state jq_bin
+	jq_bin="$(wt_pick_jq 2>/dev/null)" || return 0
+	for stream in "${TMP2}"/webtest_tool_*.stream.jsonl; do
+		[ -f "${stream}" ] || continue
+		# A writer stopped mid-record can leave a truncated final line.
+		records="$("${jq_bin}" -Rn -r '
+			reduce (inputs | fromjson? | objects | select(.id != null) |
+				select((.state=="ok" and (.latency_ms|type=="number")) or .state=="failed" or .state=="timeout"))
+				as $e ({}; .[$e.id|tostring]=$e)
+			| to_entries[] | "\(.key)>\(if .value.state=="ok" then .value.latency_ms else .value.state end)"
+		' "${stream}" 2>/dev/null)" || continue
+		printf '%s\n' "${records}" | while IFS='>' read -r id state; do
+			state="$(wt_webtest_result_state "${id}" "${state}")" || continue
+			case "$(wt_get_batch_state "${id}")" in
+			configuration_failed|tls_failed|connection_failed|dns_failed) continue ;;
+			esac
+			wt_set_batch_state "${id}" "${state}"
+		done
+	done
+}
 
-	[ "${WT_BATCH_FINALIZED}" = "1" ] && return 0
-	[ -n "${reason}" ] || reason="canceled"
-	WT_BATCH_FINALIZED=1
-	WT_BATCH_ABORT_REASON="${reason}"
-	wt_runtime_cleanup
+wt_mark_unfinished_batch_nodes() {
+	local reason="$1" old_state new_state
 	if [ -f "${WT_WEBTEST_STATE_FILE}" ]; then
 		old_state="${WT_WEBTEST_STATE_FILE}.old.$$"
 		new_state="${WT_WEBTEST_STATE_FILE}.new.$$"
 		cp -f "${WT_WEBTEST_STATE_FILE}" "${old_state}"
 		awk -F '>' -v reason="${reason}" '
 			function terminal(v) {
-				return (v ~ /^[0-9]+$/ || v == "failed" || v == "timeout" || v == "ns" || v == "stopped" || v == "canceled")
+				return (v ~ /^[0-9]+([.][0-9]+)?$/ || v == "failed" || v ~ /^(configuration|tls|connection|dns)_failed$/ || v == "timeout" || v == "ns" || v == "stopped" || v == "canceled")
 			}
 			{
 				val = $2
@@ -1452,15 +1593,38 @@ wt_abort_batch_run() {
 		mv -f "${new_state}" "${WT_WEBTEST_STATE_FILE}"
 		rm -f "${old_state}"
 	fi
-	wt_finalize_batch_output
+}
+
+wt_abort_batch_run() {
+	local reason="$1" node_reason
+
+	[ "${WT_BATCH_FINALIZED}" = "1" ] && return 0
+	[ -n "${reason}" ] || reason="canceled"
+	node_reason="${reason}"
+	[ "${reason}" != memory_pressure ] || node_reason=canceled
+	WT_BATCH_ABORT_REASON="${reason}"
+	wt_runtime_cleanup replay || return $?
+	if type fss_anytls_batch_mark_stopped >/dev/null 2>&1; then
+		fss_anytls_batch_mark_stopped "${TMP2}/webtest_tool_09.stream.jsonl" "${reason}"
+	fi
+	wt_mark_unfinished_batch_nodes "${node_reason}"
+	if [ "${WT_STOPPED_RUNNER_KIND:-batch}" = single ]; then
+		wt_append_webtest_line "stop>stop" || return 1
+		wt_release_webtest_runner
+		return
+	fi
+	wt_finish_batch_run
+}
+
+wt_release_webtest_runner() {
 	rm -f "${WT_WEBTEST_PID_FILE}" "${WT_WEBTEST_STOP_FLAG}" /tmp/webtest.lock "${WT_WEBTEST_STATE_LOCK}"
 }
 
 wt_finish_batch_run() {
 	[ "${WT_BATCH_FINALIZED}" = "1" ] && return 0
+	wt_finalize_batch_output || return $?
 	WT_BATCH_FINALIZED=1
-	wt_finalize_batch_output
-	rm -f "${WT_WEBTEST_PID_FILE}" "${WT_WEBTEST_STOP_FLAG}" /tmp/webtest.lock "${WT_WEBTEST_STATE_LOCK}"
+	wt_release_webtest_runner
 }
 
 wt_batch_exit_guard() {
@@ -1468,6 +1632,7 @@ wt_batch_exit_guard() {
 
 	[ "${WT_BATCH_ACTIVE}" = "1" ] || return 0
 	[ "${WT_BATCH_FINALIZED}" = "1" ] && return 0
+	wt_lock_webtest_control -x || return 1
 	[ -f "${WT_WEBTEST_STOP_FLAG}" ] && reason="$(cat "${WT_WEBTEST_STOP_FLAG}" 2>/dev/null)"
 	[ -n "${reason}" ] || reason="${WT_BATCH_ABORT_REASON}"
 	[ -n "${reason}" ] || reason="canceled"
@@ -1484,45 +1649,18 @@ wt_batch_signal_handler() {
 }
 
 wt_request_stop_batch() {
-	local current_pid="$$"
-	local old_state=""
-	local new_state=""
-	local ss_webtest_pids=""
+	local reason=stopped
 
-	echo "stopped" > "${WT_WEBTEST_STOP_FLAG}"
-	if [ -f "${TMP2}/webtest.state" ]; then
-		WT_WEBTEST_STATE_FILE="${TMP2}/webtest.state"
-		old_state="${WT_WEBTEST_STATE_FILE}.old.$$"
-		new_state="${WT_WEBTEST_STATE_FILE}.new.$$"
-		cp -f "${WT_WEBTEST_STATE_FILE}" "${old_state}"
-		awk -F '>' '
-			function terminal(v) {
-				return (v ~ /^[0-9]+$/ || v == "failed" || v == "timeout" || v == "ns" || v == "stopped" || v == "canceled")
-			}
-			{
-				val = $2
-				if (!terminal(val)) {
-					val = "stopped"
-				}
-				print $1 ">" val
-			}
-		' "${WT_WEBTEST_STATE_FILE}" > "${new_state}"
+	[ -e /tmp/webtest.lock ] || [ -e "${WT_WEBTEST_PID_FILE}" ] || return 0
+	if [ "$(cat "${WT_WEBTEST_STOP_FLAG}" 2>/dev/null)" = memory_pressure ]; then
+		reason=memory_pressure
+	else
+		printf '%s\n' stopped > "${WT_WEBTEST_STOP_FLAG}" || return 1
 	fi
-	ss_webtest_pids=$(ps | grep -E "ss_webtest\.sh" | awk '{print $1}' | grep -v "^${current_pid}$")
-	if [ -n "${ss_webtest_pids}" ];then
-		for ss_webtest_pid in ${ss_webtest_pids}
-		do
-			kill -9 ${ss_webtest_pid} >/dev/null 2>&1
-		done
-	fi
-	wt_runtime_cleanup
-	if [ -f "${new_state}" ]; then
-		wt_emit_batch_state_diff "${old_state}" "${new_state}"
-		mv -f "${new_state}" "${WT_WEBTEST_STATE_FILE}"
-		rm -f "${old_state}"
-		wt_finalize_batch_output
-	fi
-	rm -f "${WT_WEBTEST_PID_FILE}" "${WT_WEBTEST_STOP_FLAG}" /tmp/webtest.lock "${WT_WEBTEST_STATE_LOCK}"
+	wt_stop_webtest_runner || return $?
+	WT_WEBTEST_STATE_FILE="${TMP2}/webtest.state"
+	[ "${WT_STOPPED_RUNNER_KIND}" != single ] || WT_WEBTEST_STATE_FILE="${TMP2}/webtest.single.state"
+	wt_abort_batch_run "${reason}"
 }
 
 wt_reset_active_node_env() {
@@ -2777,6 +2915,7 @@ wt_mark_failed_result() {
 }
 
 wt_mark_failed_from_nodes_file() {
+	[ "$(cat "${WT_WEBTEST_STOP_FLAG}" 2>/dev/null)" != memory_pressure ] || return 0
 	local file_path="$1"
 	local node_id=""
 
@@ -2995,9 +3134,9 @@ webtest_web(){
 		if [ "${backup_usable}" -gt "0" ];then
 			cp -f "${WT_WEBTEST_BACKUP}" "${WT_WEBTEST_FILE}" >/dev/null 2>&1
 		else
-			clean_webtest
+			clean_webtest || return 1
 			start_webtest
-			return 0
+			return $?
 		fi
 	fi
 
@@ -3015,28 +3154,22 @@ webtest_web(){
 		wt_http_response "ok2, webtest result in ${ss_basic_lt_web_time}min, do not refresh!"
 	else
 		# 4. 结果已过期后再重新测速；节点数量/覆盖率不作为提前触发条件。
-		clean_webtest
+		clean_webtest || return 1
 		start_webtest
 	fi
 }
 
 start_webtest(){
+	local status=0 reason
 	if ! latency_feature_enabled; then
 		return 0
 	fi
-	wt_kill_stale_batch_runners "$$"
-	if wt_has_active_test_runner "$$"; then
-		return 0
-	fi
-	# create lock
-	touch /tmp/webtest.lock
-	rm -f "${WT_WEBTEST_STOP_FLAG}"
-	echo "$$" > "${WT_WEBTEST_PID_FILE}"
+	wt_register_webtest_runner batch || return $?
 	WT_BATCH_ACTIVE=1
 	WT_BATCH_FINALIZED=0
 	WT_BATCH_ABORT_REASON=""
 	trap 'wt_batch_signal_handler' HUP INT TERM
-	trap 'wt_batch_exit_guard' EXIT
+	trap 'wt_batch_exit_guard || exit $?' EXIT
 	WT_SINGLE=0
 	WT_SKIP_DNS=0
 	WT_PREVIEW_READY=0
@@ -3045,6 +3178,7 @@ start_webtest(){
 	WT_GROUP_CURRENT_FILE=""
 	WT_GROUP_PREVIEW_FILE=""
 	wt_reset_webtest_output
+	rm -f /tmp/upload/anytls-webtest.json
 	
 	# 1. prepare
 	mkdir -p ${TMP2}
@@ -3065,11 +3199,16 @@ start_webtest(){
 	ensure_latency_batch
 
 	# 4. 测试
-	test_nodes
-
-	# 5. remove lock
-	wt_finish_batch_run
+	test_nodes || status=$?
+	wt_lock_webtest_control -x || return 1
+	reason="$(cat "${WT_WEBTEST_STOP_FLAG}" 2>/dev/null)"
+	if [ "${status}" != 0 ] || [ -n "${reason}" ]; then
+		wt_abort_batch_run "${reason:-canceled}" || status=$?
+	else
+		wt_finish_batch_run || status=$?
+	fi
 	trap - HUP INT TERM EXIT
+	return "${status}"
 }
 
 sort_nodes(){
@@ -3160,8 +3299,9 @@ test_nodes(){
 	fi
 	
 	local xray_group_done=0
-	cat ${TMP2}/nodes_file_name.txt | while read test_file
+	while read -r test_file
 	do
+		[ ! -f "${WT_WEBTEST_STOP_FLAG}" ] || break
 		local file_name=${test_file##*/}
 		local node_type=${file_name#wt_*_}
 		local node_type=${node_type%%.*}
@@ -3183,10 +3323,10 @@ test_nodes(){
 			test_12_tc $file_name $node_type
 			;;
 		09)
-			test_13_at $file_name $node_type
+			test_13_at "$file_name" "$node_type" || return $?
 			;;
 		esac
-	done
+	done < "${TMP2}/nodes_file_name.txt"
 	
 	# we shold remove test tmp file
 }
@@ -3478,6 +3618,38 @@ test_12_tc(){
 	rm -rf ${TMP2}/wt-tuic "${hooks_dir}"
 }
 
+wt_start_anytls_batch() {
+	local hooks_dir="$1" client="$2" manifest="$3"
+
+	exec 9>"${hooks_dir}/.start.lock" || return 1
+	if ! flock -x 9; then
+		exec 9>&-
+		return 1
+	fi
+	# The child inherits the lock even if the batch runner is killed before
+	# recording $!. Publish its own PID before handing off to the client.
+	/bin/sh -c '
+		[ ! -e "$1/.stopped" ] && [ ! -e "$4" ] || exit 1
+		printf "%s\n" "$$" > "$1/batch.pid.tmp" &&
+			mv -f "$1/batch.pid.tmp" "$1/batch.pid" || exit 1
+		exec "$2" --webtest-manifest "$3" 9>&-
+	' fss-anytls-batch "${hooks_dir}" "${client}" "${manifest}" "${WT_WEBTEST_STOP_FLAG}" &
+	batch_pid="$!"
+	exec 9>&-
+}
+
+wt_wait_anytls_batch_ready() {
+	local ready_file="$1" pid="$2" attempts=0
+	until [ -f "${ready_file}" ]; do
+		if ! kill -0 "${pid}" 2>/dev/null || [ "${attempts}" -ge 30 ]; then
+			[ -f "${ready_file}" ]
+			return
+		fi
+		usleep 100000
+		attempts=$((attempts + 1))
+	done
+}
+
 test_13_at(){
 	local file=$1
 	local mark=$2
@@ -3499,6 +3671,18 @@ test_13_at(){
 	local sni_arg=""
 	local verify_arg=""
 	local pass_file=""
+	local manifest=""
+	local jq_bin=""
+	local stop_file=""
+	local ready_file="" batch_pid="" probe_inputs="" password_hash="" insecure=""
+	local webtest_mode="" capabilities="" staged_capabilities=""
+	local first_port=""
+	local batch_ready=1
+	local hook_binary=""
+	local batch_rc=0
+	local cleanup_status=0 WT_ANYTLS_AUTO_OUTCOME=1 WT_ANYTLS_AUTO_END=""
+	local client_binary="${FSS_ANYTLS_BINARY:-/koolshare/bin/fss-anytls-client}"
+	local WT_ANYTLS_AUTO_ACTIVE=0
 
 	case "${file}" in
 	/*)
@@ -3513,6 +3697,42 @@ test_13_at(){
 	[ -n "${max_threads}" ] || max_threads=1
 	wt_set_batch_state_from_file "${file_path}" "loading..." ""
 	wt_prepare_protocol_targets_workspace "${targets_file}" "${valid_nodes_file}" "${hooks_dir}" || return 1
+	if [ -n "${FSS_ANYTLS_BINARY:-}" ]; then
+		hook_binary="export FSS_ANYTLS_BINARY=$(wt_shell_quote "${FSS_ANYTLS_BINARY}")"
+	fi
+	if [ "${WT_SINGLE}" != "1" ]; then
+		webtest_mode="$(dbus get ss_basic_anytls_webtest_mode)"
+		if [ "${webtest_mode}" = auto ] || [ "${FSS_ANYTLS_WEBTEST_MODE:-}" = single-process ]; then
+			capabilities="$("${client_binary}" --capabilities 2>/dev/null)"
+		fi
+		if [ "${webtest_mode}" = auto ] && type fss_anytls_batch_begin >/dev/null 2>&1 &&
+			wt_pick_webtest_tool >/dev/null 2>&1; then
+			# A batch-only install may have its own client binary.
+			if [ -z "${FSS_ANYTLS_BINARY:-}" ] && [ -x "${KSROOT}/bin/fss-anytls-webtest-client" ]; then
+				staged_capabilities="$("${KSROOT}/bin/fss-anytls-webtest-client" --capabilities 2>/dev/null)"
+				if printf '%s\n' "${staged_capabilities}" | grep -qw webtest-ready-file; then
+					client_binary="${KSROOT}/bin/fss-anytls-webtest-client"
+					capabilities="${staged_capabilities}"
+				fi
+			fi
+			if printf '%s\n' "${capabilities}" | grep -qw webtest-ready-file; then
+				WT_ANYTLS_AUTO_ACTIVE=1
+			fi
+		fi
+	fi
+	if [ "${WT_SINGLE}" != "1" ] &&
+		{ [ "${FSS_ANYTLS_WEBTEST_MODE:-}" = "single-process" ] || [ "${WT_ANYTLS_AUTO_ACTIVE}" = 1 ]; }; then
+		jq_bin="$(wt_pick_jq)" || return 1
+		manifest="${hooks_dir}/manifest.json"
+		(umask 077; : > "${manifest}.nodes" && : > "${manifest}") || return 1
+		if printf '%s\n' "${capabilities}" | grep -qw webtest-ready-file; then
+			ready_file="${hooks_dir}/batch.ready"
+		fi
+		if [ "${WT_ANYTLS_AUTO_ACTIVE}" = 1 ]; then
+			probe_inputs="${hooks_dir}/probe-inputs"
+			(umask 077; : > "${probe_inputs}") || return 1
+		fi
+	fi
 
 	# One preflight for the whole batch; per-node checks only isolate failures.
 	fss_require_base_dns || return 1
@@ -3543,7 +3763,41 @@ test_13_at(){
 		}
 		server_addr="$(wt_anytls_hostport "${anytls_server}" "${anytls_port}")"
 		pass_file="${TMP2}/conf/${nu}_anytls.pass"
-		printf '%s' "${anytls_pass}" > "${pass_file}"
+		(umask 077; printf '%s' "${anytls_pass}" > "${pass_file}") || return 1
+		stop_script="${hooks_dir}/${nu}.stop.sh"
+		if [ -n "${manifest}" ]; then
+			insecure=0
+			[ "${anytls_ai}" != 1 ] || insecure=1
+			stop_file="${hooks_dir}/${nu}.stopped"
+			"${jq_bin}" -nc --arg listen "127.0.0.1:${socks5_port}" --arg server "${server_addr}" \
+				--arg password_file "${pass_file}" --arg sni "${anytls_sni}" --arg insecure "${insecure}" \
+				--arg stop_file "${stop_file}" --arg status_file "${hooks_dir}/${nu}.status" \
+				'{$listen, $server, $password_file, $sni, insecure: ($insecure == "1"), $stop_file, $status_file}' \
+				>> "${manifest}.nodes" || return 1
+			cat > "${stop_script}" <<-EOF
+				#!/bin/sh
+				: >$(wt_shell_quote "${stop_file}")
+			EOF
+			chmod 700 "${stop_script}" || return 1
+			start_script=""
+			if [ -n "${ready_file}" ]; then
+				start_script="${hooks_dir}/${nu}.start.sh"
+				cat > "${start_script}" <<-EOF
+					#!/bin/sh
+					case "\$(cat $(wt_shell_quote "${hooks_dir}/${nu}.status") 2>/dev/null)" in
+						configuration|connection) exit 1 ;;
+					esac
+				EOF
+				chmod 700 "${start_script}" || return 1
+			fi
+			wt_append_protocol_target_row "${targets_file}" "${valid_nodes_file}" "${nu}" "${socks5_port}" "${start_script}" "${stop_script}" "${socks5_port}" "5000" || return 1
+			if [ -n "${probe_inputs}" ]; then
+				password_hash="$(sha256sum "${pass_file}")" || return 1
+				printf '%s\000' "${nu}" "${server_addr}" "${anytls_sni}" "${insecure}" "${password_hash%% *}" \
+					>> "${probe_inputs}" || return 1
+			fi
+			continue
+		fi
 		sni_arg=""
 		[ -n "${anytls_sni}" ] && sni_arg=" -sni $(wt_shell_quote "${anytls_sni}")"
 		if [ "${anytls_ai}" = "1" ]; then
@@ -3553,13 +3807,17 @@ test_13_at(){
 		fi
 		pid_file="${TMP2}/pids/anytls_${nu}.pid"
 		start_script="${hooks_dir}/${nu}.start.sh"
-		stop_script="${hooks_dir}/${nu}.stop.sh"
 		cat > "${start_script}" <<-EOF
 			#!/bin/sh
+			${hook_binary}
+			exec 9>$(wt_shell_quote "${hooks_dir}/.start.lock") || exit 1
+			flock -s 9 || exit 1
+			[ ! -e $(wt_shell_quote "${hooks_dir}/.stopped") ] || exit 1
 			exec /bin/sh /koolshare/scripts/ss_anytls_helper.sh start $(wt_shell_quote "${pid_file}") $(wt_shell_quote "${pass_file}") $(wt_shell_quote "127.0.0.1:${socks5_port}") $(wt_shell_quote "${server_addr}") $(wt_shell_quote "${anytls_sni}")${verify_arg}
 		EOF
 		cat > "${stop_script}" <<-EOF
 			#!/bin/sh
+			${hook_binary}
 			exec /bin/sh /koolshare/scripts/ss_anytls_helper.sh stop $(wt_shell_quote "${pid_file}") $(wt_shell_quote "${pass_file}") $(wt_shell_quote "127.0.0.1:${socks5_port}")
 		EOF
 		chmod 600 "${pass_file}"
@@ -3567,13 +3825,47 @@ test_13_at(){
 		wt_append_protocol_target_row "${targets_file}" "${valid_nodes_file}" "${nu}" "${socks5_port}" "${start_script}" "${stop_script}" "${socks5_port}" "5000" || continue
 	done < "${file_path}"
 	[ -s "${targets_file}" ] || return 0
+	if [ "${WT_ANYTLS_AUTO_ACTIVE}" = 1 ]; then
+		fss_anytls_batch_begin "${targets_file}" "${client_binary}" "${probe_inputs}" || batch_rc=$?
+		if [ "${batch_rc}" = 2 ]; then
+			printf '%s\n' memory_pressure > "${WT_WEBTEST_STOP_FLAG}"
+			return 0
+		elif [ "${batch_rc}" != 0 ]; then
+			wt_mark_failed_from_nodes_file "${valid_nodes_file}"
+			return 0
+		fi
+		max_threads="${WT_ANYTLS_AUTO_LIMIT}"
+	fi
+	if [ -n "${manifest}" ]; then
+		"${jq_bin}" -s --arg stop_file "${hooks_dir}/.stopped" --arg ready_file "${ready_file}" '
+			{router_egress: true, $stop_file, nodes: .}
+			| if $ready_file=="" then . else .ready_file=$ready_file end
+		' \
+			"${manifest}.nodes" > "${manifest}" || return 1
+		wt_start_anytls_batch "${hooks_dir}" "${client_binary}" "${manifest}" || return $?
+		if [ -n "${ready_file}" ]; then
+			wt_wait_anytls_batch_ready "${ready_file}" "${batch_pid}" || batch_ready=0
+		else
+			first_port="$(awk -F '|' 'NR == 1 {print $2; exit}' "${targets_file}")"
+			wait_local_port "${first_port}" 30 100000 || batch_ready=0
+		fi
+	fi
 	wt_set_batch_state_from_file "${valid_nodes_file}" "booting..." ""
-	if wt_try_webtest_tool_targets_batch "${targets_file}" "${mark}" "${max_threads}"; then
-		rm -rf "${hooks_dir}"
-		return 0
+	if [ "${batch_ready}" = 1 ]; then
+		wt_try_webtest_tool_targets_batch "${targets_file}" "${mark}" "${max_threads}" || batch_rc=$?
+	else
+		batch_rc=1
+	fi
+	if [ "${batch_rc}" = 1 ]; then
+		wt_mark_failed_from_nodes_file "${valid_nodes_file}"
 	fi
 
-	wt_mark_failed_from_nodes_file "${valid_nodes_file}"
+	wt_stop_anytls_batch || cleanup_status=$?
+	if [ "${WT_ANYTLS_AUTO_ACTIVE}" = 1 ]; then
+		[ "${batch_rc}" = 0 ] || WT_ANYTLS_AUTO_OUTCOME="${batch_rc}"
+		fss_anytls_batch_finish "${TMP2}/webtest_tool_${mark}.stream.jsonl" "${WT_ANYTLS_AUTO_OUTCOME}" "${cleanup_status}"
+	fi
+	[ "${cleanup_status}" = 0 ] || return "${cleanup_status}"
 	rm -rf "${hooks_dir}"
 }
 
@@ -3735,6 +4027,9 @@ single_test_node(){
 	if [ -z "${test_node}" ];then
 		return 1
 	fi
+	wt_stop_anytls_batch || return 1
+	rm -rf "${TMP2}/hooks_09" || return 1
+	wt_register_webtest_runner single || return $?
 
 	WT_SINGLE=1
 	WT_SKIP_DNS=0
@@ -3781,7 +4076,7 @@ single_test_node(){
 		test_12_tc ${single_file}
 		;;
 	9)
-		test_13_at ${single_file} 09
+		test_13_at ${single_file} 09 || return $?
 		;;
 	*)
 		wt_append_webtest_line "${test_node}>failed"
@@ -3789,8 +4084,10 @@ single_test_node(){
 	esac
 
 	# 避免内部测速函数复用局部变量名后把原节点序号冲掉。
+	wt_lock_webtest_control -x || return 1
 	update_single_backup "${test_node}"
-	wt_append_webtest_line "stop>stop"
+	wt_append_webtest_line "stop>stop" || return 1
+	wt_release_webtest_runner
 }
 
 wt_prepare_single_test_state() {
@@ -4102,27 +4399,13 @@ get_value_empty(){
 
 clean_webtest(){
 	# 当用户手动点击web test按钮的时候，不论是否有正在进行的任务，不论是否在在时限内，强制开始webtest
-	# 1. killall program
-	wt_runtime_cleanup
+	# 1. Stop the batch runner before stopping its workers and hooks.
+	wt_stop_webtest_runner || return $?
+	wt_runtime_cleanup || return 1
 
-	# 2. kill all other ss_webtest.sh
-	local current_pid=$$
-	local ss_webtest_pids=$(ps|grep -E "ss_webtest\.sh"|awk '{print $1}'|grep -v ${current_pid})
-	if [ -n "${ss_webtest_pids}" ];then
-		for ss_webtest_pid in ${ss_webtest_pids}
-		do
-			kill -9 ${ss_webtest_pid} >/dev/null 2>&1
-		done
-	fi
-
-	# 3. remove lock file if exist
-	rm -rf /tmp/webtest.lock >/dev/null 2>&1
-	rm -f "${WT_WEBTEST_STOP_FLAG}" "${WT_WEBTEST_PID_FILE}" >/dev/null 2>&1
-
-	# 4. remove webtest result file
-	rm -rf "${WT_WEBTEST_FILE}"
-	rm -rf "${WT_WEBTEST_STREAM}"
-	rm -rf ${TMP2}/*
+	rm -f "${WT_WEBTEST_FILE}" "${WT_WEBTEST_STREAM}" /tmp/upload/anytls-webtest.json || return 1
+	rm -rf "${TMP2}"/* || return 1
+	rm -f "${WT_WEBTEST_STOP_FLAG}" "${WT_WEBTEST_PID_FILE}" /tmp/webtest.lock
 }
 
 latency_feature_enabled(){
@@ -4133,13 +4416,13 @@ latency_feature_enabled(){
 }
 
 clear_webtest_results(){
-	clean_webtest
+	clean_webtest || return 1
 	dbus remove ss_basic_webtest_ts
 	rm -f "${WT_WEBTEST_BACKUP}" "${WT_WEBTEST_HISTORY}" >/dev/null 2>&1
 }
 
 clear_webtest_all(){
-	clear_webtest_results
+	clear_webtest_results || return 1
 	rm -rf "${TMP2}" >/dev/null 2>&1
 	rm -rf "${FSS_WEBTEST_CACHE_DIR}" "${WT_WEBTEST_CACHE_LOCK}" "${WT_WEBTEST_CACHE_STATE_DIR}" >/dev/null 2>&1
 }
@@ -4299,7 +4582,7 @@ set_latency_job() {
 
 wt_is_named_action() {
 	case "$1" in
-	schedule_warm|schedule_node_direct_refresh|warm_cache|ensure_cache_ids_file|node_direct_refresh|web_webtest|clear_webtest|cleanup_helpers|single_test|manual_webtest|close_latency_test|stop_webtest|ws_start_batch|ws_stop_batch|ws_clear_cache|ws_close_latency|ws_single_test|follow_webtest_ws|follow_webtest_single_ws)
+	schedule_warm|schedule_node_direct_refresh|warm_cache|ensure_cache_ids_file|node_direct_refresh|web_webtest|clear_webtest|cleanup_helpers|single_test|manual_webtest|close_latency_test|stop_webtest|ws_start_batch|ws_stop_batch|ws_clear_cache|ws_close_latency|ws_single_test|follow_webtest_ws|follow_webtest_single_ws|run_batch|run_single)
 		return 0
 		;;
 	esac
@@ -4320,11 +4603,25 @@ else
 	WEBTEST_ACTION_ARG="$2"
 fi
 
+case "${WEBTEST_ACTION}" in
+2|web_webtest|clear_webtest|cleanup_helpers|single_test|manual_webtest|close_latency_test|stop_webtest|ws_start_batch|ws_stop_batch|ws_clear_cache|ws_close_latency|ws_single_test)
+	if ! wt_lock_webtest_control; then
+		case "${WEBTEST_ACTION}" in ws_*) echo busy ;; *) wt_http_response busy ;; esac
+		exit 0
+	fi
+	;;
+run_batch|run_single)
+	# Async runners inherit the controller's lock until they publish ownership.
+	[ "${FSS_WEBTEST_INHERITED_LOCK:-0}" = 1 ] && flock -n 6 || exit 1
+	;;
+esac
+
 case $1 in
 2)
 	# start webtest by cron
-	clean_webtest
+	clean_webtest || exit 1
 	start_webtest
+	exit $?
 	;;
 3)
 	set_latency_job
@@ -4417,17 +4714,29 @@ web_webtest)
 	# 当用户进入插件，插件列表渲染好后开始调用本脚本进行webtest
 	webtest_web
 	;;
+run_batch)
+	start_webtest
+	;;
+run_single)
+	single_test_node "${WEBTEST_ACTION_ARG}" 1
+	;;
 clear_webtest)
 	if [ -f "/tmp/webtest.lock" ];then
 		wt_http_response "busy"
 		exit 0
 	fi
-	wt_http_response $1
-	clear_webtest_results
+	if clear_webtest_results; then
+		wt_http_response "$1"
+	else
+		wt_http_response cleanup_failed
+		exit 1
+	fi
 	;;
 cleanup_helpers)
-	wt_runtime_cleanup
-	rm -rf "${TMP2}" >/dev/null 2>&1
+	wt_stop_webtest_runner || exit 1
+	wt_runtime_cleanup || exit 1
+	rm -rf "${TMP2}" || exit 1
+	wt_release_webtest_runner
 	;;
 single_test)
 	if [ -f "/tmp/webtest.lock" ];then
@@ -4444,43 +4753,48 @@ single_test)
 manual_webtest)
 	ensure_latency_batch
 	wt_save_webtest_history
-	clean_webtest
+	clean_webtest || { wt_http_response cleanup_failed; exit 1; }
 	rm -f "${WT_WEBTEST_BACKUP}"
 	dbus remove ss_basic_webtest_ts
 	wt_http_response $1
-	sh /koolshare/scripts/ss_webtest.sh web_webtest >/dev/null 2>&1 &
+	FSS_WEBTEST_MANUAL=1 FSS_WEBTEST_INHERITED_LOCK=1 sh /koolshare/scripts/ss_webtest.sh run_batch >/dev/null 2>&1 &
 	;;
 close_latency_test)
-	wt_http_response $1
-	disable_latency_feature
+	disable_latency_feature || { wt_http_response cleanup_failed; exit 1; }
+	wt_http_response "$1"
 	;;
 stop_webtest)
-	wt_http_response $1
-	wt_request_stop_batch
+	if wt_request_stop_batch; then
+		wt_http_response "$1"
+	else
+		wt_http_response cleanup_failed
+		exit 1
+	fi
 	;;
 ws_start_batch)
 	ensure_latency_batch
 	dbus set ss_basic_latency_val=2 >/dev/null 2>&1
 	wt_save_webtest_history
-	clean_webtest
+	clean_webtest || exit 1
 	rm -f "${WT_WEBTEST_BACKUP}"
-	sh /koolshare/scripts/ss_webtest.sh web_webtest >/dev/null 2>&1 &
+	dbus remove ss_basic_webtest_ts
+	FSS_WEBTEST_MANUAL=1 FSS_WEBTEST_INHERITED_LOCK=1 sh /koolshare/scripts/ss_webtest.sh run_batch >/dev/null 2>&1 &
 	echo XU6J03M6
 	;;
 ws_stop_batch)
-	wt_request_stop_batch
+	wt_request_stop_batch || exit 1
 	echo XU6J03M6
 	;;
 ws_clear_cache)
 	if [ -f "/tmp/webtest.lock" ];then
 		echo busy
 	else
-		clear_webtest_results
+		clear_webtest_results || exit 1
 		echo XU6J03M6
 	fi
 	;;
 ws_close_latency)
-	disable_latency_feature
+	disable_latency_feature || exit 1
 	echo XU6J03M6
 	;;
 ws_single_test)
@@ -4492,7 +4806,7 @@ ws_single_test)
 		echo busy
 	else
 		if wt_prepare_single_test_state "${WEBTEST_ACTION_ARG}" >/dev/null 2>&1; then
-			sh /koolshare/scripts/ss_webtest.sh single_test "${WEBTEST_ACTION_ARG}" >/dev/null 2>&1 &
+			FSS_WEBTEST_INHERITED_LOCK=1 sh /koolshare/scripts/ss_webtest.sh run_single "${WEBTEST_ACTION_ARG}" >/dev/null 2>&1 &
 			echo XU6J03M6
 		else
 			echo busy

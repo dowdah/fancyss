@@ -7,6 +7,27 @@ def function(name,path=LIB):
     end=start+len(name)+4+m.start() if m else len(text)
     return text[start:end]
 class ShuntTests(unittest.TestCase):
+    def test_pruning_proxy_artifacts_keeps_direct_and_reject_rules(self):
+        with tempfile.TemporaryDirectory() as d:
+            p = pathlib.Path(d)
+            (p / 'targets').write_text('15\n16\n')
+            (p / '15_outbounds.json').write_text('{}')
+            rules = ['camera|DIRECT|camera.domains', 'block|REJECT|block.domains',
+                     'gemini|15|gemini.domains', 'missing|16|missing.domains']
+            (p / 'active').write_text('\n'.join(rules) + '\n')
+            program = function('fss_shunt_prune_runtime_targets_by_cache') + f'''
+FSS_SHUNT_RUNTIME_TARGET_FILE={p}/targets
+FSS_SHUNT_RUNTIME_ACTIVE_FILE={p}/active
+FSS_SHUNT_RUNTIME_OUTBOUND_DIR={p}
+fss_shunt_prune_runtime_targets_by_cache 7
+'''
+            subprocess.run(['/bin/sh', '-e'], input=program, text=True, check=True)
+            self.assertEqual((p / 'active').read_text().splitlines(), rules[:3])
+            (p / '15_outbounds.json').unlink()
+            subprocess.run(['/bin/sh', '-e'], input=program, text=True, check=True)
+            self.assertEqual((p / 'active').read_text().splitlines(), rules[:2])
+            self.assertFalse((p / 'targets').exists())
+
     def test_udp_reject_follows_target_without_overriding_direct(self):
         with tempfile.TemporaryDirectory() as d:
             p=pathlib.Path(d);(p/'outbounds').mkdir();(p/'cache_ids.txt').write_text('1\n2\n')

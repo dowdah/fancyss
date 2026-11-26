@@ -11127,6 +11127,7 @@ function render_node_list_footer_html() {
 	}
 	html += '<input id="reset_select" style="margin-left:10px; display:none" class="button_gen" onClick="select_default_node(1)" type="button" value="取消"/>';
 	html += '</div>';
+	html += '<div id="anytls_webtest_progress" role="status" aria-live="polite"></div>';
 	return html;
 }
 function render_node_cards_html(nodeH, noserver, hasLatency) {
@@ -12634,6 +12635,21 @@ function finish_latency_batch() {
 	batch_stop_pending = false;
 	update_latency_action_links();
 	update_latency_finish_time();
+	refresh_anytls_webtest_progress(true);
+}
+var anytlsWebtestProgressAt = 0;
+function refresh_anytls_webtest_progress(force) {
+	if (!$("#anytls_webtest_progress").length || (!force && Date.now() - anytlsWebtestProgressAt < 1000)) return;
+	anytlsWebtestProgressAt = Date.now();
+	$.ajax({url: "/_temp/anytls-webtest.json", dataType: "json", cache: false}).done(function(state) {
+		var reason = {trial: "试高一档", low_headroom: "可用内存低于 64 MiB，沿用已验证档位",
+			shunt_busy: "分流正在应用，沿用已验证档位", memory_pressure: "可用内存低于 48 MiB",
+			trial_rejected: "试档未达标，24 小时内沿用原档", user_stopped: "已手动中止"};
+		$("#anytls_webtest_progress").text(
+			"AnyTLS " + Number(state.concurrency) + " 并发档 · 正在测 " + (state.phase === "running" ? Number(state.running) : 0) + " · 已测 " + Number(state.completed) + "/" +
+			Number(state.total) + " · 超时 " + Number(state.timeouts) +
+			(reason[state.reason] ? " · " + reason[state.reason] : ""));
+	}).fail(function() { $("#anytls_webtest_progress").empty(); });
 }
 function is_latency_transient_state(value){
 	value = String(value || "");
@@ -12641,7 +12657,7 @@ function is_latency_transient_state(value){
 }
 function is_latency_terminal_state(value){
 	value = String(value || "");
-	return $.isNumeric(value) || value == "failed" || value == "timeout" || value == "ns" || value == "stopped" || value == "canceled";
+	return $.isNumeric(value) || /^(failed|tls_failed|connection_failed|dns_failed|timeout|ns|stopped|canceled)$/.test(value);
 }
 function update_latency_action_links() {
 	if (!is_latency_feature_enabled()) {
@@ -12737,6 +12753,7 @@ function handle_latency_ws_payload(payload) {
 		return;
 	}
 	write_webtest(array);
+	refresh_anytls_webtest_progress(false);
 	batch_ws_last_message_at = Date.now();
 	var hasStop = array.some(function(item) {
 		return item[0] == "stop";
@@ -13369,6 +13386,7 @@ function get_latency_data(action, pollSeq){
 				}
 			const array = parse_webtest_lines(res);
 			write_webtest(array);
+				refresh_anytls_webtest_progress(false);
 			const hasStop = array.some(function(item) {
 				return item[0] == "stop";
 			});
@@ -13538,9 +13556,15 @@ function write_webtest(ps){
 			}
 		}else{
 			if(lag == "failed"){
-				test_result = '<font color="#FF0000">failed!</font>';
+				test_result = '<font color="#FF0000">失败</font>';
+			}else if(lag == "tls_failed"){
+				test_result = '<font color="#FF0000">TLS 校验失败</font>';
+			}else if(lag == "connection_failed"){
+				test_result = '<font color="#FF0000">连接失败</font>';
+			}else if(lag == "dns_failed"){
+				test_result = '<font color="#FF0000">DNS 失败</font>';
 			}else if(lag == "timeout"){
-				test_result = '<font color="#FF0000">timeout!</font>';
+				test_result = '<font color="#FF0000">超时</font>';
 			}else if(lag == "ns"){
 				test_result = '<font color="#FF0000">不支持!</font>';
 			}else if(lag == "waiting"){
@@ -13556,7 +13580,7 @@ function write_webtest(ps){
 			}else if(lag == "warming"){
 				test_result = '<font color="#00FFCC">warming</font>';
 			}else if(lag == "stopped"){
-				test_result = '<font color="#999999">stopped</font>';
+				test_result = '<font color="#999999">已停止</font>';
 			}else if(lag == "canceled"){
 				test_result = '<font color="#CC5500">canceled</font>';
 			}else{

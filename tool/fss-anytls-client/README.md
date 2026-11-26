@@ -20,6 +20,21 @@ When SNI is omitted, the server hostname is used even with `--insecure`.
 Go TLS omits IP literals from the SNI extension. Disabling certificate checks
 does not disable SNI or introduce a retry without SNI.
 
+For batch latency probes, run `fss-anytls-client --webtest-manifest /path/to/job.json`.
+The private manifest contains `router_egress` and a `nodes` array. Each node
+specifies `listen`, `server`, `password_file`, and an absolute `stop_file`,
+with optional `sni`, `ca_file`, and `insecure` fields. Use distinct loopback
+ports and fresh stop files in the batch's temporary directory. Point
+`webtest-tool` at those ports and have its stop hooks create the corresponding
+files. The client opens an upstream session pool on the first SOCKS CONNECT.
+A node's stop file retires its listener and connections. An optional top-level
+`stop_file` or SIGTERM closes the whole batch.
+`FSS_ANYTLS_WEBTEST_MODE=single-process` selects this mode for AnyTLS batch
+latency jobs started by `ss_webtest.sh` with the updated native client.
+
+Set `ss_basic_anytls_webtest_mode=auto` to use this client with automatic
+concurrency in node management.
+
 256 local TCP connections are admitted without a worker queue. Additional
 connections close immediately. SOCKS negotiation has a 5-second deadline;
 remote dial/TLS has a 10-second total context deadline. Established connections

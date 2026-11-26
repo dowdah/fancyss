@@ -72,32 +72,14 @@ fss_anytls_batch_finish "$3" 0
         result = self.run_trial(self.baseline, reason="memory_pressure", minimum=47)
         self.assertEqual(result["level"], 2)
 
-    def test_partial_results_only_replay_terminal_nodes(self):
-        with tempfile.TemporaryDirectory() as directory:
-            events = Path(directory) / "events"
-            events.write_text(
-                '{"type":"phase","phase":"started"}\n'
-                '{"id":"1","state":"testing"}\n'
-                '{"id":"1","state":"ok","latency_ms":41.5}\n'
-                '{"id":"2","state":"testing"}\n'
-                '{"id":"3","state":"timeout"}\n'
-            )
-            output = subprocess.check_output(
-                ["/bin/sh", "-c", r'''
-. "$1"
-wt_set_batch_state() { printf '%s>%s\n' "$1" "$2"; }
-fss_anytls_batch_recover_results "$2"
-''', "fixture", str(SCRIPT), str(events)],
-                text=True,
-            )
-            self.assertEqual(set(output.splitlines()), {"1>41.5", "3>timeout"})
-
     def test_manual_batch_only_tries_higher_with_headroom_and_no_shunt_update(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             (root / "configs/fancyss").mkdir(parents=True)
             targets = root / "targets"
             targets.write_text("1|10001\n2|10002\n3|10003\n4|10004\n")
+            inputs = root / "probe-inputs"
+            inputs.write_text("original settings")
             program = r'''
 . "$1"
 export KSROOT="$2" FSS_WEBTEST_MANUAL=1
@@ -108,21 +90,28 @@ fss_anytls_uptime() { echo 100; }
 fss_anytls_batch_state() { :; }
 fss_anytls_batch_shunt_idle() { [ "$idle" = yes ]; }
 begin() {
-    fss_anytls_batch_begin "$1" /bin/sh || exit 1
+    fss_anytls_batch_begin "$1" /bin/sh "$2" || exit 1
     printf '%s:%s\n' "$WT_ANYTLS_AUTO_LIMIT" "$WT_ANYTLS_AUTO_REASON"
 }
 firmware=one memory=68 idle=yes
-begin "$3"
+begin "$3" "$4"
 printf '%s' "$WT_ANYTLS_AUTO_PREVIOUS" | jq '.level=2|.sum=80|.samples=2' > "$WT_ANYTLS_AUTO_PROFILE"
-begin "$3"
+begin "$3" "$4"
 idle=no
-begin "$3"
+begin "$3" "$4"
 idle=yes memory=55
-begin "$3"
+begin "$3" "$4"
 firmware=two memory=68
-begin "$3"
+begin "$3" "$4"
+firmware=one memory=68
+printf '%s\n' '1|20001' '2|20002' '3|20003' '4|20004' > "$3"
+begin "$3" "$4"
+printf '%s' 'changed settings with the same node IDs' > "$4"
+begin "$3" "$4"
 '''
             output = subprocess.check_output(
-                ["/bin/sh", "-c", program, "fixture", str(SCRIPT), str(root), str(targets)], text=True
+                ["/bin/sh", "-c", program, "fixture", str(SCRIPT), str(root), str(targets), str(inputs)], text=True
             )
-            self.assertEqual(output.splitlines(), ["1:", "3:trial", "2:shunt_busy", "2:low_headroom", "1:"])
+            self.assertEqual(output.splitlines(), [
+                "1:", "3:trial", "2:shunt_busy", "2:low_headroom", "1:", "3:trial", "1:",
+            ])

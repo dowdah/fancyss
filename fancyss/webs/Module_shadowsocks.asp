@@ -12657,7 +12657,7 @@ function is_latency_transient_state(value){
 }
 function is_latency_terminal_state(value){
 	value = String(value || "");
-	return $.isNumeric(value) || /^(failed|tls_failed|connection_failed|dns_failed|timeout|ns|stopped|canceled)$/.test(value);
+	return $.isNumeric(value) || /^(failed|configuration_failed|tls_failed|connection_failed|dns_failed|timeout|ns|stopped|canceled)$/.test(value);
 }
 function update_latency_action_links() {
 	if (!is_latency_feature_enabled()) {
@@ -13557,6 +13557,8 @@ function write_webtest(ps){
 		}else{
 			if(lag == "failed"){
 				test_result = '<font color="#FF0000">失败</font>';
+			}else if(lag == "configuration_failed"){
+				test_result = '<font color="#FF0000">节点配置无效</font>';
 			}else if(lag == "tls_failed"){
 				test_result = '<font color="#FF0000">TLS 校验失败</font>';
 			}else if(lag == "connection_failed"){

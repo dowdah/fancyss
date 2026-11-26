@@ -22,6 +22,7 @@ const webtestManifestLimit = 1 << 20
 type webtestManifest struct {
 	RouterEgress bool          `json:"router_egress"`
 	StopFile     string        `json:"stop_file,omitempty"`
+	ReadyFile    string        `json:"ready_file,omitempty"`
 	Nodes        []webtestNode `json:"nodes"`
 }
 
@@ -62,26 +63,31 @@ func readWebtestManifest(path string) (webtestManifest, error) {
 		return manifest, errors.New("invalid webtest manifest")
 	}
 	listeners := make(map[string]bool, len(manifest.Nodes))
-	stopFiles := make(map[string]bool, len(manifest.Nodes))
-	if manifest.StopFile != "" {
-		if !filepath.IsAbs(manifest.StopFile) {
-			return manifest, errors.New("invalid webtest batch stop file")
+	files := make(map[string]bool, len(manifest.Nodes)*2+2)
+	for _, name := range []string{manifest.StopFile, manifest.ReadyFile} {
+		if name == "" {
+			continue
 		}
-		stopFiles[filepath.Clean(manifest.StopFile)] = true
+		path := filepath.Clean(name)
+		if !filepath.IsAbs(path) || files[path] {
+			return manifest, errors.New("invalid webtest batch signal file")
+		}
+		files[path] = true
 	}
 	for _, node := range manifest.Nodes {
-		if err := validateConfig(node.config()); err != nil {
-			return manifest, err
-		}
 		stop := filepath.Clean(node.StopFile)
-		if !filepath.IsAbs(stop) || stopFiles[stop] || listeners[node.Listen] {
+		if !filepath.IsAbs(stop) || files[stop] || listeners[node.Listen] {
 			return manifest, errors.New("invalid or duplicate webtest listener or stop file")
 		}
-		if node.StatusFile != "" && (!filepath.IsAbs(node.StatusFile) || filepath.Dir(node.StatusFile) != filepath.Dir(stop)) {
-			return manifest, errors.New("invalid webtest status file")
-		}
 		listeners[node.Listen] = true
-		stopFiles[stop] = true
+		files[stop] = true
+		if node.StatusFile != "" {
+			status := filepath.Clean(node.StatusFile)
+			if !filepath.IsAbs(status) || filepath.Dir(status) != filepath.Dir(stop) || files[status] {
+				return manifest, errors.New("invalid or duplicate webtest status file")
+			}
+			files[status] = true
+		}
 	}
 	return manifest, nil
 }
@@ -182,6 +188,7 @@ func runWebtest(ctx context.Context, manifest webtestManifest) error {
 	type endpoint struct {
 		listener net.Listener
 		stopFile string
+		proxy    *webtestProxy
 		cancel   context.CancelFunc
 	}
 	endpoints := make([]endpoint, 0, len(manifest.Nodes))
@@ -195,23 +202,38 @@ func runWebtest(ctx context.Context, manifest webtestManifest) error {
 	}()
 
 	for _, node := range manifest.Nodes {
+		if err := validateConfig(node.config()); err != nil {
+			if node.StatusFile != "" && os.WriteFile(node.StatusFile, []byte("configuration"), 0600) != nil {
+				return errors.New("webtest status file unavailable")
+			}
+			continue
+		}
 		ln, err := net.Listen("tcp", node.Listen)
 		if err != nil {
-			return errors.New("webtest SOCKS listen failed")
+			if node.StatusFile != "" && os.WriteFile(node.StatusFile, []byte("connection"), 0600) != nil {
+				return errors.New("webtest status file unavailable")
+			}
+			continue
 		}
-		endpoints = append(endpoints, endpoint{listener: ln, stopFile: node.StopFile})
+		nodeCtx, stop := context.WithCancel(ctx)
+		proxy := &webtestProxy{ctx: nodeCtx, config: node.config(), dialer: dialer, status: node.StatusFile}
+		endpoints = append(endpoints, endpoint{listener: ln, stopFile: node.StopFile, proxy: proxy, cancel: stop})
+	}
+	if manifest.ReadyFile != "" {
+		if err := os.WriteFile(manifest.ReadyFile, nil, 0600); err != nil {
+			return errors.New("webtest ready file unavailable")
+		}
+	}
+	if len(endpoints) == 0 {
+		return errors.New("no webtest listeners available")
 	}
 	results := make(chan error, len(endpoints))
-	for i := range endpoints {
-		nodeCtx, stop := context.WithCancel(ctx)
-		endpoints[i].cancel = stop
-		proxy := &webtestProxy{ctx: nodeCtx, config: manifest.Nodes[i].config(), dialer: dialer, status: manifest.Nodes[i].StatusFile}
-		socks := newServer(proxy)
-		ln := endpoints[i].listener
+	for _, endpoint := range endpoints {
+		socks := newServer(endpoint.proxy)
 		workers.Add(1)
 		go func() {
 			defer workers.Done()
-			results <- socks.serve(nodeCtx, ln)
+			results <- socks.serve(endpoint.proxy.ctx, endpoint.listener)
 		}()
 	}
 	tick := time.NewTicker(100 * time.Millisecond)

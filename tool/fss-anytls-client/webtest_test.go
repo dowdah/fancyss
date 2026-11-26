@@ -168,3 +168,78 @@ func assertWebtestClosed(t *testing.T, conn net.Conn) {
 		t.Fatalf("connection remained open: %v", err)
 	}
 }
+
+func TestWebtestKeepsValidListenersWhenOtherNodesFailSetup(t *testing.T) {
+	root := t.TempDir()
+	manifest := webtestManifest{ReadyFile: filepath.Join(root, "ready")}
+	var release []net.Listener
+	for _, label := range []string{"bad-port", "bad-sni", "occupied", "valid"} {
+		reservation, err := net.Listen("tcp", "127.0.0.1:0")
+		if err != nil {
+			t.Fatal(err)
+		}
+		node := webtestNode{
+			Listen: reservation.Addr().String(), Server: "example.invalid:443",
+			PasswordFile: filepath.Join(root, label+".pass"),
+			StopFile:     filepath.Join(root, label+".stop"),
+			StatusFile:   filepath.Join(root, label+".status"),
+		}
+		t.Cleanup(func() { reservation.Close() })
+		if label != "occupied" {
+			release = append(release, reservation)
+		}
+		switch label {
+		case "bad-port":
+			node.Server = "example.invalid:65536"
+		case "bad-sni":
+			node.SNI = "invalid host"
+		}
+		manifest.Nodes = append(manifest.Nodes, node)
+	}
+	data, err := json.Marshal(manifest)
+	if err != nil {
+		t.Fatal(err)
+	}
+	path := filepath.Join(root, "manifest.json")
+	if err := os.WriteFile(path, data, 0600); err != nil {
+		t.Fatal(err)
+	}
+	for _, reservation := range release {
+		reservation.Close()
+	}
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	done := make(chan error, 1)
+	go func() { done <- runCommand(ctx, []string{"--webtest-manifest", path}) }()
+	for deadline := time.Now().Add(2 * time.Second); ; {
+		if _, err := os.Stat(manifest.ReadyFile); err == nil {
+			break
+		}
+		select {
+		case err := <-done:
+			t.Fatalf("batch exited before listener setup: %v", err)
+		default:
+		}
+		if time.Now().After(deadline) {
+			t.Fatal("listener setup did not finish")
+		}
+		time.Sleep(10 * time.Millisecond)
+	}
+	for i, state := range []string{"configuration", "configuration", "connection"} {
+		result, err := os.ReadFile(manifest.Nodes[i].StatusFile)
+		if err != nil || string(result) != state {
+			t.Fatalf("node %d status = %q, %v", i, result, err)
+		}
+	}
+	waitWebtestSocket(t, manifest.Nodes[3].Listen, true)
+	cancel()
+	select {
+	case err := <-done:
+		if err != nil {
+			t.Fatal(err)
+		}
+	case <-time.After(2 * time.Second):
+		t.Fatal("batch did not shut down")
+	}
+	waitWebtestSocket(t, manifest.Nodes[3].Listen, false)
+}

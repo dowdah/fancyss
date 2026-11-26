@@ -9,10 +9,10 @@ fss_anytls_batch_shunt_idle() {
 fss_anytls_batch_state() {
 	local phase="$1" reason="$2" events="$3" tmp="/tmp/upload/anytls-webtest.json.$$"
 	[ -f "${events}" ] || events=/dev/null
-	jq -s --arg phase "${phase}" --arg reason "${reason}" --argjson concurrency "${WT_ANYTLS_AUTO_LIMIT}" \
+	jq -Rn --arg phase "${phase}" --arg reason "${reason}" --argjson concurrency "${WT_ANYTLS_AUTO_LIMIT}" \
 		--argjson total "${WT_ANYTLS_AUTO_COUNT}" '
-		reduce (.[] | select(.id != null)) as $event ({}; .[$event.id|tostring]=$event.state)
-		| {completed:(map(select(.!="testing"))|length),
+		reduce (inputs | fromjson? | objects | select(.id != null)) as $event ({}; .[$event.id|tostring]=$event.state)
+		| {completed:(map(select(.=="ok" or .=="failed" or .=="timeout"))|length),
 			running:(if $phase=="running" then map(select(.=="testing"))|length else 0 end),
 			timeouts:(map(select(.=="timeout"))|length),$phase,$reason,$concurrency,$total}
 	' "${events}" > "${tmp}" 2>/dev/null && mv -f "${tmp}" /tmp/upload/anytls-webtest.json
@@ -20,16 +20,21 @@ fss_anytls_batch_state() {
 }
 
 fss_anytls_batch_begin() {
-	local targets="$1" client="$2" now mem profile
+	local targets="$1" client="$2" probe_inputs="$3" now mem profile tool binaries inputs
+	tool="$(wt_pick_webtest_tool)" || return 1
+	binaries="$(sha256sum "${client}" "${tool}")" || return 1
+	inputs="$(sha256sum "${probe_inputs}")" || return 1
 	WT_ANYTLS_AUTO_PROFILE="${KSROOT}/configs/fancyss/anytls-webtest-profile.json"
 	WT_ANYTLS_AUTO_KEY="$({
+		printf '%s\n' 'fixed-sampling-1-warmup-2-attempts'
 		cut -d '|' -f 1 "${targets}"
+		printf '%s\n' "${inputs%% *}"
 		printf '%s\n' "${ss_basic_furl}"
 		uname -r
 		nvram get firmver
 		nvram get buildno
 		nvram get extendno
-		sha256sum "${client}" "$(wt_pick_webtest_tool)" | awk '{print $1}'
+		printf '%s\n' "${binaries}" | awk '{print $1}'
 	} | sha256sum | awk '{print $1}')"
 	WT_ANYTLS_AUTO_COUNT="$(wc -l < "${targets}" | tr -d ' ')"
 	profile="$(jq -ec --arg key "${WT_ANYTLS_AUTO_KEY}" '
@@ -49,7 +54,7 @@ fss_anytls_batch_begin() {
 	if [ "${mem}" -lt 48 ]; then
 		WT_ANYTLS_AUTO_REASON=memory_pressure
 		fss_anytls_batch_state canceled "${WT_ANYTLS_AUTO_REASON}" /dev/null
-		return 1
+		return 2
 	fi
 	if [ "${WT_ANYTLS_AUTO_LIMIT}" -gt "${WT_ANYTLS_AUTO_COUNT}" ]; then
 		WT_ANYTLS_AUTO_LIMIT="${WT_ANYTLS_AUTO_COUNT}"
@@ -98,8 +103,8 @@ fss_anytls_batch_finish() (
 	umask 077
 	local events="$1" outcome="$2" now end seconds result done_count timeouts ok profile phase=complete
 	[ -f "${events}" ] || events=/dev/null
-	result="$(jq -sr '
-		reduce (.[] | select(.id != null and .state != "testing")) as $e ({}; .[$e.id|tostring]=$e.state)
+	result="$(jq -Rn -r '
+		reduce (inputs | fromjson? | objects | select(.id != null and (.state=="ok" or .state=="timeout" or .state=="failed"))) as $e ({}; .[$e.id|tostring]=$e.state)
 		| [length, (map(select(.=="timeout"))|length), (map(select(.=="ok"))|length)] | @tsv
 	' "${events}" 2>/dev/null)" || result="0 0 0"
 	set -- ${result}
@@ -141,20 +146,8 @@ fss_anytls_batch_finish() (
 	printf '%s\n' "${profile}" > "${WT_ANYTLS_AUTO_PROFILE}.$$" && mv -f "${WT_ANYTLS_AUTO_PROFILE}.$$" "${WT_ANYTLS_AUTO_PROFILE}"
 )
 
-fss_anytls_batch_recover_results() {
-	local events="$1" records
-	records="$(jq -sr '
-		reduce (.[]|select(.id != null and .state != "testing")) as $e ({}; .[$e.id|tostring]=$e)
-		| to_entries[] | [.key, (if .value.state=="ok" then .value.latency_ms else .value.state end|tostring)] | join(">")
-	' "${events}" 2>/dev/null)" || return 0
-	printf '%s\n' "${records}" | while IFS='>' read -r id result; do
-		[ -z "${id}" ] || wt_set_batch_state "${id}" "${result}"
-	done
-}
-
 fss_anytls_batch_mark_stopped() {
 	local json=/tmp/upload/anytls-webtest.json
-	[ -f "$1" ] || return 0
 	WT_ANYTLS_AUTO_LIMIT="$(jq -er 'select(.phase=="running")|.concurrency' "${json}" 2>/dev/null)" || return 0
 	WT_ANYTLS_AUTO_COUNT="$(jq -er '.total' "${json}" 2>/dev/null)" || return 0
 	fss_anytls_batch_state canceled user_stopped "$1"

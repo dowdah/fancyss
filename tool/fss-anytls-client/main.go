@@ -190,7 +190,7 @@ func main() {
 
 func runCommand(ctx context.Context, args []string) error {
 	if len(args) == 1 && args[0] == "--capabilities" {
-		fmt.Println("webtest-manifest")
+		fmt.Println("webtest-manifest webtest-ready-file")
 		return nil
 	}
 	if len(args) == 1 && args[0] == "--check-router-egress" {

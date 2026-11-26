@@ -27,6 +27,10 @@ with optional `sni`, `ca_file`, and `insecure` fields. Use distinct loopback
 ports and fresh stop files in the batch's temporary directory. Point
 `webtest-tool` at those ports and have its stop hooks create the corresponding
 files. The client opens an upstream session pool on the first SOCKS CONNECT.
+A node can provide a private `status_file` in the same directory as its stop
+file. Invalid transport settings and bind failures are recorded there while
+valid nodes keep their listeners. An optional absolute `ready_file` marks the
+end of listener setup so the scheduler can skip nodes that failed setup.
 A node's stop file retires its listener and connections. An optional top-level
 `stop_file` or SIGTERM closes the whole batch.
 `FSS_ANYTLS_WEBTEST_MODE=single-process` selects this mode for AnyTLS batch

@@ -293,6 +293,30 @@ clean_webtest || exit 5
                 ["/bin/sh", "-c", program], env={**os.environ, "TMP2": directory}, check=True,
             )
 
+    def test_start_requires_registered_pid_and_ignores_shadowed_shell(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            scripts = root / "scripts"
+            scripts.mkdir()
+            shadow = root / "sh"
+            shadow.write_text('#!/bin/sh\nexit 31\n')
+            shadow.chmod(0o700)
+            (scripts / "ss_webtest.sh").write_text(r'''
+[ "$1" = run_batch ] && [ "$FSS_WEBTEST_INHERITED_LOCK" = 1 ] || exit 1
+printf '%s\n' "$$" > "$WT_WEBTEST_PID_FILE"
+''')
+            program = shell_functions("wt_launch_webtest_runner") + r'''
+usleep() { sleep 0.01; }
+wt_launch_webtest_runner run_batch || exit 2
+rm "$WT_WEBTEST_PID_FILE"
+if wt_launch_webtest_runner run_single; then exit 3; fi
+'''
+            subprocess.run(
+                ["/bin/sh", "-c", program], check=True,
+                env={**os.environ, "KSROOT": directory, "WT_WEBTEST_PID_FILE": str(root / "runner.pid"),
+                     "PATH": f"{directory}:{os.environ['PATH']}"},
+            )
+
     @unittest.skipUnless(Path("/proc/self/stat").is_file(), "requires Linux process ownership checks")
     def test_controls_wait_for_runner_handoff_and_stop_only_owned_pid(self):
         with tempfile.TemporaryDirectory() as directory:
